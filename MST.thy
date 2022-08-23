@@ -21,7 +21,7 @@ definition "is_st T \<equiv> T \<subseteq> E \<and> Vs E = Vs T \<and> is_tree T
 
 section \<open>Minimum Spanning Tree\<close>
 
-definition "is_mst c T \<equiv> is_st T \<and> (\<forall>T'. is_st T' \<longrightarrow> (\<Sum>e\<in>T. c e) \<le> (\<Sum>e\<in>T'. c e))"
+definition "is_mst (c::'a set \<Rightarrow> nat) T \<equiv> is_st T \<and> (\<forall>T'. is_st T' \<longrightarrow> (\<Sum>e\<in>T. c e) \<le> (\<Sum>e\<in>T'. c e))"
 
 lemma finite_mst: 
   assumes "is_mst c T" 
@@ -75,7 +75,7 @@ qed
 lemma "is_st (kruskal c)"
   sorry (* need characterizations of MST *)
 
-lemma "is_mst c (kruskal c)"
+lemma kruskal_mst: "is_mst c (kruskal c)"
   sorry
 
 end
