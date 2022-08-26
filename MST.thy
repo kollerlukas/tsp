@@ -1,83 +1,47 @@
+(* Author: Lukas Koller *)
 theory MST
-  imports "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
+  imports Main WeightedGraph (* "Prim_Dijkstra_Simple.Prim_Impl" *)
 begin
-
-context graph_abs
-begin
-
-section \<open>Definitions\<close>
 
 text \<open>Connected Graph\<close>
-definition "is_connected G \<equiv> \<forall>u\<in>Vs G.\<forall>v\<in>Vs G. u\<in>connected_component G v"
+definition "is_connected E \<equiv> \<forall>u\<in>Vs E.\<forall>v\<in>Vs E. u\<in>connected_component E v"
 
 text \<open>Acyclic Graph\<close>
-definition "is_acyclic G \<equiv> \<forall>P P'. path G P \<and> path G P' \<and> hd P = hd P' \<and> last P  = last P' \<longrightarrow> P = P'"
+definition "is_acyclic E \<equiv> \<forall>P P'. path E P \<and> path E P' \<and> hd P = hd P' \<and> last P  = last P' \<longrightarrow> P = P'"
 
 text \<open>Tree\<close>
 definition "is_tree T \<equiv> is_connected T \<and> is_acyclic T"
 
+context graph_abs
+begin
+
 text \<open>Spanning Tree\<close>
 definition "is_st T \<equiv> T \<subseteq> E \<and> Vs E = Vs T \<and> is_tree T"
 
-section \<open>Minimum Spanning Tree\<close>
+end
 
-definition "is_mst (c::'a set \<Rightarrow> nat) T \<equiv> is_st T \<and> (\<forall>T'. is_st T' \<longrightarrow> (\<Sum>e\<in>T. c e) \<le> (\<Sum>e\<in>T'. c e))"
+context w_graph_abs
+begin
 
-lemma finite_mst: 
-  assumes "is_mst c T" 
-  shows "finite T"
-  using assms finite_subset finite_E unfolding is_mst_def is_st_def by auto
+definition "cost_of_st T \<equiv> (\<Sum>e\<in>T. c e)"
 
-subsection \<open>Kruskal's Algorithm\<close>
+text \<open>Minimum Spanning Tree\<close>
+definition "is_mst T \<equiv> is_st T \<and> (\<forall>T'. is_st T' \<longrightarrow> cost_of_st T \<le> cost_of_st T')"
 
-fun kruskal :: "('a set \<Rightarrow> int) \<Rightarrow> 'a set set" where
-  "kruskal c = (let Es = sorted_key_list_of_set c E; 
-    f = \<lambda>T e. if is_acyclic (T \<union> {e}) then T \<union> {e} else T in 
-    foldl f {} Es)"
-
-lemma foldl_is_acyclic:
-  assumes "is_acyclic T" "f = (\<lambda>T e. if is_acyclic (T \<union> {e}) then T \<union> {e} else T)"
-  shows "is_acyclic (foldl f T Es)"
-  using assms by (induction Es arbitrary: T) auto
-
-lemma empty_path: 
-  assumes "path {} P" 
-  shows "P = []"
-  using assms by (induction rule: path.induct) (auto simp: Vs_def)
-
-lemma empty_is_acyclic: 
-  shows "is_acyclic {}"
-  unfolding is_acyclic_def using empty_path by blast
-
-lemma kruskal_is_acyclic: 
-  shows "is_acyclic (kruskal c)"
-  using foldl_is_acyclic empty_is_acyclic by auto 
-
-lemma kruskal_is_connected:
-  assumes "is_connected E" 
-  shows "is_connected (kruskal c)" (is "is_connected ?T")
-proof (rule ccontr)
-  assume "\<not>is_connected ?T"
-  then obtain u v where "u\<in>Vs ?T" "v\<in>Vs ?T" "u\<notin>connected_component ?T v"
-    unfolding is_connected_def by auto
-  let ?uv="{{u',v'} | u' v'. {u',v'}\<in>E \<and> u'\<in>connected_component E u \<and> v'\<in>connected_component E v}"
-  have "?uv \<noteq> {}"
-    using assms unfolding is_connected_def sorry
-  then obtain e where "e\<in>?uv" "\<forall>e'\<in>?uv. c e \<le> c e'"
-    sorry
-
-  
-
-  show "False"
-    sorry
-qed
-
-lemma "is_st (kruskal c)"
-  sorry (* need characterizations of MST *)
-
-lemma kruskal_mst: "is_mst c (kruskal c)"
-  sorry
+lemma mst_eq_cost:
+  assumes "is_mst T\<^sub>1" "is_mst T\<^sub>2"
+  shows "cost_of_st T\<^sub>1 = cost_of_st T\<^sub>2"
+  using assms[unfolded is_mst_def] by fastforce
 
 end
+
+locale mst = w_graph_abs E c for E c +
+  fixes comp_mst
+  assumes mst: "is_mst (comp_mst c E)"
+
+(* TODO: use Prim_Dijkstra_Simple *)
+
+(* interpretation mst
+  sorry *)
 
 end

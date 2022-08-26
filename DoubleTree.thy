@@ -1,245 +1,194 @@
+(* Author: Lukas Koller *)
 theory DoubleTree
-  imports TSP MST
+  imports TSP MST Eulerian 
 begin
 
-context graph_abs_compl
+section \<open>\textsc{DoubleTree} Approximation Algorithm for mTSP\<close>
+                                                
+locale double_tree_algo = 
+  metric_graph_abs E c + 
+  mst E c comp_mst + 
+  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
 begin
-
-section \<open>\textsc{DoubleTree} Approximation Algorithm for TSP\<close>
-
-text \<open>directed edges\<close>
-definition "diE X = {(u,v) | u v. {u,v}\<in>X}"
-
-lemma diE_iff: "(u,v) \<in> diE X \<longleftrightarrow> {u,v} \<in> X"
-  unfolding diE_def by auto
-
-text \<open>Vertices of directed graph\<close>
-definition "diVs X = (fst ` X) \<union> (snd ` X)"
-
-lemma diVs_member: "v \<in> diVs X \<longleftrightarrow> (\<exists>u. (u,v) \<in> X \<or> (v,u) \<in> X)"
-  unfolding diVs_def by force
-
-lemma diVs_nil: "X = {} \<longleftrightarrow> diVs X = {}"
-  unfolding diVs_def by blast
-
-lemma diVs_tour_nil: "P = [] \<longleftrightarrow> diVs (set P) = {}"
-  unfolding diVs_def by blast
-
-lemma diVs_Cons: "diVs (set ((u,v)#P)) = {u,v} \<union> diVs (set P)"
-  unfolding diVs_def by auto
-
-text \<open>directed tour\<close>
-inductive ditour :: "('a * 'a) set \<Rightarrow> ('a * 'a) list \<Rightarrow> bool" where
-  ditour0: "ditour X []" |
-  ditour1: "e \<in> X \<Longrightarrow> ditour X [e]" |
-  ditour2: "(u,v) \<in> X \<Longrightarrow> ditour X ((v,w)#T) \<Longrightarrow> ditour X ((u,v)#(v,w)#T)"
-
-lemma ditour_Cons: "ditour X (e#P) \<Longrightarrow> ditour X P"
-proof (induction P)
-  case (Cons e' P)
-  then show ?case using ditour.cases by fastforce
-qed (auto intro: ditour0)
-
-lemma ditour_edges_subset: "ditour E' T \<Longrightarrow> set T \<subseteq> E'"
-  by (induction E' T rule: ditour.induct) auto
-
-lemma ditour_ball_edges: "ditour (diE E) T \<Longrightarrow> (u,v) \<in> set T \<Longrightarrow> {u,v} \<in> E"
-  using ditour_edges_subset diE_iff by fastforce
-
-lemma ditour_consec_vertices: "ditour X (e\<^sub>1#e\<^sub>2#P) \<Longrightarrow> snd e\<^sub>1 = fst e\<^sub>2"
-  using ditour.cases by fastforce
-
-text \<open>Eulerian Tour\<close>
-definition "is_et P \<equiv> 
-  ditour (diE E) P \<and> fst (hd P) = snd (last P) \<and> (\<forall>e\<in>diE E. \<exists>!i. i < length P \<and> P ! i = e)"
-
-lemma et_distinct:
-  assumes "is_et P"
-  shows "distinct P"
-proof -
-  have "\<forall>i<length P. \<forall>j<length P. i \<noteq> j \<longrightarrow> P ! i \<noteq> P ! j"
-  proof (rule allI impI)+
-    fix i j
-    assume "i < length P" "j < length P" "i \<noteq> j"
-    then have "P ! i \<in> diE E" "P ! j \<in> diE E"
-      using assms[unfolded is_et_def] ditour_edges_subset[of "diE E" P] by auto
-    then show "P ! i \<noteq> P ! j"
-      using assms[unfolded is_et_def] \<open>i \<noteq> j\<close> \<open>i < length P\<close> \<open>j < length P\<close> by blast
-  qed
-  then show "distinct P"
-    using distinct_conv_nth by auto
-qed
-
-lemma et_vertices:
-  assumes "is_et P"
-  shows "diVs (set P) = Vs E"
-proof
-  show "diVs (set P) \<subseteq> Vs E"
-  proof
-    fix v
-    assume "v \<in> diVs (set P)"
-    then obtain u where "(u,v) \<in> set P \<or> (v,u) \<in> set P"
-      using diVs_member[of v "set P"] by auto
-    then have "{u,v} \<in> E"
-      using assms[unfolded is_et_def] ditour_ball_edges by (metis insert_commute)
-    then show "v \<in> Vs E"
-      unfolding Vs_def by auto
-  qed
-next
-  show "Vs E \<subseteq> diVs (set P)"
-  proof
-    fix v
-    assume "v \<in> Vs E"
-    then obtain e where "v \<in> e" "e \<in> E"
-      using vs_member[of v E] by auto
-    then obtain u where "e={u,v}"
-      using graph by fastforce
-    then have "(u,v) \<in> diE E"
-      using \<open>e \<in> E\<close> diE_iff[of u v E] by auto
-    then have "\<exists>!i. i < length P \<and> P ! i = (u,v)"
-      using assms[unfolded is_et_def] by auto
-    then have "(u,v) \<in> set P"
-      using nth_mem by fastforce
-    then show "v \<in> diVs (set P)"
-      using diVs_member[of v "set P"] by auto
-  qed
-qed
-
-lemma et_nil_iff:
-  assumes "is_et P"
-  shows "P = [] \<longleftrightarrow> E = {}"
-  using assms graph diVs_tour_nil[of P] et_vertices[unfolded Vs_def, of P] by blast
-
-text \<open>Eulerian tour of 'double'-Tree starting at vertex \<open>u\<close>\<close>
-function et_of_dT :: "'a \<Rightarrow> ('a * 'a) set \<Rightarrow> ('a * 'a) list" where
-  "et_of_dT u X = (
-    if X = {} then []
-    else let v = SOME v. (u,v)\<in>X in (u,v)#et_of_dT v (X-{(u,v)}))"
-  by pat_completeness auto
-termination et_of_dT
-  apply (relation "measure (\<lambda>(u,Es). card Es)")
-  apply auto
-  sorry
-
-find_theorems "?A = (SOME x. ?P x)"
-
-lemma et_of_dT_ditour:
-  assumes "finite X" "u \<in> diVs X" (* X has to be eulerian *)
-  shows "ditour X (et_of_dT u X)"
-  using assms
-proof (induction X arbitrary: u rule: finite.induct)
-  case emptyI
-  then show ?case
-    using diVs_nil by (metis empty_iff)
-next
-  case (insertI X e)
-  then show ?case 
-    sorry
-qed
-
-lemma et_of_dT_correct:
-  assumes "finite X" "u \<in> diVs X"
-  shows "is_et (et_of_dT u X)"
-  sorry
 
 text \<open>Hamiltonian Cycle of Eulerian Tour\<close>
-fun hc_of_et :: "('a * 'a) list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+fun hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "hc_of_et [] H = H"
-| "hc_of_et [(u,v)] H = v#(if u\<in>set H then H else u#H)"
-| "hc_of_et ((u,v)#P) H = (if u\<in>set H then hc_of_et P H else hc_of_et P (u#H))"
+| "hc_of_et [v] H = v#H"
+| "hc_of_et (v#P) H = (if v \<in> List.set H then hc_of_et P H else hc_of_et P (v#H))"
 
-lemma hc_of_et_vertices_aux: 
-  assumes "ditour X P"
-  shows "set (hc_of_et P H) = diVs (set P) \<union> set H"
-  using assms
-proof (induction P H rule: hc_of_et.induct)
-  case (3 u v e P H)
-  then obtain v' w where "e = (v',w)"
-    by (meson old.prod.exhaust)
-  then have "e = (v,w)"
-    using "3.prems" ditour_consec_vertices[of X "(u,v)" e P] by auto
-
-  have "set (hc_of_et ((u,v)#e#P) H) = diVs (set (e#P)) \<union> {u} \<union> set (u#H)"
-    using ditour_Cons[OF "3.prems"] "3.IH" by auto
-  also have "... = diVs (set ((u,v)#e#P)) \<union> set H"
-    using \<open>e = (v,w)\<close> diVs_Cons[of v w P] diVs_Cons[of u v "(v,w)#P"] by auto 
-  finally show ?case .
-qed (auto simp: diVs_def)
-
-lemma hc_of_et_vertices:
-  assumes "is_et P"
-  shows "set (hc_of_et P []) = Vs E"
-  using assms hc_of_et_vertices_aux et_vertices by (auto simp: is_et_def)
-
-lemma hc_of_et_path: "is_et P \<Longrightarrow> path E (hc_of_et P [])"
-  using hc_of_et_vertices complete_path by auto
-
-lemma hc_of_et_distinct: 
-  assumes "distinct H" 
-  shows "distinct (tl (hc_of_et P H))"
-  using assms by (induction P H rule: hc_of_et.induct) (auto simp: distinct_tl)
-
-lemma hc_of_et_hd:
-  assumes "P \<noteq> []"
-  shows "hd (hc_of_et P H) = snd (last P)"
-  using assms by (induction P H rule: hc_of_et.induct) auto
-
-lemma hc_of_et_last_H_notnil: "H \<noteq> [] \<Longrightarrow> last H = last (hc_of_et P H)"
+lemma hc_of_et_not_rem_vs: "set P \<union> set H = set (hc_of_et P H)"
   by (induction P H rule: hc_of_et.induct) auto
 
-lemma hc_of_et_last:
-  assumes "P \<noteq> []"
-  shows "last (hc_of_et P []) = fst (hd P)"
-  using assms hc_of_et_last_H_notnil 
-  by (induction P "[]::'a list" rule: hc_of_et.induct) auto
-  (* induction only for case-distinction *)
+lemma hc_of_et_vs:
+  assumes "is_et X P" 
+  shows "set (hc_of_et P []) = mVs X"
+proof
+  show "set (hc_of_et P []) \<subseteq> mVs X"
+    unfolding mVs_def
+    using assms[unfolded is_et_def mpath_def] mem_path_Vs[of "set_mset X" P] 
+          hc_of_et_not_rem_vs[of P "[]"] by (simp add: subsetI)
+next
+  show "mVs X \<subseteq> set (hc_of_et P [])"
+    unfolding mVs_def
+  proof
+    fix v
+    assume "v \<in> Vs (set_mset X)"
+    then obtain e where "e \<in># X" "v \<in> e"
+      by (auto elim: vs_member_elim)
+    then obtain i where "i < length (edges_of_path P)" "e = (edges_of_path P) ! i"
+      using assms[unfolded is_et_def] by auto
+    then show "v \<in> set (hc_of_et P [])"
+      using \<open>v \<in> e\<close> v_in_edge_in_path_gen[of e P v] hc_of_et_not_rem_vs[of P] by auto
+  qed
+qed
 
-lemma hc_of_et_hd_last_eq: 
-  assumes "is_et P" "P \<noteq> []" "H = hc_of_et P []" 
-  shows "hd H = last H"
-  using assms[unfolded is_et_def] hc_of_et_hd hc_of_et_last by auto
+lemma hc_of_et_path:
+  assumes "is_et X P" "set_mset X \<subseteq> E"
+  shows "path E (hc_of_et P [])" (is "path E ?H")
+proof -
+  have "set P \<subseteq> Vs E"
+    using assms[unfolded is_et_def mpath_def] Vs_subset[of "set_mset X" E] 
+    by (auto simp: mem_path_Vs subsetI)
+  then have "set ?H \<subseteq> Vs E"
+    using hc_of_et_not_rem_vs[of P "[]"] by auto
+  then show ?thesis
+    unfolding mpath_def using path_complete_graph[of ?H] by auto
+qed
 
-lemma hc_of_et_correct:
-  assumes "is_et P"
+lemma hc_of_et_distinct: "distinct H \<Longrightarrow> distinct (tl (hc_of_et P H))"
+  by (induction P H rule: hc_of_et.induct) (auto simp: Let_def distinct_tl)
+
+lemma hc_of_et_last_aux: "H \<noteq> [] \<Longrightarrow> last H = last (hc_of_et P H)"
+  by (induction P H rule: hc_of_et.induct) auto
+
+lemma hc_of_et_last: "P \<noteq> [] \<Longrightarrow> hd P = last (hc_of_et P [])"
+  using hc_of_et_last_aux by (induction P rule: a.induct) auto
+
+lemma hc_of_et_hd: "P \<noteq> [] \<Longrightarrow> last P = hd (hc_of_et P H)"
+  by (induction P H rule: hc_of_et.induct) auto
+
+lemma hc_of_et_cycle:
+  assumes "P \<noteq> []" "is_et X P"
+  shows "hd (hc_of_et P []) = last (hc_of_et P [])" (is "hd ?H = last ?H")
+proof -
+  have "hd ?H = last P"
+    using assms hc_of_et_hd[of P "[]"] by auto
+  also have "... = hd P"
+    using assms[unfolded is_et_def] by auto
+  also have "... = last ?H"
+    using assms hc_of_et_last by auto
+  finally show ?thesis .
+qed
+
+lemma hc_of_et_correct: 
+  assumes "is_et X P" "mVs X = Vs E" "set_mset X \<subseteq> E"
   shows "is_hc (hc_of_et P [])"
 proof (cases "P = []")
   case True
+  then have "X = {#}"
+    using assms et_nil_iff[of X P] by auto
+  then have "Vs E = {}"
+    using assms by (auto simp: mVs_def Vs_def)
+  have "E = {}"
+    using vs_member[of _ E] \<open>Vs E = {}\<close> graph by fastforce
   then show ?thesis 
-    using et_nil_iff[OF assms] hc_nil_iff by auto
+    using \<open>P = []\<close> hc_nil_iff by auto
 next
   case False
   then show ?thesis 
-    unfolding is_hc_def 
-    using assms hc_of_et_path hc_of_et_vertices hc_of_et_distinct hc_of_et_hd_last_eq by auto
+    unfolding is_hc_def
+    using assms hc_of_et_path[of X P] hc_of_et_vs[of X P] hc_of_et_distinct[of "[]" P] 
+          hc_of_et_cycle[of P X] by auto
 qed
 
-fun double_tree :: "('a set \<Rightarrow> int) \<Rightarrow> 'a list" where
-  "double_tree c = (
-    let T = kruskal c;
-        u = SOME u. u\<in>Vs T;
-        P = et_of_dT u (diE T) in
+fun double_tree :: "unit \<Rightarrow> 'a list" where
+  "double_tree () = (
+    let T = comp_mst c E;
+        T\<^sub>2\<^sub>x = mset_set T + mset_set T;
+        P = comp_et T\<^sub>2\<^sub>x in
         hc_of_et P [])"
 
 text \<open>Feasibility of \textsc{DoubleTree}\<close>
-lemma "is_hc (double_tree c)"
-proof -
-  let ?T="kruskal c"
 
-  show ?thesis
-    using hc_of_et_correct[OF et_of_dT_correct, of "diE ?T"]
-    sorry
-qed
+lemma T2x_eulerian:
+  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T"
+  shows "is_eulerian T\<^sub>2\<^sub>x"
+  using assms[unfolded is_mst_def is_st_def] finite_E finite_subset[of T E]
+        double_graph_eulerian[of T T\<^sub>2\<^sub>x] by auto
+
+lemma T2x_vs:
+  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T"
+  shows "mVs T\<^sub>2\<^sub>x = Vs E"
+  using assms[unfolded is_mst_def is_st_def] finite_subset[OF _ finite_E] by (auto simp: mVs_def) 
+
+lemma T2x_edges:
+  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T"
+  shows "set_mset T\<^sub>2\<^sub>x \<subseteq> E"
+  using assms[unfolded is_mst_def is_st_def] finite_subset[OF _ finite_E] by auto 
+
+lemmas dt_correctness = T2x_eulerian[OF mst] T2x_vs[OF mst] T2x_edges[OF mst]
+
+lemma "is_hc (double_tree ())" (is "is_hc ?H")
+  apply (simp only: double_tree.simps Let_def)
+  apply (rule hc_of_et_correct, rule eulerian)
+  using dt_correctness by auto
 
 text \<open>Approximation of \textsc{DoubleTree}\<close>
 
-(* lemma
-  shows "cost_of_path c (hc_of_et P H) \<le> cost_of_path c P"
-  sorry *)
+lemma cost_of_path_hc_of_et:
+  assumes "set P \<union> set H \<subseteq> Vs E"
+  shows "cost_of_path (hc_of_et P H) \<le> cost_of_path (rev P @ H)"
+  using assms
+proof (induction P H rule: hc_of_et.induct)
+  case (3 u v P H)
+  then show ?case 
+    using cost_of_path_app_tri_ineq[of "rev (v#P)" H u] by auto
+qed auto
 
-lemma dT_mst_approx:
-  assumes "is_mst c T"
-  shows "cost_of_path c (double_tree c) \<le> 2*(\<Sum>e\<in>T. c e)"
-  sorry
+lemma hc_of_et_reduces_cost: "set P \<subseteq> Vs E \<Longrightarrow> cost_of_path (hc_of_et P []) \<le> cost_of_path P"
+  using cost_of_path_hc_of_et[of P "[]"] cost_of_path_rev[of P] by auto
+
+lemma cost_of_et:
+  assumes "is_et T P" 
+  shows "cost_of_path P = (\<Sum>e\<in>#T. c e)"
+  using assms cost_of_path_sum[of P] et_edges[of T P] by auto
+
+lemma hc_of_et_cost_le_dt:
+  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T" "is_et T\<^sub>2\<^sub>x P"
+  shows "cost_of_path (hc_of_et P []) \<le> 2 * cost_of_st T"
+proof -
+  have "set P \<subseteq> Vs E"
+    using assms et_vertices[of T\<^sub>2\<^sub>x P] T2x_vs[of T T\<^sub>2\<^sub>x] by auto
+  then have "cost_of_path (hc_of_et P []) \<le> cost_of_path P"
+    using hc_of_et_reduces_cost[of P] by auto
+  also have "... = (\<Sum>e\<in>#T\<^sub>2\<^sub>x. c e)"
+    using assms cost_of_et by auto
+  also have "... = (\<Sum>e\<in>T. c e) + (\<Sum>e\<in>T. c e)"
+    using assms by (simp add: sum_unfold_sum_mset)
+  also have "... = 2 * (\<Sum>e\<in>T. c e)"
+    sorry
+  also have "... = 2 * cost_of_st T"
+    by (auto simp: cost_of_st_def)
+  finally show ?thesis .
+qed
+
+lemma dt_mst_approx:
+  assumes "is_mst T"
+  shows "cost_of_path (double_tree ()) \<le> 2 * cost_of_st T"
+proof -
+  let ?T="comp_mst c E"
+  let ?T\<^sub>2\<^sub>x="mset_set ?T + mset_set ?T"
+  let ?P="comp_et ?T\<^sub>2\<^sub>x"
+  
+  have "cost_of_path (double_tree ()) = cost_of_path (hc_of_et ?P [])"
+    by (auto simp: Let_def)
+  also have "... \<le> 2 * cost_of_st ?T"
+    using mst hc_of_et_cost_le_dt[of ?T ?T\<^sub>2\<^sub>x ?P] eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2\<^sub>x] by auto
+  also have "... = 2 * cost_of_st T"
+    using assms mst_eq_cost[OF mst, of T] by auto
+  finally show ?thesis .
+qed
 
 lemma st_of_hc:
   assumes "is_hc H" "E' = set (edges_of_path H)" "e \<in> E'"
@@ -247,34 +196,45 @@ lemma st_of_hc:
   sorry
 
 lemma mst_mtsp_approx:
-  assumes "is_mst c T" "is_mtsp c OPT"
-  shows "(\<Sum>e\<in>T. c e) \<le> cost_of_path c OPT"
+  assumes "is_mst T" "is_mtsp OPT"
+  shows "cost_of_st T \<le> cost_of_path OPT"
 proof (cases "OPT = []")
   case True
   then have "E = {}"
     using assms[unfolded is_mtsp_def is_tsp_def] hc_nil_iff by auto
   then have "T = {}"
     using assms[unfolded is_mst_def is_st_def] by auto
-  then show ?thesis 
-    using \<open>OPT = []\<close> by auto
+  then have "cost_of_st T = 0"
+    unfolding cost_of_st_def by auto
+  then show ?thesis
+    using cost_of_path_pos by auto
 next
-  let ?E\<^sub>O\<^sub>P\<^sub>T="set (edges_of_path OPT)"
+  let ?E'="set (edges_of_path OPT)"
   case False
-  then obtain e where "e \<in> ?E\<^sub>O\<^sub>P\<^sub>T"
-    sorry
-  then have "is_st (?E\<^sub>O\<^sub>P\<^sub>T - {e})"
-    using assms[unfolded is_mtsp_def is_tsp_def] st_of_hc[of OPT] by auto
-  then have "(\<Sum>e\<in>T. c e) \<le> (\<Sum>e\<in>(?E\<^sub>O\<^sub>P\<^sub>T - {e}). c e)"
+  then have "?E' \<noteq> {}"
+    using assms[unfolded is_mtsp_def is_tsp_def] hc_edges_nil[of OPT] by auto
+  then obtain e where "e \<in> ?E'"
+    by fastforce
+  then have "is_st (?E' - {e})"
+    using assms[unfolded is_mtsp_def is_tsp_def] st_of_hc[of OPT ?E' e] by auto
+  then have "cost_of_st T \<le> cost_of_st (?E' - {e})"
     using assms[unfolded is_mst_def] by auto
-  also have "... \<le> cost_of_path c OPT"
-    using cost_of_path_sum[of c OPT] by (auto simp: sum_diff1_nat)
+  also have "... = (\<Sum>e\<in>(?E' - {e}). c e)"
+    unfolding cost_of_st_def by auto
+  also have "... \<le> (\<Sum>e\<in>(?E' - {e}). c e) + c e"
+    using costs_ge_0 by (auto simp: add.commute add_increasing)
+  also have "... = (\<Sum>e\<in>?E'. c e)"
+    using sum.union_disjoint[of "?E' - {e}" "{e}" c] insert_Diff[OF \<open>e \<in> ?E'\<close>] by auto
+  also have "... \<le> cost_of_path OPT"
+    using assms[unfolded is_mtsp_def is_tsp_def] 
+          cost_of_path_distinct_sum[OF hc_distinct_edges[of OPT]] by auto
   finally show ?thesis .
 qed
 
-lemma dT_approx:
-  assumes "is_mtsp c OPT"
-  shows "cost_of_path c (double_tree c) \<le> 2 * cost_of_path c OPT"
-  using assms dT_mst_approx[OF kruskal_mst, of c] mst_mtsp_approx[OF kruskal_mst assms] by auto
+lemma dt_approx:
+  assumes "is_mtsp OPT"
+  shows "cost_of_path (double_tree ()) \<le> 2 * cost_of_path OPT"
+  using dt_mst_approx[OF mst] mst_mtsp_approx[OF mst assms] sorry
 
 end
 
