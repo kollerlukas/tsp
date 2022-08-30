@@ -14,6 +14,8 @@ proof (rule equivpI)
   show "transp mgraph_rel" by (auto simp: transp_def mgraph_rel_def)
 qed
 
+(* type isomorphism in Isabelle? show "'a graph = 'a set set" *)
+
 locale mgraph_def =
   fixes E :: "'a set multiset"
 
