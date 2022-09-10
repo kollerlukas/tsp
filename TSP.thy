@@ -1,38 +1,64 @@
 (* Author: Lukas Koller *)
 theory TSP
-  imports Main CompleteGraph WeightedGraph "HOL-Library.Multiset"
+  imports Main CompleteGraph WeightedGraph MST "HOL-Library.Multiset"
 begin
 
 context graph_abs
 begin
 
-text \<open>Hamiltonian cycle\<close>
-definition "is_hc H \<equiv> (H \<noteq> [] \<longrightarrow> (\<exists>v. walk_betw E v H v)) \<and> set H = Vs E \<and> distinct (tl H)"
+lemma path_subset_singleton:
+  assumes "path X [v]" "v \<in> Vs X'"
+  shows "path X' [v]"
+  using assms by (auto intro: path.intros)
 
-lemma hc_nil_iff: "E = {} \<longleftrightarrow> is_hc []"
-proof -
-  have "E = {} \<longleftrightarrow> path E [] \<and> set [] = Vs E"
-    unfolding Vs_def using graph by force
-  also have "... \<longleftrightarrow> is_hc []"
-    unfolding is_hc_def by (simp add: hd_Nil_eq_last)
-  finally show ?thesis .
-qed
+lemma path_subset:
+  assumes "path X P" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
+  shows "path X' P"
+  using assms by (induction P rule: path.induct) (auto intro: path.intros)
 
-lemma hc_nil_iff2: 
-  assumes "is_hc H" 
-  shows "E = {} \<longleftrightarrow> H = []"
-proof 
-  assume "E = {}"
-  then have "{} = Vs E"
-    unfolding Vs_def by auto
-  also have "... = set H"
-    using assms[unfolded is_hc_def] by auto
-  finally show "H = []"
+lemma walk_superset:
+  assumes "walk_betw X u P v" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
+  shows "walk_betw X' u P v"
+  using assms path_subset unfolding walk_betw_def by blast 
+
+lemma path_Vs_subset: 
+  assumes "path X P" 
+  shows "set P \<subseteq> Vs X"
+  using assms mem_path_Vs[of X] by blast
+
+lemma vs_edges_path_eq:
+  assumes "length P \<noteq> 1"
+  shows "set P = Vs (set (edges_of_path P))"
+  using assms
+proof (induction P rule: edges_of_path.induct)
+  case (3 u v P)
+  show ?case 
+  proof 
+    show "set (u#v#P) \<subseteq> Vs (set (edges_of_path (u#v#P)))" (is "set (u#v#P) \<subseteq> Vs ?E'")
+    proof
+      fix w
+      assume "w \<in> set (u#v#P)"
+      then obtain e where "e \<in> set (edges_of_path (u#v#P))" "w \<in> e"
+        using path_vertex_has_edge[of "u#v#P" w] by auto
+      then show "w \<in> Vs ?E'"
+        by (intro vs_member_intro)
+    qed
+  next
+    show "Vs (set (edges_of_path (u#v#P))) \<subseteq> set (u#v#P)"
+      using edges_of_path_Vs[of "u#v#P"] by auto
+  qed
+qed (auto simp: Vs_def)
+
+lemma walk_on_edges_of_path:
+  assumes "walk_betw X u P v" "length P \<noteq> 1"
+  shows "walk_betw (set (edges_of_path P)) u P v"
+proof (rule walk_superset)
+  show "walk_betw X u P v"
+    using assms by auto
+  show "set (edges_of_path P) \<subseteq> set (edges_of_path P)"
     by auto
-next
-  assume "H = []"
-  then show "E = {}"
-    using assms hc_nil_iff by blast
+  show "set P \<subseteq> Vs (set (edges_of_path P)) "
+    using assms vs_edges_path_eq by auto
 qed
 
 lemma card_vertices_ge2:
@@ -47,17 +73,120 @@ proof -
     using \<open>{u,v} \<in> E\<close> by (metis card_2_iff card_mono graph)
 qed
 
-lemma hc_non_nil_length_ge2:
-  assumes "is_hc H" "H \<noteq> []"
-  shows "length H \<ge> 2"
-proof (rule ccontr)
-  assume "\<not> length H \<ge> 2"
+text \<open>Hamiltonian cycle\<close>
+definition "is_hc H \<equiv> (H \<noteq> [] \<longrightarrow> (\<exists>v. walk_betw E v H v)) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+(* TODO: Definition with \<open>is_cycle\<close> *)
 
-  have "card (Vs E) = card (set H)"
-    using assms[unfolded is_hc_def] by auto
-  also have "... < 2"
-    using \<open>\<not> length H \<ge> 2\<close> card_length[of H] by linarith
-  finally show "False"
+lemma is_hc_def2: "is_hc H \<longleftrightarrow> (H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+proof
+  assume "is_hc H"
+  moreover then have "H \<noteq> [] \<longrightarrow> is_cycle E H"
+    unfolding is_hc_def using cycle_length[OF graph] is_cycleI simple_pathI2 sorry
+  ultimately show "(H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+    by (auto simp: is_hc_def)
+next
+  assume "(H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+  then show "is_hc H"
+    unfolding is_hc_def by (auto elim: is_cycleE)
+qed
+
+thm cycle_length[OF graph]
+
+lemma is_hcE:
+  assumes "is_hc H"
+  shows "H \<noteq> [] \<Longrightarrow> (\<exists>v. walk_betw E v H v)" "Vs E = set (tl H)" "distinct (tl H)"
+  using assms[unfolded is_hc_def] by auto
+
+lemma is_hc_nilE:
+  assumes "is_hc []"
+  shows "Vs E = {}"
+  using assms[unfolded is_hc_def] by auto
+
+lemma is_hc_nonnilE:
+  assumes "is_hc H" "H \<noteq> []"
+  obtains v where "walk_betw E v H v" "set (tl H) = Vs E" "distinct (tl H)"
+  using assms[unfolded is_hc_def] by auto
+
+lemma last_in_set_tl: "2 \<le> length xs \<Longrightarrow> last xs \<in> set (tl xs)"
+  by (induction xs) auto
+
+lemma walk_betw_vv_set_tl_eq: 
+  assumes "H \<noteq> []" "walk_betw E v H v" "set H = Vs E" 
+  shows "set (tl H) = Vs E"
+proof -
+  have "E \<noteq> {}"
+    using assms by (auto simp: Vs_def)
+  then have "2 \<le> length H"
+    using assms card_vertices_ge2 card_length[of H] by auto
+  then have "hd H \<in> set (tl H)"
+    using assms[unfolded walk_betw_def] last_in_set_tl[of H] by auto
+  then have "set (tl H) = set H"
+    using hd_Cons_tl[OF \<open>H \<noteq> []\<close>] insert_absorb[of "hd H" "set (tl H)"] set_simps by metis
+  also have "... = Vs E"
+    using assms by (auto elim: is_hc_nonnilE) 
+  finally show ?thesis .
+qed
+
+lemma is_hcI_non_nil: 
+  "H \<noteq> [] \<Longrightarrow> walk_betw E v H v \<Longrightarrow> set H = Vs E \<Longrightarrow> distinct (tl H) \<Longrightarrow> is_hc H"
+  unfolding is_hc_def using walk_betw_vv_set_tl_eq by auto
+
+lemma is_hcI_nil: 
+  "Vs E = {} \<Longrightarrow> is_hc []"
+  unfolding is_hc_def by auto
+
+lemma hc_nil_iff: "E = {} \<longleftrightarrow> is_hc []"
+proof -
+  have "E = {} \<longleftrightarrow> path E [] \<and> set [] = Vs E"
+    unfolding Vs_def using graph by force
+  also have "... \<longleftrightarrow> is_hc []"
+    by (auto intro: is_hcI_nil simp: is_hc_nilE)
+  finally show ?thesis .
+qed
+
+lemma hc_vs_set:
+  assumes "is_hc H"
+  shows "set H = Vs E"
+proof (cases "H = []")
+  case True
+  then show ?thesis 
+    using assms by (auto simp: is_hc_nilE)
+next
+  case False
+  then have "hd H \<in> set (tl H)"
+    using assms[unfolded is_hc_def walk_betw_def] by (metis hd_in_set mem_path_Vs)
+  then have "set H = set (tl H)"
+    using hd_Cons_tl[OF \<open>H \<noteq> []\<close>] insert_absorb[of "hd H" "set (tl H)"] set_simps by metis
+  also have "... = Vs E"
+    using assms \<open>H \<noteq> []\<close> by (auto elim: is_hc_nonnilE[of H])
+  finally show ?thesis .
+qed
+
+lemma hc_nil_iff2: 
+  assumes "is_hc H" 
+  shows "E = {} \<longleftrightarrow> H = []"
+proof 
+  assume "E = {}"
+  then have "{} = Vs E"
+    unfolding Vs_def by auto
+  also have "... = set H"
+    using assms hc_vs_set by auto
+  finally show "H = []"
+    by auto
+next
+  assume "H = []"
+  then show "E = {}"
+    using assms hc_nil_iff by blast
+qed
+
+lemma hc_non_nil_length_gr2:
+  assumes "is_hc H" "H \<noteq> []"
+  shows "length H > 2"
+proof (rule ccontr)
+  assume "\<not> length H > 2"
+  then have "card (Vs E) < 2"
+    using assms card_length[of "tl H"] by (auto simp: is_hcE)
+  then show "False"
     using assms hc_nil_iff2[of H] card_vertices_ge2 by auto
 qed
 
@@ -69,77 +198,64 @@ lemma edges_of_path_nil:
 lemma hc_edges_nil: 
   assumes "is_hc H" "edges_of_path H = []" 
   shows "H = []"
-  using assms edges_of_path_nil hc_non_nil_length_ge2 by force
+  using assms edges_of_path_nil hc_non_nil_length_gr2 by force
 
-lemma path_drop:
-  assumes "path E P"
-  shows "path E (drop i P)"
-  using assms path_suff[of E "take i P" "drop i P"] append_take_drop_id[of i P] by auto
+lemma hc_length:
+  assumes "is_hc H" "H \<noteq> []"
+  shows "length H = card (Vs E) + 1"
+proof -
+  have "length H = 1 + length (tl H)"
+    using assms hd_Cons_tl[of H] by auto
+  also have "... = card (Vs E) + 1"
+    using assms distinct_card[of "tl H"] by (auto elim: is_hc_nonnilE)
+  finally show ?thesis .
+qed
 
-lemma path_take:
-  assumes "path E P"
-  shows "path E (take i P)"
-  using assms path_pref[of E "take i P" "drop i P"] append_take_drop_id[of i P] by auto
+lemma hc_edges_length:
+  assumes "is_hc H"
+  shows "length (edges_of_path H) = card (Vs E)"
+  using assms
+proof (induction H)
+  case Nil
+  then show ?case 
+    using hc_nil_iff2[of "[]"] by (simp add: Vs_def)
+next
+  case (Cons v H)
+  then show ?case 
+    using hc_length[of "v#H"] edges_of_path_length[of "v#H"] by (simp add: Vs_def)
+qed
+
+lemma walk_edges_subset: "walk_betw E u P v \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
+  using walk_between_nonempty_path[of E u P v] path_edges_subset by auto
+
+lemma hc_edges_subset: 
+  assumes "is_hc H"
+  shows "set (edges_of_path H) \<subseteq> E"
+proof (cases "H = []")
+  case False
+  then obtain v where "walk_betw E v H v"
+    using assms by (auto elim: is_hc_nonnilE)
+  then show ?thesis
+    using walk_edges_subset by auto
+qed auto
 
 lemma hc_walk_betw1:
   assumes "is_hc H" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length H"
   shows "walk_betw E (H ! i\<^sub>u) (drop i\<^sub>u (take (i\<^sub>v+1) H)) (H ! i\<^sub>v)" (is "walk_betw E ?u ?P ?v")
 proof (rule nonempty_path_walk_between)
   show "path E ?P"
-    using assms[unfolded is_hc_def walk_betw_def] path_drop[OF path_take, of H i\<^sub>u "i\<^sub>v+1"] by auto
-
+    using assms path_drop[OF path_take, of E H i\<^sub>u "i\<^sub>v+1"] 
+    by (cases H) (auto elim: is_hc_nonnilE simp: walk_between_nonempty_path)
   have "length ?P = i\<^sub>v-i\<^sub>u+1"
     using assms length_take[of i\<^sub>v H] length_drop[of i\<^sub>u "take (i\<^sub>v+1) H"] by auto 
   then show "?P \<noteq> []"
     using assms length_0_conv[of ?P] by auto
-
   show "hd ?P = ?u"
     using assms hd_drop_conv_nth[of i\<^sub>u "take (i\<^sub>v+1) H"] nth_take[of i\<^sub>u "i\<^sub>v+1" H] by auto
-
   show "last ?P = ?v"
     using assms last_drop[of i\<^sub>u "take (i\<^sub>v+1) H"] last_conv_nth[of "take (i\<^sub>v+1) H"] 
       nth_take[of i\<^sub>v "i\<^sub>v+1" H] by force
 qed
-
-lemma hc_walk_betw2: (* TODO *)
-  assumes "is_hc H" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length H"
-  shows "walk_betw E (H ! i\<^sub>u) (rev (tl (take i\<^sub>u H)) @ rev (drop i\<^sub>v H)) (H ! i\<^sub>v)" (is "walk_betw E ?u (?P1 @ ?P2) ?v")
-proof (rule nonempty_path_walk_between)
-  let ?P ="?P1 @ ?P2"
-
-  have "hd ?P2 = last H"
-    sorry
-  
-  have "last ?P1 = hd (tl H)" "hd ?P2 = hd H"
-    sorry
-
-  have "?P1 \<noteq> [] \<Longrightarrow> ?P2 \<noteq> [] \<Longrightarrow> {last ?P1,hd ?P2} \<in> E"
-    using assms[unfolded is_hc_def walk_betw_def] sorry
-
-  have "path E ?P1" "path E ?P2"
-    using assms[unfolded is_hc_def walk_betw_def] 
-      rev_path_is_path[OF tl_path_is_path[OF path_take], of H i\<^sub>u]
-      rev_path_is_path[OF path_drop, of H i\<^sub>v] by auto
-  then show "path E ?P"
-    using path_append[of E ?P1 ?P2]
-    sorry
-
-  show "?P \<noteq> []"
-    sorry
-
-  show "hd ?P = ?u"
-    sorry
-
-  show "last ?P = ?v"
-    sorry
-qed
-
-lemma hc_edge_distinct_paths:
-  assumes "is_hc H" "u \<in> Vs E" "v \<in> Vs E"
-  obtains P\<^sub>1 P\<^sub>2 where "walk_betw E u P\<^sub>1 v" "walk_betw E u P\<^sub>2 v" 
-    "set (edges_of_path P\<^sub>1) \<inter> set (edges_of_path P\<^sub>2) = {}"
-  using hc_walk_betw1 hc_walk_betw2
-  sorry
 
 end
 
@@ -189,6 +305,11 @@ qed auto
 text \<open>Traveling-Salesman Problem\<close>
 definition "is_tsp P \<equiv> is_hc P \<and> (\<forall>P'. is_hc P' \<longrightarrow> cost_of_path P \<le> cost_of_path P')"
 
+lemma is_tspE:
+  assumes "is_tsp P"
+  shows "is_hc P" "\<And>P'. is_hc P' \<Longrightarrow> cost_of_path P \<le> cost_of_path P'"
+  using assms[unfolded is_tsp_def] by auto
+
 end
 
 locale metric_graph_abs = 
@@ -214,10 +335,15 @@ lemma cost_of_path_app_tri_ineq:
   assumes "set P\<^sub>1 \<union> set P\<^sub>2 \<union> {w} \<subseteq> Vs E" 
   shows "cost_of_path (P\<^sub>1 @ P\<^sub>2) \<le> cost_of_path (P\<^sub>1 @ w#P\<^sub>2)"
   using assms cost_of_path_le cost_of_path_cons_tri_ineq 
-  by (induction P\<^sub>1 rule: a.induct) (auto simp: add_left_mono)
+  by (induction P\<^sub>1 rule: list012.induct) (auto simp: add_left_mono)
 
 text \<open>metric Traveling-Salesman\<close>
 definition "is_mtsp P \<equiv> is_tsp P"
+
+lemma is_mtspE:
+  assumes "is_mtsp P"
+  shows "is_tsp P"
+  using assms[unfolded is_mtsp_def] by auto
 
 end
 

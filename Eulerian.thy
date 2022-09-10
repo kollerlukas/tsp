@@ -7,8 +7,10 @@ fun even' :: "enat \<Rightarrow> bool" where
   "even' \<infinity> = False"
 | "even' i = even i"
 
+thm even_iff_mod_2_eq_zero add_self_mod_2
+
 lemma even_2x: "i \<noteq> \<infinity> \<Longrightarrow> even' (2 * i)"
-  using dvdI sorry
+  sorry
 
 text \<open>A graph is eulerian iff all vertices have even degree.\<close>
 definition "is_eulerian E \<equiv> (\<forall>v \<in> mVs E. even' (mdegree E v))"
@@ -16,6 +18,7 @@ definition "is_eulerian E \<equiv> (\<forall>v \<in> mVs E. even' (mdegree E v))
 lemma is_eulerianI: "(\<And>v. v \<in> mVs E \<Longrightarrow> even' (mdegree E v)) \<Longrightarrow> is_eulerian E"
   unfolding is_eulerian_def by auto
 
+text \<open>Definition of a Eulerian tour on multigraphs.\<close>
 definition "is_et E T \<equiv> mpath E T \<and> hd T = last T \<and> E = mset (edges_of_path T)"
 
 lemma edges_of_path_nil:
@@ -29,7 +32,15 @@ lemma et_nil: "is_et E [] \<Longrightarrow> E = {#}"
 lemma double_graph_degree:
   assumes "E\<^sub>2\<^sub>x = mset_set E + mset_set E" "v \<in> mVs E\<^sub>2\<^sub>x"
   shows "mdegree E\<^sub>2\<^sub>x v = 2 * degree E v"
-  sorry
+proof -
+  have "mdegree E\<^sub>2\<^sub>x v = mdegree (mset_set E) v + mdegree (mset_set E) v"
+    using assms mdegree_add by auto
+  also have "... = degree E v + degree E v"
+    using mdegree_eq_degree[of E v] by auto
+  also have "... = 2 * degree E v"
+    by (auto simp: mult_2)
+  finally show ?thesis .
+qed
 
 lemma non_inf_degr: "finite E \<Longrightarrow> degree E v \<noteq> \<infinity>"
   unfolding degree_def2 by auto
@@ -40,7 +51,7 @@ lemma et_edges:
   using assms[unfolded is_et_def] by auto
 
 lemma et_vertices: 
-  assumes "is_et E T" "length T \<noteq> 1" (* there is not Eulerian Tour with length 1 *)
+  assumes "is_et E T" "length T \<noteq> 1" (* there is no Eulerian Tour with length 1 *)
   shows "set T = mVs E"
   using assms
 proof (induction T rule: edges_of_path.induct)
@@ -55,11 +66,11 @@ next
     proof
       fix w
       assume "w \<in> set (u#v#T)"
-      then have "2 \<le> length (u#v#T)"
+      hence "2 \<le> length (u#v#T)"
         by auto
       then obtain e where "e \<in> set (edges_of_path (u#v#T))" "w \<in> e"
         using path_vertex_has_edge[of "u#v#T" w, OF _ \<open>w \<in> set (u#v#T)\<close>] by auto
-      then have "e \<in># E"
+      hence "e \<in># E"
         using "3.prems"[unfolded is_et_def] by auto
       then show "w \<in> mVs E"
         unfolding mVs_def Vs_def using \<open>w \<in> e\<close> by auto
@@ -71,7 +82,7 @@ next
       assume "w \<in> mVs E"
       then obtain e where "e \<in># E" "w \<in> e"
         unfolding mVs_def using vs_member by metis
-      then have "e \<in> set (edges_of_path (u#v#T))"
+      hence "e \<in> set (edges_of_path (u#v#T))"
         using "3.prems"[unfolded is_et_def] by auto
       then show "w \<in> set (u#v#T)"
         using v_in_edge_in_path_gen[of e "u#v#T", OF _ \<open>w \<in> e\<close>] by auto
