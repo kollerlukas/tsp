@@ -11,15 +11,10 @@ lemma path_subset_singleton:
   shows "path X' [v]"
   using assms by (auto intro: path.intros)
 
-lemma path_subset:
-  assumes "path X P" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
-  shows "path X' P"
-  using assms by (induction P rule: path.induct) (auto intro: path.intros)
-
 lemma walk_superset:
   assumes "walk_betw X u P v" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
   shows "walk_betw X' u P v"
-  using assms path_subset unfolding walk_betw_def by blast 
+  using assms subset_path unfolding walk_betw_def by blast
 
 lemma path_Vs_subset: 
   assumes "path X P" 
@@ -90,8 +85,6 @@ next
     unfolding is_hc_def by (auto elim: is_cycleE)
 qed
 
-thm cycle_length[OF graph]
-
 lemma is_hcE:
   assumes "is_hc H"
   shows "H \<noteq> [] \<Longrightarrow> (\<exists>v. walk_betw E v H v)" "Vs E = set (tl H)" "distinct (tl H)"
@@ -106,6 +99,9 @@ lemma is_hc_nonnilE:
   assumes "is_hc H" "H \<noteq> []"
   obtains v where "walk_betw E v H v" "set (tl H) = Vs E" "distinct (tl H)"
   using assms[unfolded is_hc_def] by auto
+
+lemma is_hc_path: "is_hc H \<Longrightarrow> path E H"
+  by (cases H) (auto intro: path.intros elim: is_hc_nonnilE)
 
 lemma last_in_set_tl: "2 \<le> length xs \<Longrightarrow> last xs \<in> set (tl xs)"
   by (induction xs) auto
@@ -242,19 +238,13 @@ qed auto
 lemma hc_walk_betw1:
   assumes "is_hc H" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length H"
   shows "walk_betw E (H ! i\<^sub>u) (drop i\<^sub>u (take (i\<^sub>v+1) H)) (H ! i\<^sub>v)" (is "walk_betw E ?u ?P ?v")
-proof (rule nonempty_path_walk_between)
-  show "path E ?P"
-    using assms path_drop[OF path_take, of E H i\<^sub>u "i\<^sub>v+1"] 
-    by (cases H) (auto elim: is_hc_nonnilE simp: walk_between_nonempty_path)
-  have "length ?P = i\<^sub>v-i\<^sub>u+1"
-    using assms length_take[of i\<^sub>v H] length_drop[of i\<^sub>u "take (i\<^sub>v+1) H"] by auto 
-  then show "?P \<noteq> []"
-    using assms length_0_conv[of ?P] by auto
-  show "hd ?P = ?u"
-    using assms hd_drop_conv_nth[of i\<^sub>u "take (i\<^sub>v+1) H"] nth_take[of i\<^sub>u "i\<^sub>v+1" H] by auto
-  show "last ?P = ?v"
-    using assms last_drop[of i\<^sub>u "take (i\<^sub>v+1) H"] last_conv_nth[of "take (i\<^sub>v+1) H"] 
-      nth_take[of i\<^sub>v "i\<^sub>v+1" H] by force
+proof -
+  have "path E H"
+    using assms by (auto elim: is_hc_nonnilE walk_between_nonempty_path)
+  moreover hence "set (edges_of_path H) \<subseteq> E"
+    using path_edges_subset by auto
+  ultimately show ?thesis
+    using assms walk_subset[OF _ walk_of_path[of E H i\<^sub>u i\<^sub>v]] by auto
 qed
 
 end

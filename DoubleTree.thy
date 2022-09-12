@@ -302,101 +302,151 @@ proof (rule is_connectedI)
   qed
 qed
 
+lemma degree_edges_of_path_leq_2:
+  assumes "distinct P" "length P > 1" "v \<in> set P"
+  shows "degree (set (edges_of_path P)) v \<le> 2"
+proof -
+  have "v = hd P \<or> v = last P \<or> (v \<noteq> hd P \<and> v \<noteq> last P)"
+    by auto
+  thus ?thesis
+  proof (elim disjE)
+    assume "v = hd P"
+    hence "degree (set (edges_of_path P)) v = 1"
+      using assms degree_edges_of_path_hd[of P] by auto
+    also have "... \<le> 2"
+      using one_le_numeral by blast
+    finally show ?thesis by (auto simp: tl_edges_of_path)
+  next
+    assume "v = last P"
+    hence "degree (set (edges_of_path P)) v = 1"
+      using assms degree_edges_of_path_last[of P] by auto
+    also have "... \<le> 2"
+      using one_le_numeral by blast
+    finally show ?thesis by (auto simp: tl_edges_of_path)
+  next
+    assume "v \<noteq> hd P \<and> v \<noteq> last P"
+    then show ?thesis
+      using assms degree_edges_of_path_ge_2[of P v] by auto
+  qed
+qed
+
 lemma hc_degree_leq_2:
   assumes "is_hc H" "x \<in> set H"
   shows "degree (set (tl (edges_of_path H))) x \<le> 2"
   using assms i0_lb
 proof (induction H rule: list0123.induct) (* induction just for case distinction *)
   case (4 u v w P)
-  let ?H="u#v#w#P"
-  have prems: "distinct (tl ?H)" "2 \<le> length (tl ?H)" 
-    using 4 by (elim is_hc_nonnilE) auto
-  have "x = hd (tl ?H) \<or> x = last (tl ?H) \<or> (x \<noteq> hd (tl ?H) \<and> x \<noteq> last (tl ?H))"
-    by auto
-  then show ?case
-  proof (elim disjE)
-    assume "x = hd (tl ?H)"
-    hence "degree (set (edges_of_path (tl ?H))) x = 1"
-      using prems degree_edges_of_path_hd[of "tl ?H"] by auto
-    also have "... \<le> 2"
-      using one_le_numeral by blast
-    finally show ?case by (auto simp: tl_edges_of_path)
-  next
-    assume "x = last (tl ?H)"
-    hence "degree (set (edges_of_path (tl ?H))) x = 1"
-      using prems degree_edges_of_path_last[of "tl ?H"] by auto
-    also have "... \<le> 2"
-      using one_le_numeral by blast
-    finally show ?case by (auto simp: tl_edges_of_path)
-  next
-    have "x \<in> set (tl ?H)"
-      using "4.prems" is_hc_nonnilE[of ?H] hc_vs_set[of ?H] by blast
-    assume "x \<noteq> hd (tl ?H) \<and> x \<noteq> last (tl ?H)"
-    then show ?case
-      using "4.prems" prems \<open>x \<in> set (tl ?H)\<close> degree_edges_of_path_ge_2[of "tl ?H" x] by auto
-  qed
+  moreover hence "distinct (v#w#P)" "length (v#w#P) > 1"
+    by (elim is_hc_nonnilE) auto
+  moreover have "x \<in> set (v#w#P)"
+    using calculation hc_vs_set[of "u#v#w#P"] is_hc_nonnilE[of "u#v#w#P"] by auto
+  ultimately show ?case
+    using degree_edges_of_path_leq_2[of "v#w#P"] by (auto simp: tl_edges_of_path)
 qed auto
 
 lemma walk_split:
-  assumes "walk_betw E u P v" "u \<in> E\<^sub>1" "v \<in> E\<^sub>2" "set P \<subseteq> E\<^sub>1 \<union> E\<^sub>2"
+  assumes "walk_betw X u P v" "u \<noteq> v" "u \<in> E\<^sub>1" "v \<in> E\<^sub>2" "set P \<subseteq> E\<^sub>1 \<union> E\<^sub>2"
   obtains x y where "{x,y} \<in> set (edges_of_path P)" "x \<in> E\<^sub>1" "y \<in> E\<^sub>2"
-  sorry
+  using assms by (induction rule: induct_walk_betw) auto
 
 lemma connected_bridge:
-  assumes "is_connected E\<^sub>2" "Vs E\<^sub>1 \<noteq> {}" "E\<^sub>1 \<subset> E\<^sub>2"
-  obtains u v where "{u,v} \<in> E\<^sub>2" "u \<in> Vs E\<^sub>1" "v \<in> Vs E\<^sub>2 - Vs E\<^sub>1"
+  assumes "is_connected X" "X' \<subseteq> X" "Vs X' \<noteq> {}" "Vs X' \<subset> Vs X"
+  obtains u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
 proof -
-  have "Vs E\<^sub>1 \<subset> Vs E\<^sub>1"
-    sorry
-  moreover hence "Vs E\<^sub>2 - Vs E\<^sub>1 \<noteq> {}"
+  obtain u v where "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
     using assms by auto
-  moreover then obtain u v where "u \<in> Vs E\<^sub>1" "v \<in> Vs E\<^sub>2 - Vs E\<^sub>1"
-    using assms by auto
-  moreover hence "u \<in> Vs E\<^sub>2" "v \<in> Vs E\<^sub>2" "u \<noteq> v"
-    using calculation by auto
-  moreover then obtain P where "walk_betw E\<^sub>2 u P v"
-    using assms by (auto elim: is_connectedE2)
-  ultimately show ?thesis
-    using walk_split by auto
+  moreover hence "u \<in> Vs X" "v \<in> Vs X" "u \<noteq> v"
+    using assms calculation by auto
+  moreover then obtain P where "walk_betw X u P v"
+    using assms is_connectedE2[of X u v] by auto
+  moreover have "set P \<subseteq> Vs X' \<union> (Vs X - Vs X')"
+    using calculation walk_in_Vs[of X u P v] by auto
+  moreover have "set (edges_of_path P) \<subseteq> X"
+    using calculation path_edges_subset[OF walk_between_nonempty_path(1), of X u P v] by auto
+  ultimately obtain u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
+    by (elim walk_split[of X u P v "Vs X'" "Vs X - Vs X'"]) fastforce+
+  thus ?thesis
+    using that by auto
 qed
 
-lemma
-  assumes "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")
+lemma non_acyclic_path_not_distinct:
+  assumes "path E P" "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")
   shows "\<not> distinct P"
-proof -
+proof
+  assume "distinct P"
+
+  have "?E\<^sub>P \<subseteq> E"
+    using assms path_edges_subset by auto
+  hence "graph_invar ?E\<^sub>P"
+    using graph finite_subset[OF Vs_subset[of ?E\<^sub>P E]] by auto
+
   obtain C where "is_cycle ?E\<^sub>P C"
     using assms by (auto elim: not_acyclicE)
   let ?E\<^sub>C="set (edges_of_path C)"
-  have "is_connected ?E\<^sub>P"
-    sorry
-  then obtain u v where "{u,v} \<in> ?E\<^sub>P" "u \<in> Vs ?E\<^sub>C" "v \<in> Vs ?E\<^sub>P - Vs ?E\<^sub>C"
-    using connected_bridge sorry
-
-  obtain C' where "is_cycle ?E\<^sub>P C'" "walk_betw ?E\<^sub>P u C' u"
-    using cycle_rotate sorry
-
-  have "degree ?E\<^sub>P u \<ge> 3"
+  have "Vs ?E\<^sub>C \<noteq> {}"
+    using cycle_length[OF \<open>graph_invar ?E\<^sub>P\<close> \<open>is_cycle ?E\<^sub>P C\<close>] v_in_edge_in_path_gen
     sorry
 
-  show ?thesis
-    sorry
+  thm edges_of_path_Vs
+
+  have "?E\<^sub>C \<subseteq> ?E\<^sub>P"
+    using \<open>is_cycle ?E\<^sub>P C\<close> path_edges_subset[of ?E\<^sub>P C, OF walk_between_nonempty_path(1)] 
+    by (auto elim: is_cycleE)
+  hence "Vs ?E\<^sub>C = Vs ?E\<^sub>P \<or> Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
+    using Vs_subset[of ?E\<^sub>C ?E\<^sub>P] by auto
+  thus "False"
+  proof (elim disjE)
+    assume "Vs ?E\<^sub>C = Vs ?E\<^sub>P"
+    then have "hd P = last P" "length P > 2"
+      sorry
+    thus ?thesis
+      using distinct_hd_last_neq[OF \<open>distinct P\<close>] by auto
+  next
+    assume "Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
+    moreover have "is_connected ?E\<^sub>P"
+      using assms path_connected by auto
+    moreover have "Vs ?E\<^sub>C \<noteq> {}"
+      using v_in_edge_in_path_gen
+      sorry
+    ultimately obtain u v where "{u,v} \<in> ?E\<^sub>P" "u \<in> Vs ?E\<^sub>C" "v \<in> Vs ?E\<^sub>P - Vs ?E\<^sub>C"
+      using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close> connected_bridge[of ?E\<^sub>P ?E\<^sub>C] by auto
+    moreover hence "u \<in> set C" "v \<notin> Vs ?E\<^sub>C" "u \<in> set P"
+      using vs_member_elim[of _ ?E\<^sub>C] v_in_edge_in_path_gen[of _ C] 
+            v_in_edge_in_path_gen[of "{u,v}" P u] by auto
+    moreover hence "{u,v} \<notin> ?E\<^sub>C"
+      using v_in_edge_in_path[of v u C] insert_commute by auto
+    moreover then obtain e\<^sub>1 e\<^sub>2 where "e\<^sub>1 \<noteq> e\<^sub>2" "e\<^sub>1 \<in> ?E\<^sub>C" "u \<in> e\<^sub>1" "e\<^sub>2 \<in> ?E\<^sub>C" "u \<in> e\<^sub>2"
+      using \<open>is_cycle ?E\<^sub>P C\<close> calculation cycle_edges_for_v[OF \<open>graph_invar ?E\<^sub>P\<close>, of C u] by auto
+    moreover hence "e\<^sub>1 \<in> ?E\<^sub>P" "e\<^sub>1 \<noteq> {u,v}" "e\<^sub>2 \<in> ?E\<^sub>P" "e\<^sub>2 \<noteq> {u,v}"
+      using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close> calculation by auto
+    moreover hence "{{u,v},e\<^sub>1,e\<^sub>2} \<subseteq> ?E\<^sub>P" "card' {{u,v},e\<^sub>1,e\<^sub>2} = 3"
+      using calculation by auto
+    moreover hence "length P > 1"
+      by (induction P rule: list012.induct) auto
+    moreover have "degree {{u,v},e\<^sub>1,e\<^sub>2} u = 3"
+      unfolding degree_def using calculation by auto
+    ultimately have "degree ?E\<^sub>P u \<ge> 3"
+      using subset_edges_less_degree[of "{{u,v},e\<^sub>1,e\<^sub>2}" ?E\<^sub>P u] by auto
+    hence "enat 3 \<le> enat 2"
+      using degree_edges_of_path_leq_2[OF \<open>distinct P\<close> \<open>length P > 1\<close> \<open>u \<in> set P\<close>]
+      by (metis dual_order.trans numeral_eq_enat)
+    thus ?thesis
+      using enat_ord_simps by auto (* TODO: clean up enat stuff *)
+  qed
 qed
-
 
 lemma tl_hc_acyclic:
   assumes "is_hc H"
-  shows "is_acyclic (set (tl (edges_of_path H)))" (is "is_acyclic ?E'")
+  shows "is_acyclic (set (tl (edges_of_path H)))" (is "is_acyclic ?E\<^sub>H")
 proof (rule ccontr)
-  assume "\<not> is_acyclic ?E'"
-  moreover hence "graph_invar ?E'"
-    sorry
-  ultimately obtain u v P P' where "simple_path P" "walk_betw ?E' u P v" 
-    "simple_path P'" "walk_betw ?E' u P' v" "P \<noteq> P'"
-    by (elim not_acyclicE2) auto
-
-  
-  show "False"
-    sorry
+  assume "\<not> is_acyclic ?E\<^sub>H"
+  moreover have "path E (tl H)"
+    using assms is_hc_path tl_path_is_path by auto
+  moreover have "distinct (tl H)"
+    using assms by (auto elim: is_hc_nonnilE)
+  ultimately show "False"
+    using non_acyclic_path_not_distinct[of "tl H", OF \<open>path E (tl H)\<close>] 
+    by (auto simp: tl_edges_of_path[of H])
 qed
 
 lemma edges_of_path_tl: "edges_of_path (tl P) = tl (edges_of_path P)"
@@ -404,7 +454,7 @@ lemma edges_of_path_tl: "edges_of_path (tl P) = tl (edges_of_path P)"
 
 lemma tl_hc_Vs:
   assumes "is_hc H"
-  shows "Vs E = Vs (set (tl (edges_of_path H)))" (is "Vs E = Vs ?E'")
+  shows "Vs E = Vs (set (tl (edges_of_path H)))" (is "Vs E = Vs ?E\<^sub>H'")
 proof -
   have "Vs E = set (tl H)"
     using assms by (auto simp: is_hcE)
@@ -413,7 +463,7 @@ proof -
     using vs_member[of _ "{}"] apply fastforce
     using hc_non_nil_length_gr2[of H, OF assms] vs_edges_path_eq[of "tl H"] apply auto
     done
-  also have "... = Vs ?E'"
+  also have "... = Vs ?E\<^sub>H'"
     by (auto simp: edges_of_path_tl[of H])
   finally show ?thesis .
 qed
@@ -425,7 +475,7 @@ lemma tl_hc_tree:
 
 lemma tl_hc_st:
   assumes "is_hc H"
-  shows "is_st (set (tl (edges_of_path H)))" (is "is_st ?E'")
+  shows "is_st (set (tl (edges_of_path H)))" (is "is_st ?E\<^sub>H'")
   using assms hc_edges_subset set_tl_subset[of "edges_of_path H"] tl_hc_Vs tl_hc_tree 
   by (intro is_stI) auto
 

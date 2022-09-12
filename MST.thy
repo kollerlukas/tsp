@@ -1,6 +1,7 @@
 (* Author: Lukas Koller *)
 theory MST                                           
-  imports Main "Prim_Dijkstra_Simple.Prim_Impl" CompleteGraph WeightedGraph 
+  imports Main "Prim_Dijkstra_Simple.Undirected_Graph" 
+    (* "Prim_Dijkstra_Simple.Prim_Impl" *) CompleteGraph WeightedGraph 
     (* default graph defintions from Berge? *)
 begin
 
@@ -11,13 +12,128 @@ lemma is_connectedI:
   "(\<And>u v. u\<in>Vs E \<Longrightarrow> v\<in>Vs E \<Longrightarrow> u \<in> connected_component E v) \<Longrightarrow> is_connected E"
   unfolding is_connected_def by auto
 
-lemma is_connectedE: "is_connected E \<Longrightarrow> u\<in>Vs E \<Longrightarrow> v\<in>Vs E \<Longrightarrow> u \<in> connected_component E v"
+lemma is_connectedE: "is_connected E \<Longrightarrow> u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<in> connected_component E v"
   unfolding is_connected_def by auto
 
 lemma is_connectedE2: 
-  assumes "is_connected E" "u\<in>Vs E" "v\<in>Vs E" "u \<noteq> v"
+  assumes "is_connected E" "u \<in> Vs E" "v \<in> Vs E" "u \<noteq> v"
   obtains P where "walk_betw E u P v"
   using assms[unfolded is_connected_def connected_component_def] by fastforce
+
+lemma path_drop:
+  assumes "path X P"
+  shows "path X (drop i P)"
+  using assms path_suff[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
+
+lemma path_take:
+  assumes "path X P"
+  shows "path X (take i P)"
+  using assms path_pref[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
+
+lemma subset_path:
+  assumes "path X P" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
+  shows "path X' P"
+  using assms by (induction P rule: path.induct) (auto intro: path.intros)
+
+lemma path_on_edges:
+  assumes "path X P" "length P > 1"
+  shows "path (set (edges_of_path P)) P" (is "path ?E\<^sub>P P")
+  using assms path_edges_of_path_refl by force
+
+(* own proof, until I found \<open>path_edges_of_path_refl\<close> *)
+(* proof (rule subset_path)
+  show "path X P" "?E\<^sub>P \<subseteq> ?E\<^sub>P"
+    using assms by auto
+  show "set P \<subseteq> Vs ?E\<^sub>P"
+  proof 
+    fix v
+    assume "v \<in> set P"
+    then obtain e where "e \<in> ?E\<^sub>P" "v \<in> e"
+      using assms path_vertex_has_edge[of P v] by auto
+    thus "v \<in> Vs ?E\<^sub>P"
+      by (auto intro: vs_member_intro)
+  qed
+qed *)
+
+lemma subset_walk:
+  assumes "walk_betw X u P v" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
+  shows "walk_betw X' u P v"
+proof -
+  have "path X P" "P \<noteq> []" "hd P = u" "last P = v"
+    using assms by (auto elim: walk_between_nonempty_path)
+  moreover hence "path X' P" 
+    using assms subset_path[of X P X'] by auto
+  ultimately show ?thesis
+    by (intro nonempty_path_walk_between)
+qed
+
+lemma edges_of_path_prepend_subset: "set (edges_of_path P) \<subseteq> set (edges_of_path (P @ P'))"
+  by (induction P rule: edges_of_path.induct) auto
+
+lemma edges_of_path_take_subset: "set (edges_of_path (take i P)) \<subseteq> set (edges_of_path P)"
+  using edges_of_path_prepend_subset[of "take i P" "drop i P"] append_take_drop_id by auto
+
+lemma edges_of_path_drop_subset: "set (edges_of_path (drop i P)) \<subseteq> set (edges_of_path P)"
+  using edges_of_path_append_subset[of "drop i P" "take i P"] append_take_drop_id by auto
+
+lemma walk_of_path:
+  assumes "path E P" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length P"
+  shows "walk_betw (set (edges_of_path P)) (P ! i\<^sub>u) (drop i\<^sub>u (take (i\<^sub>v+1) P)) (P ! i\<^sub>v)" 
+    (is "walk_betw ?E\<^sub>P ?u ?P' ?v")
+proof -
+  have "path E ?P'"
+    using assms path_drop[OF path_take, of E P i\<^sub>u "i\<^sub>v+1"] by auto
+  moreover hence "path (set (edges_of_path ?P')) ?P'"
+    using assms path_on_edges[of E ?P'] by auto
+  moreover have "set (edges_of_path ?P') \<subseteq> ?E\<^sub>P"
+    using edges_of_path_drop_subset[of i\<^sub>u "take (i\<^sub>v+1) P"] 
+          edges_of_path_take_subset[of "i\<^sub>v+1" P] by auto
+  moreover hence "path ?E\<^sub>P ?P'"
+    using calculation path_subset[of "set (edges_of_path ?P')" ?P' ?E\<^sub>P] by auto
+  moreover have "?P' \<noteq> []"
+    using assms length_take length_drop by auto
+  moreover have "hd ?P' = ?u"
+      using assms hd_drop_conv_nth[of i\<^sub>u "take (i\<^sub>v+1) P"] nth_take[of i\<^sub>u "i\<^sub>v+1" P] by auto
+  moreover have "last ?P' = ?v"
+    using assms last_drop[of i\<^sub>u "take (i\<^sub>v+1) P"] last_conv_nth[of "take (i\<^sub>v+1) P"] by force
+  ultimately show ?thesis
+    by (intro nonempty_path_walk_between) auto
+qed
+
+lemma walk_of_pathE:
+  assumes "path E P" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length P"
+  obtains P' where "walk_betw (set (edges_of_path P)) (P ! i\<^sub>u) P' (P ! i\<^sub>v)"
+  using assms walk_of_path by blast
+
+lemma path_connected:
+  assumes "path E P"
+  shows "is_connected (set (edges_of_path P))" (is "is_connected ?E\<^sub>P")
+proof (rule is_connectedI)
+  fix u v
+  assume "u \<in> Vs ?E\<^sub>P" "v \<in> Vs ?E\<^sub>P"
+  then have "u \<in> set P" "v \<in> set P"
+    using edges_of_path_Vs[of P] by auto
+  then obtain i\<^sub>u i\<^sub>v where u_v_simps: "u = P ! i\<^sub>u" "i\<^sub>u < length P" "v = P ! i\<^sub>v" "i\<^sub>v < length P"
+    using set_conv_nth[of P] by auto
+  have "i\<^sub>u = i\<^sub>v \<or> i\<^sub>u < i\<^sub>v \<or> i\<^sub>v < i\<^sub>u"
+    by auto
+  thus "u \<in> connected_component ?E\<^sub>P v"
+  proof (elim disjE)
+    assume "i\<^sub>u = i\<^sub>v"
+    thus ?thesis
+      using u_v_simps in_own_connected_component[of "P ! i\<^sub>u" ?E\<^sub>P] by auto
+  next
+    assume "i\<^sub>u < i\<^sub>v"
+    then obtain P' where "walk_betw ?E\<^sub>P u P' v"
+      using assms u_v_simps by (auto elim: walk_of_pathE[of E P i\<^sub>u i\<^sub>v])
+    thus ?thesis
+      unfolding connected_component_def using walk_symmetric[of ?E\<^sub>P u P' v] by auto
+  next
+    assume "i\<^sub>v < i\<^sub>u"
+    thus ?thesis
+      unfolding connected_component_def using assms u_v_simps walk_of_path[of E P i\<^sub>v i\<^sub>u] by auto
+  qed
+qed
 
 text \<open>Acyclic Graph\<close>
 definition "simple_path P \<equiv> distinct (edges_of_path P)"
@@ -95,6 +211,18 @@ qed
 lemma cycle_non_nil: "is_cycle E C \<Longrightarrow> C \<noteq> []"
   by (auto elim: is_cycleE walk_nonempty)
 
+lemma cycle_hd_last_eq: 
+  assumes "is_cycle E C" 
+  shows "hd C = last C"
+proof -
+  obtain v where "walk_betw E v C v"
+    using assms by (auto elim: is_cycleE)
+  hence "hd C = v" "last C = v"
+    by (auto elim: walk_between_nonempty_path)
+  thus ?thesis
+    by (auto elim: walk_between_nonempty_path)
+qed
+
 text \<open>Not using \<open>graph_abs\<close> because for the Double-Tree algorithm we need to talk about cycles 
 in subgraphs.\<close>
 lemma cycle_length:
@@ -114,6 +242,16 @@ proof (induction C rule: list0123.induct)
     using assms by auto
 qed (auto elim: is_cycleE)
 
+lemma cycle_edges_subset: 
+  assumes "is_cycle E C" 
+  shows "set (edges_of_path C) \<subseteq> E"
+proof -
+  obtain v where "walk_betw E v C v"
+    using assms by (auto elim: is_cycleE)
+  thus ?thesis
+    by (rule path_edges_subset[OF walk_between_nonempty_path(1)])
+qed
+
 lemma cycle_edge_length:
   assumes "graph_invar E" "is_cycle E C"
   shows "length (edges_of_path C) > 1"
@@ -123,16 +261,6 @@ lemma cycle_edges_hd_last_neq:
   assumes "graph_invar E" "is_cycle E C"
   shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)" (is "?e\<^sub>1 \<noteq> ?e\<^sub>2")
   using assms cycle_edge_length distinct_hd_last_neq[OF simple_pathE] by (auto elim: is_cycleE)
-
-lemma path_drop:
-  assumes "path X P"
-  shows "path X (drop i P)"
-  using assms path_suff[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
-
-lemma path_take:
-  assumes "path X P"
-  shows "path X (take i P)"
-  using assms path_pref[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
 
 lemma path_swap:
   assumes "P\<^sub>1 \<noteq> []" "P\<^sub>2 \<noteq> []" "path E (P\<^sub>1 @ P\<^sub>2)" "hd P\<^sub>1 = last P\<^sub>2"
@@ -242,7 +370,8 @@ qed
 
 lemma cycle_rotate:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C"
-  obtains C' where "is_cycle E C'" "walk_betw E v C' v"
+  obtains C' where "is_cycle E C'" "walk_betw E v C' v" 
+    "set (edges_of_path C) = set (edges_of_path C')"
 proof (cases "v = hd C")
   case True
   hence "is_cycle E C" "walk_betw E v C v"
@@ -263,35 +392,55 @@ next
     by auto
   moreover have "is_cycle E ?C'"
     using calculation by (auto intro: is_cycleI)
+  moreover have "set (edges_of_path C) = set (edges_of_path ?C')"
+    using edges_of_path_rotate by fastforce
   ultimately show ?thesis using that by auto
+qed
+
+lemma cycle_edges_for_v:
+  assumes "graph_invar E" "is_cycle E C" "v \<in> set C"
+  obtains e\<^sub>1 e\<^sub>2 where "e\<^sub>1 \<noteq> e\<^sub>2" "e\<^sub>1 \<in> set (edges_of_path C)" "v \<in> e\<^sub>1" 
+    "e\<^sub>2 \<in> set (edges_of_path C)" "v \<in> e\<^sub>2"
+proof -
+  obtain C' where "is_cycle E C'" "walk_betw E v C' v" 
+    "set (edges_of_path C) = set (edges_of_path C')"
+    using cycle_rotate[OF assms] by auto
+  moreover hence "v = hd C'" "v = last C'" "length C' > 2" "edges_of_path C' \<noteq> []"
+    using assms cycle_length walk_between_nonempty_path[of E v C' v] cycle_edge_length[of E C'] 
+    by auto
+  moreover obtain e\<^sub>1 e\<^sub>2 where "e\<^sub>1 = hd (edges_of_path C')" "e\<^sub>2 = last (edges_of_path C')"
+    by auto
+  moreover hence "e\<^sub>1 \<in> set (edges_of_path C')" "e\<^sub>2 \<in> set (edges_of_path C')"
+    using calculation hd_in_set[of C'] last_in_set[of C'] by auto
+  moreover hence "e\<^sub>1 \<in> set (edges_of_path C)" "e\<^sub>2 \<in> set (edges_of_path C)"
+    using calculation by auto
+  moreover have "v \<in> e\<^sub>1" "v \<in> e\<^sub>2"
+    using calculation last_v_in_last_e[of C'] hd_v_in_hd_e[of C'] by auto
+  moreover have "e\<^sub>1 \<noteq> e\<^sub>2"
+    using assms calculation cycle_edges_hd_last_neq by auto
+  ultimately show ?thesis
+    using that by auto
 qed
 
 lemma cycle_degree:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C"
   shows "degree E v \<ge> 2"
 proof -
-  obtain C' where "is_cycle E C'" "walk_betw E v C' v"
-    using assms cycle_rotate[of E] by auto
-  moreover hence "path E C'" "v = hd C'" "v = last C'"
-    by (auto simp: walk_between_nonempty_path)
-  moreover have 
-    "v \<in> hd (edges_of_path C')" (is "v \<in> ?e\<^sub>1") "v \<in> last (edges_of_path C')" (is "v \<in> ?e\<^sub>2") 
-    using assms calculation cycle_length[of E C'] last_v_in_last_e[of C'] hd_v_in_hd_e[of C']
-    by auto
-  moreover have "edges_of_path C' \<noteq> []"
-    using assms calculation cycle_edge_length[of E C'] by auto
-  moreover hence "?e\<^sub>1 \<in> set (edges_of_path C')" "?e\<^sub>2 \<in> set (edges_of_path C')" 
-    using hd_in_set[of "edges_of_path C'"] last_in_set[of "edges_of_path C'"] by auto
-  moreover have "{?e\<^sub>1,?e\<^sub>2} \<subseteq> {e \<in> E. v \<in> e}"
-    using calculation path_edges_subset[of E C', OF \<open>path E C'\<close>] by auto
-  moreover have "finite {?e\<^sub>1,?e\<^sub>2}" "card {?e\<^sub>1,?e\<^sub>2} = 2"
-    using assms \<open>is_cycle E C'\<close> cycle_edges_hd_last_neq by auto
-  moreover hence "card' {?e\<^sub>1,?e\<^sub>2} = 2"
-    using card'_finite_nat[of "{?e\<^sub>1,?e\<^sub>2}"] by auto
-  ultimately have "card' {e \<in> E. v \<in> e} \<ge> 2"
-    using card'_mono[of "{?e\<^sub>1,?e\<^sub>2}" "{e \<in> E. v \<in> e}"] by presburger
-  thus ?thesis
-    unfolding degree_def2 by (auto simp: degree_def)
+  obtain e\<^sub>1 e\<^sub>2 where "e\<^sub>1 \<noteq> e\<^sub>2" "e\<^sub>1 \<in> set (edges_of_path C)" "v \<in> e\<^sub>1" 
+    "e\<^sub>2 \<in> set (edges_of_path C)" "v \<in> e\<^sub>2"
+    using cycle_edges_for_v[OF assms] by auto
+  moreover have "set (edges_of_path C) \<subseteq> E"
+    using assms cycle_edges_subset by auto
+  moreover have "{e \<in> {e\<^sub>1,e\<^sub>2}. v \<in> e} = {e\<^sub>1,e\<^sub>2}" "{e\<^sub>1,e\<^sub>2} \<subseteq> {e \<in> E. v \<in> e}"
+    using calculation by auto
+  moreover have "finite {e\<^sub>1,e\<^sub>2}" "card {e\<^sub>1,e\<^sub>2} = 2"
+    using assms calculation by auto
+  moreover hence "card' {e\<^sub>1,e\<^sub>2} = 2"
+    using card'_finite_nat[of "{e\<^sub>1,e\<^sub>2}"] by auto
+  moreover hence "degree {e\<^sub>1,e\<^sub>2} v = 2"
+    unfolding degree_def2 using calculation by auto
+  ultimately show ?thesis
+    using subset_edges_less_degree[of "{e\<^sub>1,e\<^sub>2}" E v] by auto
 qed
 
 definition "is_acyclic E \<equiv> \<nexists>C. is_cycle E C"
