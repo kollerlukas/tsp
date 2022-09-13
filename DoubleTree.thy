@@ -369,6 +369,16 @@ proof -
     using that by auto
 qed
 
+lemma degree_edges_of_path_hd_leq_1:
+  assumes "distinct P"
+  shows "degree (set (edges_of_path P)) (hd P) \<le> 1" (is "degree ?E\<^sub>P (hd P) \<le> 1")
+  using assms
+proof (induction P rule: list012.induct) (* induction just for case distinction *)
+  case (3 u v P)
+  then show ?case 
+    using degree_edges_of_path_hd by fastforce
+qed auto (* induction just for case distinction *)
+
 lemma non_acyclic_path_not_distinct:
   assumes "path E P" "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")
   shows "\<not> distinct P"
@@ -377,61 +387,83 @@ proof
 
   have "?E\<^sub>P \<subseteq> E"
     using assms path_edges_subset by auto
-  hence "graph_invar ?E\<^sub>P"
+  hence graph_E\<^sub>P: "graph_invar ?E\<^sub>P"
     using graph finite_subset[OF Vs_subset[of ?E\<^sub>P E]] by auto
-
-  obtain C where "is_cycle ?E\<^sub>P C"
+  moreover obtain C where cycle_C: "is_cycle ?E\<^sub>P C"
     using assms by (auto elim: not_acyclicE)
-  let ?E\<^sub>C="set (edges_of_path C)"
-  have "Vs ?E\<^sub>C \<noteq> {}"
-    using cycle_length[OF \<open>graph_invar ?E\<^sub>P\<close> \<open>is_cycle ?E\<^sub>P C\<close>] v_in_edge_in_path_gen
-    sorry
+  ultimately have "length C > 2"
+    using cycle_length by auto
+  hence "Vs (set (edges_of_path C)) \<noteq> {}" (is "Vs ?E\<^sub>C \<noteq> {}")
+    using vs_edges_path_eq[of C] by (auto simp: set_empty[of C])
+  then obtain e where "e \<in> ?E\<^sub>C"
+    by (auto elim: vs_member_elim)
+  moreover then obtain u v where "e = {u,v}"
+    by (auto elim: v_in_edge_in_path_inj)
+  ultimately have "{u,v} \<in> ?E\<^sub>C"
+    by auto
+  moreover have "?E\<^sub>C \<subseteq> ?E\<^sub>P"
+    by (metis cycle_C cycle_edges_subset)
+  moreover have "{u,v} \<in> ?E\<^sub>P"
+    using calculation by auto
+  moreover have "u \<in> set P" "v \<in> set P"
+    using calculation v_in_edge_in_path_gen[of \<open>{u,v}\<close>] by auto
+  moreover have "u \<noteq> v"
+    using calculation graph_E\<^sub>P by auto
+  moreover have "2 \<le> card (set P)"
+    using calculation card_mono[of "set P" "{u,v}"] by auto
+  ultimately have "length P > 1"
+    using card_length[of P] by auto
 
-  thm edges_of_path_Vs
-
-  have "?E\<^sub>C \<subseteq> ?E\<^sub>P"
-    using \<open>is_cycle ?E\<^sub>P C\<close> path_edges_subset[of ?E\<^sub>P C, OF walk_between_nonempty_path(1)] 
-    by (auto elim: is_cycleE)
-  hence "Vs ?E\<^sub>C = Vs ?E\<^sub>P \<or> Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
-    using Vs_subset[of ?E\<^sub>C ?E\<^sub>P] by auto
+  have "Vs ?E\<^sub>C = Vs ?E\<^sub>P \<or> Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
+    using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close>Vs_subset[of ?E\<^sub>C ?E\<^sub>P] by auto
   thus "False"
   proof (elim disjE)
     assume "Vs ?E\<^sub>C = Vs ?E\<^sub>P"
-    then have "hd P = last P" "length P > 2"
-      sorry
+    moreover have "hd P \<in> hd (edges_of_path P)"
+      using \<open>length P > 1\<close> hd_v_in_hd_e[of P] by auto
+    moreover have "hd (edges_of_path P) \<in> ?E\<^sub>P"
+      using \<open>length P > 1\<close> edges_of_path_length[of P] by (intro hd_in_set) auto
+    moreover have "hd P \<in> Vs ?E\<^sub>P"
+      using calculation by (auto intro: vs_member_intro)
+    ultimately have "hd P \<in> Vs ?E\<^sub>C"
+      by auto
+    hence "hd P \<in> set C"
+      using v_in_edge_in_path_gen by (fastforce elim: vs_member_elim)
+
+    have "degree ?E\<^sub>P (hd P) \<le> 1"
+      using \<open>distinct P\<close> degree_edges_of_path_hd_leq_1[of P] by auto
+    moreover have "degree ?E\<^sub>P (hd P) \<ge> 2"
+      using \<open>hd P \<in> set C\<close> cycle_degree[OF graph_E\<^sub>P cycle_C] by auto
+    ultimately have  "enat 2 \<le> enat 1"
+      by (metis numeral_eq_enat one_enat_def dual_order.trans)
     thus ?thesis
-      using distinct_hd_last_neq[OF \<open>distinct P\<close>] by auto
+      using enat_ord_simps by auto
   next
     assume "Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
     moreover have "is_connected ?E\<^sub>P"
       using assms path_connected by auto
-    moreover have "Vs ?E\<^sub>C \<noteq> {}"
-      using v_in_edge_in_path_gen
-      sorry
     ultimately obtain u v where "{u,v} \<in> ?E\<^sub>P" "u \<in> Vs ?E\<^sub>C" "v \<in> Vs ?E\<^sub>P - Vs ?E\<^sub>C"
-      using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close> connected_bridge[of ?E\<^sub>P ?E\<^sub>C] by auto
+      using \<open>Vs ?E\<^sub>C \<noteq> {}\<close> \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close> connected_bridge[of ?E\<^sub>P ?E\<^sub>C] by auto
     moreover hence "u \<in> set C" "v \<notin> Vs ?E\<^sub>C" "u \<in> set P"
       using vs_member_elim[of _ ?E\<^sub>C] v_in_edge_in_path_gen[of _ C] 
             v_in_edge_in_path_gen[of "{u,v}" P u] by auto
     moreover hence "{u,v} \<notin> ?E\<^sub>C"
       using v_in_edge_in_path[of v u C] insert_commute by auto
     moreover then obtain e\<^sub>1 e\<^sub>2 where "e\<^sub>1 \<noteq> e\<^sub>2" "e\<^sub>1 \<in> ?E\<^sub>C" "u \<in> e\<^sub>1" "e\<^sub>2 \<in> ?E\<^sub>C" "u \<in> e\<^sub>2"
-      using \<open>is_cycle ?E\<^sub>P C\<close> calculation cycle_edges_for_v[OF \<open>graph_invar ?E\<^sub>P\<close>, of C u] by auto
+      using cycle_C calculation cycle_edges_for_v[OF \<open>graph_invar ?E\<^sub>P\<close>, of C u] by auto
     moreover hence "e\<^sub>1 \<in> ?E\<^sub>P" "e\<^sub>1 \<noteq> {u,v}" "e\<^sub>2 \<in> ?E\<^sub>P" "e\<^sub>2 \<noteq> {u,v}"
       using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close> calculation by auto
     moreover hence "{{u,v},e\<^sub>1,e\<^sub>2} \<subseteq> ?E\<^sub>P" "card' {{u,v},e\<^sub>1,e\<^sub>2} = 3"
       using calculation by auto
-    moreover hence "length P > 1"
-      by (induction P rule: list012.induct) auto
     moreover have "degree {{u,v},e\<^sub>1,e\<^sub>2} u = 3"
       unfolding degree_def using calculation by auto
     ultimately have "degree ?E\<^sub>P u \<ge> 3"
       using subset_edges_less_degree[of "{{u,v},e\<^sub>1,e\<^sub>2}" ?E\<^sub>P u] by auto
     hence "enat 3 \<le> enat 2"
       using degree_edges_of_path_leq_2[OF \<open>distinct P\<close> \<open>length P > 1\<close> \<open>u \<in> set P\<close>]
-      by (metis dual_order.trans numeral_eq_enat)
+      by (metis numeral_eq_enat dual_order.trans) (* TODO: clean up \<open>enat\<close> stuff *)
     thus ?thesis
-      using enat_ord_simps by auto (* TODO: clean up enat stuff *)
+      using enat_ord_simps by auto
   qed
 qed
 

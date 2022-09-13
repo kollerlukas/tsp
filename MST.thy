@@ -1011,8 +1011,7 @@ next
 
   show "is_mst T"
     sorry
-qed
-
+qed (* TODO: fix locale stuff *)
 
 end
 
@@ -1023,7 +1022,7 @@ begin
 
 end
 
-(* TODO: use Prim_Dijkstra_Simple *)
+(* TODO: use Prim_Dijkstra_Simple implementation *)
 
 fun prim_impl' where
   "prim_impl' c E = undefined" (* translate params to prim_impl, or prim_list_impl_int *)
