@@ -1,89 +1,14 @@
 (* Author: Lukas Koller *)
 theory TSP
-  imports Main CompleteGraph WeightedGraph MST "HOL-Library.Multiset"
+  imports Main Misc CompleteGraph WeightedGraph MST "HOL-Library.Multiset"
 begin
 
 context graph_abs
 begin
 
-lemma path_subset_singleton:
-  assumes "path X [v]" "v \<in> Vs X'"
-  shows "path X' [v]"
-  using assms by (auto intro: path.intros)
-
-lemma walk_superset:
-  assumes "walk_betw X u P v" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
-  shows "walk_betw X' u P v"
-  using assms subset_path unfolding walk_betw_def by blast
-
-lemma path_Vs_subset: 
-  assumes "path X P" 
-  shows "set P \<subseteq> Vs X"
-  using assms mem_path_Vs[of X] by blast
-
-lemma vs_edges_path_eq:
-  assumes "length P \<noteq> 1"
-  shows "set P = Vs (set (edges_of_path P))"
-  using assms
-proof (induction P rule: edges_of_path.induct)
-  case (3 u v P)
-  show ?case 
-  proof 
-    show "set (u#v#P) \<subseteq> Vs (set (edges_of_path (u#v#P)))" (is "set (u#v#P) \<subseteq> Vs ?E'")
-    proof
-      fix w
-      assume "w \<in> set (u#v#P)"
-      then obtain e where "e \<in> set (edges_of_path (u#v#P))" "w \<in> e"
-        using path_vertex_has_edge[of "u#v#P" w] by auto
-      then show "w \<in> Vs ?E'"
-        by (intro vs_member_intro)
-    qed
-  next
-    show "Vs (set (edges_of_path (u#v#P))) \<subseteq> set (u#v#P)"
-      using edges_of_path_Vs[of "u#v#P"] by auto
-  qed
-qed (auto simp: Vs_def)
-
-lemma walk_on_edges_of_path:
-  assumes "walk_betw X u P v" "length P \<noteq> 1"
-  shows "walk_betw (set (edges_of_path P)) u P v"
-proof (rule walk_superset)
-  show "walk_betw X u P v"
-    using assms by auto
-  show "set (edges_of_path P) \<subseteq> set (edges_of_path P)"
-    by auto
-  show "set P \<subseteq> Vs (set (edges_of_path P)) "
-    using assms vs_edges_path_eq by auto
-qed
-
-lemma card_vertices_ge2:
-  assumes "E \<noteq> {}" 
-  shows "card (Vs E) \<ge> 2"
-proof -
-  obtain u v where "{u,v} \<in> E" "u \<noteq> v"
-    using assms graph by force
-  then have "{u,v} \<subseteq> Vs E"
-    unfolding Vs_def by blast
-  then show ?thesis
-    using \<open>{u,v} \<in> E\<close> by (metis card_2_iff card_mono graph)
-qed
-
 text \<open>Hamiltonian cycle\<close>
 definition "is_hc H \<equiv> (H \<noteq> [] \<longrightarrow> (\<exists>v. walk_betw E v H v)) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
 (* TODO: Definition with \<open>is_cycle\<close> *)
-
-lemma is_hc_def2: "is_hc H \<longleftrightarrow> (H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
-proof
-  assume "is_hc H"
-  moreover then have "H \<noteq> [] \<longrightarrow> is_cycle E H"
-    unfolding is_hc_def using cycle_length[OF graph] is_cycleI simple_pathI2 sorry
-  ultimately show "(H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
-    by (auto simp: is_hc_def)
-next
-  assume "(H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
-  then show "is_hc H"
-    unfolding is_hc_def by (auto elim: is_cycleE)
-qed
 
 lemma is_hcE:
   assumes "is_hc H"
@@ -102,9 +27,6 @@ lemma is_hc_nonnilE:
 
 lemma is_hc_path: "is_hc H \<Longrightarrow> path E H"
   by (cases H) (auto intro: path.intros elim: is_hc_nonnilE)
-
-lemma last_in_set_tl: "2 \<le> length xs \<Longrightarrow> last xs \<in> set (tl xs)"
-  by (induction xs) auto
 
 lemma walk_betw_vv_set_tl_eq: 
   assumes "H \<noteq> []" "walk_betw E v H v" "set H = Vs E" 
@@ -186,11 +108,6 @@ proof (rule ccontr)
     using assms hc_nil_iff2[of H] card_vertices_ge2 by auto
 qed
 
-lemma edges_of_path_nil: 
-  assumes "edges_of_path H = []" 
-  shows "H = [] \<or> (\<exists>v. H = [v])"
-  using assms by (induction H rule: edges_of_path.induct) auto
-
 lemma hc_edges_nil: 
   assumes "is_hc H" "edges_of_path H = []" 
   shows "H = []"
@@ -221,9 +138,6 @@ next
     using hc_length[of "v#H"] edges_of_path_length[of "v#H"] by (simp add: Vs_def)
 qed
 
-lemma walk_edges_subset: "walk_betw E u P v \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
-  using walk_between_nonempty_path[of E u P v] path_edges_subset by auto
-
 lemma hc_edges_subset: 
   assumes "is_hc H"
   shows "set (edges_of_path H) \<subseteq> E"
@@ -232,7 +146,7 @@ proof (cases "H = []")
   then obtain v where "walk_betw E v H v"
     using assms by (auto elim: is_hc_nonnilE)
   then show ?thesis
-    using walk_edges_subset by auto
+    using walk_edges_subset by fastforce
 qed auto
 
 lemma hc_walk_betw1:
@@ -247,50 +161,13 @@ proof -
     using assms walk_subset[OF _ walk_of_path[of E H i\<^sub>u i\<^sub>v]] by auto
 qed
 
+lemma is_hc_def2: "is_hc H \<longleftrightarrow> (H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+  oops (* Does not hold! counterexample: graph with 2 vertices *)
+
 end
 
 context pos_w_graph_abs
 begin
-
-fun cost_of_path where
-  "cost_of_path [] = 0"
-| "cost_of_path [v] = 0"
-| "cost_of_path (u#v#P) = c {u,v} + cost_of_path (v#P)"
-
-lemma cost_of_path_pos: "cost_of_path P \<ge> 0"
-  by (induction P rule: cost_of_path.induct) (auto simp: costs_ge_0)
-
-lemma cost_of_path_le: "cost_of_path P \<le> cost_of_path (v#P)"
-  by (induction P arbitrary: v rule: cost_of_path.induct) (auto simp: costs_ge_0 add_increasing)
-
-lemma cost_of_path_sum: "cost_of_path P = (\<Sum>e \<in># mset (edges_of_path P). c e)"
-  by (induction P rule: cost_of_path.induct) auto
-
-lemma cost_of_path_distinct_sum: 
-  assumes "distinct (edges_of_path P)" 
-  shows "(\<Sum>e \<in> set (edges_of_path P). c e) = cost_of_path P"
-  using assms cost_of_path_sum[of P] mset_set_set[of "edges_of_path P"] 
-  by (simp add: sum_unfold_sum_mset)
-
-lemma "(\<Sum>e \<in> set A. c e) \<le> (\<Sum>e \<in># mset A. c e)"
-  sorry
-
-lemma cost_of_path_leq_sum: "(\<Sum>e \<in> set (edges_of_path P). c e) \<le> cost_of_path P"
-  using cost_of_path_sum[of P] sum_unfold_sum_mset
-  sorry (* TODO: ask Mohammad *)
-
-lemma cost_of_path_app: "cost_of_path (P @ [u,v]) = c {u,v} + cost_of_path (P @ [u])"
-  by (induction P rule: cost_of_path.induct) (auto simp: add.assoc add.commute add.left_commute)
-
-lemma cost_of_path_rev: "cost_of_path P = cost_of_path (rev P)"
-proof (induction P rule: cost_of_path.induct)
-  case (3 u v P)
-  then have "cost_of_path (u#v#P) = c {u,v} + cost_of_path (rev P @ [v])"
-    using "3.IH" by auto
-  also have "... = cost_of_path (rev (u#v#P))"
-    using cost_of_path_app[of "rev P" v u] by (auto simp: insert_commute)
-  finally show ?case .
-qed auto
 
 text \<open>Traveling-Salesman Problem\<close>
 definition "is_tsp P \<equiv> is_hc P \<and> (\<forall>P'. is_hc P' \<longrightarrow> cost_of_path P \<le> cost_of_path P')"

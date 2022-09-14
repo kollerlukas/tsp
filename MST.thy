@@ -1,11 +1,10 @@
 (* Author: Lukas Koller *)
 theory MST                                           
-  imports Main "Prim_Dijkstra_Simple.Undirected_Graph" 
-    (* "Prim_Dijkstra_Simple.Prim_Impl" *) CompleteGraph WeightedGraph 
-    (* default graph defintions from Berge? *)
+  imports Main Misc CompleteGraph WeightedGraph 
 begin
 
-text \<open>Connected Graph\<close>
+section \<open>Connected Graphs\<close>
+
 definition "is_connected E \<equiv> \<forall>u\<in>Vs E.\<forall>v\<in>Vs E. u \<in> connected_component E v"
 
 lemma is_connectedI: 
@@ -19,91 +18,6 @@ lemma is_connectedE2:
   assumes "is_connected E" "u \<in> Vs E" "v \<in> Vs E" "u \<noteq> v"
   obtains P where "walk_betw E u P v"
   using assms[unfolded is_connected_def connected_component_def] by fastforce
-
-lemma path_drop:
-  assumes "path X P"
-  shows "path X (drop i P)"
-  using assms path_suff[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
-
-lemma path_take:
-  assumes "path X P"
-  shows "path X (take i P)"
-  using assms path_pref[of X "take i P" "drop i P"] append_take_drop_id[of i P] by auto
-
-lemma subset_path:
-  assumes "path X P" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
-  shows "path X' P"
-  using assms by (induction P rule: path.induct) (auto intro: path.intros)
-
-lemma path_on_edges:
-  assumes "path X P" "length P > 1"
-  shows "path (set (edges_of_path P)) P" (is "path ?E\<^sub>P P")
-  using assms path_edges_of_path_refl by force
-
-(* own proof, until I found \<open>path_edges_of_path_refl\<close> *)
-(* proof (rule subset_path)
-  show "path X P" "?E\<^sub>P \<subseteq> ?E\<^sub>P"
-    using assms by auto
-  show "set P \<subseteq> Vs ?E\<^sub>P"
-  proof 
-    fix v
-    assume "v \<in> set P"
-    then obtain e where "e \<in> ?E\<^sub>P" "v \<in> e"
-      using assms path_vertex_has_edge[of P v] by auto
-    thus "v \<in> Vs ?E\<^sub>P"
-      by (auto intro: vs_member_intro)
-  qed
-qed *)
-
-lemma subset_walk:
-  assumes "walk_betw X u P v" "set (edges_of_path P) \<subseteq> X'" "set P \<subseteq> Vs X'"
-  shows "walk_betw X' u P v"
-proof -
-  have "path X P" "P \<noteq> []" "hd P = u" "last P = v"
-    using assms by (auto elim: walk_between_nonempty_path)
-  moreover hence "path X' P" 
-    using assms subset_path[of X P X'] by auto
-  ultimately show ?thesis
-    by (intro nonempty_path_walk_between)
-qed
-
-lemma edges_of_path_prepend_subset: "set (edges_of_path P) \<subseteq> set (edges_of_path (P @ P'))"
-  by (induction P rule: edges_of_path.induct) auto
-
-lemma edges_of_path_take_subset: "set (edges_of_path (take i P)) \<subseteq> set (edges_of_path P)"
-  using edges_of_path_prepend_subset[of "take i P" "drop i P"] append_take_drop_id by auto
-
-lemma edges_of_path_drop_subset: "set (edges_of_path (drop i P)) \<subseteq> set (edges_of_path P)"
-  using edges_of_path_append_subset[of "drop i P" "take i P"] append_take_drop_id by auto
-
-lemma walk_of_path:
-  assumes "path E P" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length P"
-  shows "walk_betw (set (edges_of_path P)) (P ! i\<^sub>u) (drop i\<^sub>u (take (i\<^sub>v+1) P)) (P ! i\<^sub>v)" 
-    (is "walk_betw ?E\<^sub>P ?u ?P' ?v")
-proof -
-  have "path E ?P'"
-    using assms path_drop[OF path_take, of E P i\<^sub>u "i\<^sub>v+1"] by auto
-  moreover hence "path (set (edges_of_path ?P')) ?P'"
-    using assms path_on_edges[of E ?P'] by auto
-  moreover have "set (edges_of_path ?P') \<subseteq> ?E\<^sub>P"
-    using edges_of_path_drop_subset[of i\<^sub>u "take (i\<^sub>v+1) P"] 
-          edges_of_path_take_subset[of "i\<^sub>v+1" P] by auto
-  moreover hence "path ?E\<^sub>P ?P'"
-    using calculation path_subset[of "set (edges_of_path ?P')" ?P' ?E\<^sub>P] by auto
-  moreover have "?P' \<noteq> []"
-    using assms length_take length_drop by auto
-  moreover have "hd ?P' = ?u"
-      using assms hd_drop_conv_nth[of i\<^sub>u "take (i\<^sub>v+1) P"] nth_take[of i\<^sub>u "i\<^sub>v+1" P] by auto
-  moreover have "last ?P' = ?v"
-    using assms last_drop[of i\<^sub>u "take (i\<^sub>v+1) P"] last_conv_nth[of "take (i\<^sub>v+1) P"] by force
-  ultimately show ?thesis
-    by (intro nonempty_path_walk_between) auto
-qed
-
-lemma walk_of_pathE:
-  assumes "path E P" "i\<^sub>u < i\<^sub>v" "i\<^sub>v < length P"
-  obtains P' where "walk_betw (set (edges_of_path P)) (P ! i\<^sub>u) P' (P ! i\<^sub>v)"
-  using assms walk_of_path by blast
 
 lemma path_connected:
   assumes "path E P"
@@ -135,7 +49,28 @@ proof (rule is_connectedI)
   qed
 qed
 
-text \<open>Acyclic Graph\<close>
+lemma connected_bridge:
+  assumes "is_connected X" "X' \<subseteq> X" "Vs X' \<noteq> {}" "Vs X' \<subset> Vs X"
+  obtains u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
+proof -
+  obtain u v where "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
+    using assms by auto
+  moreover hence "u \<in> Vs X" "v \<in> Vs X" "u \<noteq> v"
+    using assms calculation by auto
+  moreover then obtain P where "walk_betw X u P v"
+    using assms is_connectedE2[of X u v] by auto
+  moreover have "set P \<subseteq> Vs X' \<union> (Vs X - Vs X')"
+    using calculation walk_in_Vs[of X u P v] by auto
+  moreover have "set (edges_of_path P) \<subseteq> X"
+    using calculation path_edges_subset[OF walk_between_nonempty_path(1), of X u P v] by auto
+  ultimately obtain u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
+    by (elim walk_split[of X u P v "Vs X'" "Vs X - Vs X'"]) fastforce+
+  thus ?thesis
+    using that by auto
+qed
+
+section \<open>Simple Paths\<close>
+
 definition "simple_path P \<equiv> distinct (edges_of_path P)"
 
 lemma simple_pathI: "distinct (edges_of_path P) \<Longrightarrow> simple_path P"
@@ -153,16 +88,6 @@ lemma simple_path_rev: "simple_path P \<Longrightarrow> simple_path (rev P)"
 lemma simple_path_cons: "simple_path (v#P) \<Longrightarrow> simple_path P"
   unfolding simple_path_def using distinct_edges_of_paths_cons[of v P] by auto
 
-lemma distinct_hd_last_neq: "distinct xs \<Longrightarrow> length xs > 1 \<Longrightarrow> hd xs \<noteq> last xs"
-  by (induction xs) auto
-
-lemma rev_hd_last_eq: "xs \<noteq> [] \<Longrightarrow> xs = rev xs \<Longrightarrow> hd xs = last xs"
-proof (induction xs rule: list012.induct)
-  case (3 x x' xs)
-  thus ?case 
-    by (metis last_rev)
-qed auto
-
 lemma simple_path_rev_neq:
   assumes "simple_path P" "length P > 2"
   shows "P \<noteq> rev P"
@@ -179,6 +104,22 @@ proof (induction P rule: list0123.induct)
         distinct_hd_last_neq[OF simple_pathE[of "u#v#w#P"]] by auto
   qed
 qed auto
+
+lemma simple_path_rotate:
+  assumes "simple_path (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "simple_path ?P")
+  shows "simple_path (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "simple_path ?P'")
+proof (rule simple_pathI; rule card_distinct) 
+  have "card (set (edges_of_path ?P')) = card (set (edges_of_path ?P))"
+    by (auto simp: edges_of_path_rotate)
+  also have "... = length (edges_of_path ?P)"
+    apply (rule distinct_card)
+    using assms by (auto elim: simple_pathE)
+  also have "... = length (edges_of_path ?P')"
+    by (auto simp: length_edges_of_path_rotate)
+  finally show "card (set (edges_of_path ?P')) = length (edges_of_path ?P')" .
+qed
+
+section \<open>Acyclic Graphs\<close>
 
 text \<open>Definition for a cycle in a graph. A cycle is a vertex-path, thus a cycle needs to contain 
 at least one edge, otherwise the singleton path \<open>[v]\<close> is a cycle. Therefore, no graph would be 
@@ -261,88 +202,6 @@ lemma cycle_edges_hd_last_neq:
   assumes "graph_invar E" "is_cycle E C"
   shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)" (is "?e\<^sub>1 \<noteq> ?e\<^sub>2")
   using assms cycle_edge_length distinct_hd_last_neq[OF simple_pathE] by (auto elim: is_cycleE)
-
-lemma path_swap:
-  assumes "P\<^sub>1 \<noteq> []" "P\<^sub>2 \<noteq> []" "path E (P\<^sub>1 @ P\<^sub>2)" "hd P\<^sub>1 = last P\<^sub>2"
-  shows "path E (P\<^sub>2 @ tl P\<^sub>1)"
-  using assms path_suff[of E P\<^sub>1 P\<^sub>2] path_pref[of E P\<^sub>1 P\<^sub>2] path_concat[of E P\<^sub>2 P\<^sub>1] by auto
-
-lemma path_last_edge:
-  assumes "path E (u#P @ [v])"
-  shows "{last (u#P),v} \<in> E"
-  using assms by (induction P arbitrary: u) auto
-
-lemma path_rotate:
-  assumes "path E (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "path E ?P")
-  shows "path E (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "path E ?P'")
-proof -
-  have "path E (v#P\<^sub>2 @ u#P\<^sub>1)"
-    using assms path_swap[of "u#P\<^sub>1" "v#P\<^sub>2 @ [u]" E] by auto
-  moreover have "path E [v]"
-    using assms mem_path_Vs[of E ?P v] by auto
-  moreover have "{last (v#P\<^sub>2 @ u#P\<^sub>1),v} \<in> E"
-    using assms path_last_edge[of E u P\<^sub>1 v] path_pref[of E "u#P\<^sub>1 @ [v]" "P\<^sub>2 @ [u]"] by auto
-  ultimately show ?thesis
-    using path_append[of E "v#P\<^sub>2 @ u#P\<^sub>1" "[v]"] by auto
-qed
-
-lemma edges_of_path_append:
-  assumes "P\<^sub>1 \<noteq> []"
-  shows "edges_of_path (P\<^sub>1 @ u#P\<^sub>2) = edges_of_path P\<^sub>1 @ [{last P\<^sub>1,u}] @ edges_of_path (u#P\<^sub>2)"
-  using assms by (induction P\<^sub>1 rule: list012.induct) auto
-
-lemma edges_of_path_rotate:
-  "set (edges_of_path (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])) = set (edges_of_path (v#P\<^sub>2 @ u#P\<^sub>1 @ [v]))"
-  (is "set (edges_of_path ?P) = set (edges_of_path ?P')")
-proof -
-  have "set (edges_of_path ?P) 
-    = set (edges_of_path (u#P\<^sub>1)) \<union> {{last (u#P\<^sub>1),v}} \<union> set (edges_of_path (v#P\<^sub>2 @ [u]))"
-    using edges_of_path_append[of "u#P\<^sub>1" v "P\<^sub>2 @ [u]"] by auto
-  also have "... = set (edges_of_path (u#P\<^sub>1)) \<union> {{last (u#P\<^sub>1),v}} 
-    \<union> set (edges_of_path (v#P\<^sub>2)) \<union> {{last (v#P\<^sub>2),u}}"
-    using edges_of_path_append[of "v#P\<^sub>2" u "[]"] by auto  
-  also have 
-    "... = set (edges_of_path (v#P\<^sub>2)) \<union> {{last (v#P\<^sub>2),u}} \<union> set (edges_of_path (u#P\<^sub>1 @ [v]))"
-    using edges_of_path_append[of "u#P\<^sub>1" v "[]"] by auto
-  also have "... = set (edges_of_path ?P')"
-    using edges_of_path_append[of "v#P\<^sub>2" u "P\<^sub>1 @ [v]"] by auto
-  finally show ?thesis .
-qed
-
-lemma length_edges_of_path_rotate:
-  "length (edges_of_path (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])) = length (edges_of_path (v#P\<^sub>2 @ u#P\<^sub>1 @ [v]))"
-  (is "length (edges_of_path ?P) = length (edges_of_path ?P')")
-proof -
-  have "length (edges_of_path ?P) = length ?P -1"
-    using edges_of_path_length[of ?P] by auto
-  also have "... = length (edges_of_path ?P')"
-    using edges_of_path_length[of ?P'] by auto
-  finally show ?thesis .
-qed
-
-lemma simple_path_rotate:
-  assumes "simple_path (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "simple_path ?P")
-  shows "simple_path (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "simple_path ?P'")
-proof (rule simple_pathI; rule card_distinct) 
-  have "card (set (edges_of_path ?P')) = card (set (edges_of_path ?P))"
-    by (auto simp: edges_of_path_rotate)
-  also have "... = length (edges_of_path ?P)"
-    apply (rule distinct_card)
-    using assms by (auto elim: simple_pathE)
-  also have "... = length (edges_of_path ?P')"
-    by (auto simp: length_edges_of_path_rotate)
-  finally show "card (set (edges_of_path ?P')) = length (edges_of_path ?P')" .
-qed
-
-lemma split_hd: 
-  assumes "xs \<noteq> []"
-  obtains xs' where "xs = hd xs#xs'"
-  using assms list.exhaust_sel by blast
-
-lemma split_last:
-  assumes "xs \<noteq> []" 
-  obtains xs' where "xs = xs' @ [last xs]"
-  using assms append_butlast_last_id by metis
 
 lemma cycle_path_split:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C" "v \<noteq> hd C"
@@ -475,7 +334,8 @@ proof -
     using that by auto
 qed
 
-text \<open>Tree\<close>
+section \<open>Trees\<close>
+
 definition "is_tree T \<equiv> is_connected T \<and> is_acyclic T"
 
 lemma is_treeI: "is_connected T \<Longrightarrow> is_acyclic T \<Longrightarrow> is_tree T"
@@ -486,10 +346,11 @@ lemma is_treeE:
   shows "is_connected T" "is_acyclic T"
   using assms[unfolded is_tree_def] by auto
 
+section \<open>Spanning Trees\<close>
+
 context graph_abs
 begin
 
-text \<open>Spanning Tree\<close>
 definition "is_st T \<equiv> T \<subseteq> E \<and> Vs E = Vs T \<and> is_tree T"
 
 lemma is_stI: "T \<subseteq> E \<Longrightarrow> Vs E = Vs T \<Longrightarrow> is_tree T \<Longrightarrow> is_st T"
@@ -510,437 +371,6 @@ proof -
     using assms graph by (auto simp: is_stE)
   ultimately show ?thesis by auto
 qed
-
-text \<open>Convert to graph from \<open>Prim_Dijkstra_Simple\<close>.\<close>
-abbreviation "G \<equiv> Undirected_Graph.graph (Vs E) {(u,v)| u v. {u,v} \<in> E}"
-
-lemma G_finite: "finite (Vs E)" "finite {(u,v)| u v. {u,v} \<in> E}"
-  using graph finite_subset[of "{(u,v)| u v. {u,v} \<in> E}" "Vs E \<times> Vs E"] 
-  by (auto intro: vs_member_intro)
-
-lemma nodes_equiv: "v \<in> Vs E \<longleftrightarrow> v \<in> nodes G"
-proof
-  assume "v \<in> Vs E"
-  thus "v \<in> nodes G"
-    using graph_accs[OF G_finite] by auto
-next
-  let ?E'="{(u,v) |u v. {u,v} \<in> E}"
-  assume "v \<in> nodes G"
-  hence "v \<in> Vs E \<or> v \<in> fst ` ?E' \<or> v \<in> snd ` ?E'"
-    using graph_accs[OF G_finite] by auto
-  thus "v \<in> Vs E"
-  proof (elim disjE)
-    assume "v \<in> fst ` ?E'"
-    then obtain u' v' where "v = fst (u',v')" "{u',v'} \<in> E"
-      by auto
-    thus "v \<in> Vs E"
-      by (intro vs_member_intro[of v _ E]) auto
-  next
-    assume "v \<in> snd ` ?E'"
-    then obtain u' v' where "v = snd (u',v')" "{u',v'} \<in> E"
-      by auto
-    thus "v \<in> Vs E"
-      by (intro vs_member_intro[of v _ E]) auto
-  qed auto
-qed
-
-lemma edges_equiv: "{u,v} \<in> E \<longleftrightarrow> (u,v) \<in> edges G"
-  using graph graph_accs[OF G_finite] by (auto simp: insert_commute)
-
-lemma edges_equiv2: "E = uedge ` edges G"
-proof
-  show "E \<subseteq> uedge ` edges G"
-  proof
-    fix e
-    assume "e \<in> E"
-    moreover then obtain u v where [simp]: "e = {u,v}"
-      using graph by auto
-    ultimately have "(u,v) \<in> edges G"
-      using edges_equiv[of u v] by auto
-    thus "e \<in> uedge ` edges G"
-      unfolding uedge_def by auto
-  qed
-next
-  show "uedge ` edges G \<subseteq> E"
-  proof
-    fix e
-    assume "e \<in> uedge ` edges G"
-    moreover then obtain e' where "e = uedge e'" "e' \<in> edges G"
-      by auto   
-    moreover then obtain u v where [simp]: "e' = (u,v)"
-      by fastforce
-    moreover hence "e = {u,v}"
-      unfolding uedge_def using calculation by auto
-    ultimately show "e \<in> E"
-      using edges_equiv[of u v] by auto
-  qed
-qed
-
-end
-
-fun dedges_of_path where
-  "dedges_of_path [] = []"
-| "dedges_of_path [v] = []"
-| "dedges_of_path (u#v#P) = (u,v) # (dedges_of_path (v#P))"
-
-lemma dedges_length: "length (dedges_of_path P) = length (edges_of_path P)"
-  by (induction P rule: dedges_of_path.induct) auto
-
-lemma dedges_of_path_nilE:
-  assumes "dedges_of_path P = []"
-  obtains v where "P = [] \<or> P = [v]"
-  using assms by (induction P rule: dedges_of_path.induct) auto
-
-lemma dedges_of_path_nonnilE:
-  assumes "dedges_of_path P \<noteq> []"
-  shows "P \<noteq> []" "\<And>v. P \<noteq> [v]"
-  using assms by auto
-
-lemma dedges_of_path_nil_length: "dedges_of_path P = [] \<Longrightarrow> length P \<le> 1"
-  by (induction P rule: dedges_of_path.induct) auto
-
-lemma dedges_of_path_nonnil:
-  assumes "length P > 1"
-  shows "dedges_of_path P \<noteq> []"
-  using assms by (induction P rule: dedges_of_path.induct) auto
-
-lemma map_dedges_of_path: "map Undirected_Graph.uedge (dedges_of_path P) = edges_of_path P"
-  by (induction P rule: dedges_of_path.induct) auto 
-
-lemma tl_dedges_of_path:
-  assumes "P = dedges_of_path P'"
-  shows "tl P = dedges_of_path (tl P')"
-  using assms by (induction P' rule: dedges_of_path.induct) auto
-
-context graph_abs
-begin
-
-lemma edges_subset_iff: "set (dedges_of_path P) \<subseteq> edges G \<longleftrightarrow> set (edges_of_path P) \<subseteq> E"
-proof
-  show "set (dedges_of_path P) \<subseteq> edges G \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
-  proof (induction P rule: dedges_of_path.induct)
-    case (3 u v P)
-    thus ?case 
-      using edges_equiv[of u v] by auto
-  qed auto
-next
-  show "set (edges_of_path P) \<subseteq> E \<Longrightarrow> set (dedges_of_path P) \<subseteq> edges G"
-  proof (induction P rule: dedges_of_path.induct)
-    case (3 u v P)
-    thus ?case 
-      using edges_equiv[of u v] by auto
-  qed auto
-qed
-
-lemma vpath_of_epath:
-  assumes "Undirected_Graph.path G u P v"
-  shows "P = dedges_of_path (map fst P @ [snd (last P)])"
-  using assms
-proof (induction P arbitrary: u rule: dedges_of_path.induct)
-  case (3 e\<^sub>1 e\<^sub>2 P)
-  then obtain x\<^sub>1 x\<^sub>2 where 
-    "e\<^sub>1 = (u,x\<^sub>1)" "e\<^sub>1 \<in> edges G" "Undirected_Graph.path G x\<^sub>1 (e\<^sub>2#P) v" 
-    "e\<^sub>2 = (x\<^sub>1,x\<^sub>2)" "e\<^sub>2 \<in> edges G" "Undirected_Graph.path G x\<^sub>2 P v"
-    by auto
-  hence "e\<^sub>1#e\<^sub>2#P = (u,x\<^sub>1)#dedges_of_path (map fst (e\<^sub>2#P) @ [snd (last (e\<^sub>2#P))])"
-    using \<open>Undirected_Graph.path G x\<^sub>1 (e\<^sub>2#P) v\<close> "3.IH" by blast
-  also have "... = dedges_of_path (map fst (e\<^sub>1#e\<^sub>2#P) @ [snd (last (e\<^sub>1#e\<^sub>2#P))])"
-    using \<open>e\<^sub>1 = (u,x\<^sub>1)\<close> \<open>e\<^sub>2 = (x\<^sub>1,x\<^sub>2)\<close> by auto
-  finally show ?case by blast
-qed auto
-
-lemma vpath_of_epathE:
-  assumes "Undirected_Graph.path G u P v"
-  obtains P' where "P = dedges_of_path P'"
-  using assms vpath_of_epath by auto
-
-lemma simple_path_equiv: "simple_path P \<longleftrightarrow> Undirected_Graph.simple (dedges_of_path P)"
-  unfolding Undirected_Graph.simple_def
-  by (auto intro: simple_pathI elim: simple_pathE simp: map_dedges_of_path) 
-
-lemma list_hd_singleton: "length xs = 1 \<Longrightarrow> hd xs = x \<Longrightarrow> xs = [x]"
-  by (induction xs) auto
-
-lemma walk_is_path:
-  assumes "walk_betw E u P v"
-  shows "Undirected_Graph.path G u (dedges_of_path P) v"
-proof -
-  have "path E P" "P \<noteq> []" "hd P = u" "last P = v" "u \<in> Vs E"
-    using assms by (auto simp: mem_path_Vs elim: walk_between_nonempty_path)
-  thus "Undirected_Graph.path G u (dedges_of_path P) v"
-  proof (induction P arbitrary: u rule: path.induct)
-    case (path2 u' x P)
-    hence [simp]: "u = u'" and "(u,x) \<in> edges G" 
-      "Undirected_Graph.path G x (dedges_of_path (x#P)) v"
-      using edges_equiv[of u x] by auto
-    moreover hence "Undirected_Graph.path G u [(u,x)] x"
-      by (auto intro: path_emptyI)
-    ultimately show ?case 
-      using \<open>u \<in> Vs E\<close> path_transs1 by auto
-  qed (auto intro: path_emptyI)
-qed
-
-lemma path_equiv2:
-  assumes "set P \<subseteq> Vs E" "Undirected_Graph.path G u (dedges_of_path P) v"
-  shows "path E P"
-  using assms
-proof (induction P arbitrary: u rule: dedges_of_path.induct)
-  case (3 u' x P)
-  hence "{u',x} \<in> E" "path E (x#P)"
-    using 3 edges_equiv[of u x] by auto  
-  thus ?case 
-    by (auto intro: path.intros)
-qed auto
-
-lemma edges_of_vpath_are_vs:
-  assumes "\<And>v. P = [v] \<Longrightarrow> v \<in> Vs E" "set (edges_of_path P) \<subseteq> E"
-  shows "set P \<subseteq> Vs E"
-  using assms
-proof (induction P rule: list0123.induct)
-  case (3 u v)
-  thus ?case 
-    by (auto intro: vs_member_intro[of _ "{u,v}" E])
-qed auto
-
-lemma epath_last_node:
-  assumes "P \<noteq> []" "hd P = u" "Undirected_Graph.path G u (dedges_of_path P) v"
-  shows "last P = v"
-  using assms by (induction P arbitrary: u rule: dedges_of_path.induct) auto
-
-lemma path_is_walk:
-  assumes "P \<noteq> []" "hd P = u" "u \<in> Vs E" "Undirected_Graph.path G u (dedges_of_path P) v"
-  shows "walk_betw E u P v"
-proof (rule nonempty_path_walk_between)
-  have "set (edges_of_path P) \<subseteq> E"
-    using assms path_edges[of G u "dedges_of_path P" v] edges_subset_iff by auto
-  hence "set P \<subseteq> Vs E"
-    using assms edges_of_vpath_are_vs list.sel(1) by metis
-  thus "path E P" "P \<noteq> []" "hd P = u" "last P = v"
-    using assms path_equiv2 epath_last_node by auto
-qed
-
-lemma walk_equiv_path: "walk_betw E u P v 
-  \<longleftrightarrow> P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
-proof
-  assume "walk_betw E u P v"
-  moreover hence "path E P" "P \<noteq> []" "hd P = u" "last P = v" "u \<in> Vs E"
-    by (auto simp: mem_path_Vs elim: walk_between_nonempty_path)
-  ultimately show "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
-    using walk_is_path by auto
-next
-  assume assms: "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
-  show "walk_betw E u P v"
-  proof (rule nonempty_path_walk_between)
-    have "set (edges_of_path P) \<subseteq> E"
-      using assms path_edges[of G u "dedges_of_path P" v] edges_subset_iff by auto
-    hence "set P \<subseteq> Vs E"
-      using assms edges_of_vpath_are_vs list.sel(1) by metis
-    thus "path E P" "P \<noteq> []" "hd P = u" "last P = v"
-      using assms path_equiv2 epath_last_node by auto
-  qed
-qed
-
-lemma walk_iff_rtrancl_edges: 
-  assumes "u \<in> Vs E" "v \<in> Vs E"
-  shows "(\<exists>P. walk_betw E u P v) \<longleftrightarrow> (u,v) \<in> (edges G)\<^sup>*"
-proof
-  assume "\<exists>P. walk_betw E u P v"
-  thus "(u,v) \<in> (edges G)\<^sup>*"
-    using walk_is_path[of u _ v] rtrancl_edges_iff_path[of u v G] by auto
-next
-  assume "(u,v) \<in> (edges G)\<^sup>*"
-  thus "\<exists>P. walk_betw E u P v"
-    using assms
-  proof (induction rule: rtrancl_induct)
-    case base
-    hence "walk_betw E u [u] u"
-      by (auto intro: path.intros nonempty_path_walk_between)
-    thus ?case
-      by auto
-  next
-    case (step y z)
-    hence "{y,z} \<in> E" "y \<in> Vs E"
-      using edges_equiv[of y z] by (auto intro: vs_member_intro[of y "{y,z}"])
-    then obtain P where "walk_betw E u P y" "path E [y,z]"
-      using step.prems step.IH by (auto intro: path.intros)
-    moreover hence "walk_betw E y [y,z] z"
-      by (auto intro: path.intros nonempty_path_walk_between)
-    ultimately have "walk_betw E u (P@[z]) z"
-      using walk_transitive[of E u P y "[y,z]" z] by auto
-    thus ?case 
-      by auto
-  qed  
-qed
-
-lemma conn_comp_equiv: 
-  assumes "u \<in> Vs E" "v \<in> Vs E"
-  shows "v \<in> connected_component E u \<longleftrightarrow> (u,v) \<in> (edges G)\<^sup>*"
-proof
-  assume "v \<in> connected_component E u"
-  hence "(\<exists>p. walk_betw E u p v)"
-    using assms by (auto elim: in_connected_component_has_path)
-  thus "(u,v) \<in> (edges G)\<^sup>*"
-    using assms walk_iff_rtrancl_edges by auto
-next
-  assume "(u,v) \<in> (edges G)\<^sup>*"
-  hence "(\<exists>p. walk_betw E u p v)"
-    using assms walk_iff_rtrancl_edges by auto
-  thus "v \<in> connected_component E u"
-    by (auto intro: has_path_in_connected_component)
-qed
-
-lemma connected_equiv: "is_connected E \<longleftrightarrow> connected G"
-proof 
-  assume "is_connected E"
-  show "connected G"
-  proof (rule connectedI)
-    fix u v
-    assume "u \<in> nodes G" "v \<in> nodes G"
-    hence "u \<in> Vs E" "v \<in> Vs E"
-      using nodes_equiv by auto
-    hence "v \<in> connected_component E u"
-      using \<open>is_connected E\<close> by (auto elim: is_connectedE)
-    thus "(u,v) \<in> (edges G)\<^sup>*"
-      using \<open>u \<in> Vs E\<close> \<open>v \<in> Vs E\<close> conn_comp_equiv by auto
-  qed
-next
-  assume "connected G"
-  show "is_connected E"
-  proof (rule is_connectedI)
-    fix u v
-    assume "u \<in> Vs E" "v \<in> Vs E"
-    hence "u \<in> nodes G" "v \<in> nodes G"
-      using nodes_equiv by auto
-    hence "(u,v) \<in> (edges G)\<^sup>*"
-      using \<open>Undirected_Graph.connected G\<close> by (auto elim: connectedD)
-    thus "v \<in> connected_component E u"
-      using \<open>u \<in> Vs E\<close> \<open>v \<in> Vs E\<close> conn_comp_equiv by auto
-  qed
-qed
-
-lemma walks_len_gr1:
-  assumes "walk_betw E u P v" "walk_betw E u P' v" "P \<noteq> P'"
-  shows "length P > 1 \<or> length P' > 1"
-proof (rule ccontr)
-  assume "\<not> (length P > 1 \<or> length P' > 1)"
-  hence "length P \<le> 1" "length P' \<le> 1"
-    by auto
-  moreover have "length P \<ge> 1" "length P' \<ge> 1"
-    using assms by (auto simp: walk_nonempty Suc_leI)
-  ultimately have "length P = 1" "length P' = 1"
-    by auto
-  moreover have "hd P = u" "hd P' = u"
-    using assms by (auto elim: walk_between_nonempty_path)
-  ultimately have "P = [u]" "P' = [u]"
-    by (auto intro: list_hd_singleton)
-  thus "False"
-    using assms by auto
-qed
-
-lemma dedges_path_hd_Vs_mem:
-  assumes "Undirected_Graph.path G u (dedges_of_path P) v" "dedges_of_path P \<noteq> []"
-  shows "hd P = u" "u \<in> Vs E"
-  using assms 
-proof (induction P rule: dedges_of_path.induct)
-  case (3 u' v P)
-  {
-    case 1
-    thus ?case by auto
-  next
-    case 2
-    hence "{u,v} \<in> E"
-      using edges_equiv[of u v] by auto
-    thus ?case 
-      by (auto simp: edges_are_Vs)
-  }
-qed auto
-
-lemma acyclic_equiv: "is_acyclic E \<longleftrightarrow> cycle_free G"
-proof
-  assume "is_acyclic E"
-  show "cycle_free G"
-  proof (rule cycle_freeI)
-    fix P u
-    assume "Undirected_Graph.path G u P u" "P \<noteq> []" "simple P"
-    moreover then obtain P' where "P = dedges_of_path P'"
-      using vpath_of_epathE[of u P u] by auto
-    ultimately have "simple_path P'" "0 < length (edges_of_path P')" "walk_betw E u P' u"
-      using simple_path_equiv dedges_of_path_nonnilE dedges_path_hd_Vs_mem 
-        walk_equiv_path[of u P' u] by (auto simp: dedges_length[symmetric, of P'])
-    hence "is_cycle E P'"
-      by (auto intro: is_cycleI)
-    thus "False"
-      using \<open>is_acyclic E\<close> is_acyclicE by auto
-  qed
-next
-  assume "cycle_free G"
-  show "is_acyclic E"
-  proof (rule ccontr)
-    assume "\<not> is_acyclic E"
-    then obtain C where "is_cycle E C"
-      by (auto elim: not_acyclicE)
-    then obtain u where "simple_path C" "0 < length (edges_of_path C)" "walk_betw E u C u"
-      by (auto elim: is_cycleE)
-    hence "Undirected_Graph.path G u (dedges_of_path C) u" "dedges_of_path C \<noteq> []" 
-      "simple (dedges_of_path C)"
-      using walk_equiv_path[of u C u] simple_path_equiv 
-      by (auto simp: dedges_length[symmetric, of C])
-    thus "False"
-      using \<open>cycle_free G\<close> cycle_freeD[of G] by auto
-  qed
-qed
-
-lemma tree_equiv: "is_tree E \<longleftrightarrow> tree G"
-  using connected_equiv acyclic_equiv by (auto intro: is_treeI simp: is_treeE tree_def)
-
-end
-
-locale st_graph_abs = (* spanning tree equivalence *)
-  E: graph_abs E +
-  T: graph_abs T for E :: "'a set set " and T :: "'a set set"
-begin
-
-lemma edges_subset_iff: "T \<subseteq> E \<longleftrightarrow> edges T.G \<subseteq> edges E.G"
-proof
-  assume "T \<subseteq> E"
-  show "edges T.G \<subseteq> edges E.G"
-  proof
-    fix x
-    assume "x \<in> edges T.G"
-    moreover then obtain u v where [simp]: "x = (u,v)"
-      using old.prod.exhaust by blast
-    ultimately show "x \<in> edges E.G"
-      using T.edges_equiv[of u v] \<open>T \<subseteq> E\<close> E.edges_equiv[of u v] by auto
-  qed
-next
-  assume "edges T.G \<subseteq> edges E.G"
-  show "T \<subseteq> E"
-  proof
-    fix x
-    assume "x \<in> T"
-    moreover then obtain u v where [simp]: "x = {u,v}"
-      using T.graph by auto
-    ultimately show "x \<in> E"
-      using T.edges_equiv[of u v] \<open>edges T.G \<subseteq> edges E.G\<close> E.edges_equiv[of u v] by auto
-  qed
-qed
-
-lemma st_equiv: "E.is_st T \<longleftrightarrow> is_spanning_tree E.G T.G"
-  apply (rule iffI)
-  using T.tree_equiv E.nodes_equiv T.nodes_equiv edges_subset_iff 
-  by (auto intro: E.is_stI simp: E.is_stE is_spanning_tree_def)
-
-end
-
-context graph_abs
-begin
-
-lemma st_equiv: 
-  fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
-  assumes "graph_invar T"
-  shows "is_st T \<longleftrightarrow> is_spanning_tree G T\<^sub>G"
-  using graph assms st_graph_abs.st_equiv[unfolded st_graph_abs_def graph_abs_def, of E T] by auto
 
 end
 
@@ -964,70 +394,12 @@ lemma mst_eq_cost:
 
 end
 
-locale nat_w_graph_abs = (* nat weights *)
-  pos_w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> nat"
-begin
-
-lemma cost_of_st_equiv: 
-  fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
-  assumes "graph_invar T"
-  shows "cost_of_st T = weight c T\<^sub>G"
-proof -
-  have "cost_of_st T = (\<Sum>e \<in> T. c e)"
-    unfolding cost_of_st_def by auto
-  also have "... = (\<Sum>e \<in> uedge ` edges T\<^sub>G. c e)"
-    using assms graph_abs.edges_equiv2[unfolded graph_abs_def, of T] by auto
-  also have "... = Undirected_Graph.weight c T\<^sub>G"
-    unfolding Undirected_Graph.weight_alt by auto
-  finally show ?thesis .
-qed
-
-lemma mst_equiv: 
-  fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
-  shows "is_mst T \<longleftrightarrow> is_MST c G T\<^sub>G"
-proof 
-  assume "is_mst T"
-  hence "is_st T" "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
-    by (auto elim: is_mstE)
-
-  hence "is_spanning_tree G T\<^sub>G" 
-    "\<forall>T'. is_spanning_tree G T' \<longrightarrow> weight c T\<^sub>G \<le> weight c T'"
-    subgoal
-      using assms st_equiv[OF st_graph_invar] by auto
-    subgoal
-      using assms st_equiv cost_of_st_equiv[OF st_graph_invar]
-      sorry
-    sorry
-
-  thus "is_MST c G T\<^sub>G"
-    unfolding is_MST_def by auto
-next
-  assume "is_MST c G T\<^sub>G"
-  hence "is_spanning_tree G T\<^sub>G" 
-    "\<forall>T'. is_spanning_tree G T' \<longrightarrow> weight c T\<^sub>G \<le> weight c T'"
-    unfolding is_MST_def by auto
-
-  show "is_mst T"
-    sorry
-qed (* TODO: fix locale stuff *)
-
-end
-
-locale mst = w_graph_abs E c for E c +
+locale mst = 
+  w_graph_abs E c for E c +
   fixes comp_mst
   assumes mst: "is_mst (comp_mst c E)"
 begin
 
 end
-
-(* TODO: use Prim_Dijkstra_Simple implementation *)
-
-fun prim_impl' where
-  "prim_impl' c E = undefined" (* translate params to prim_impl, or prim_list_impl_int *)
-
-(* interpretation mst E c prim_impl'
-  sorry *)
 
 end

@@ -1,5 +1,6 @@
+(* Author: Lukas Koller *)
 theory Eulerian
-  imports Main MultiGraph Select
+  imports Main Misc MultiGraph Select
 begin
 
 text \<open>even predicate for \<open>enat\<close>.\<close>
@@ -21,11 +22,6 @@ lemma is_eulerianI: "(\<And>v. v \<in> mVs E \<Longrightarrow> even' (mdegree E 
 text \<open>Definition of a Eulerian tour on multigraphs.\<close>
 definition "is_et E T \<equiv> mpath E T \<and> hd T = last T \<and> E = mset (edges_of_path T)"
 
-lemma edges_of_path_nil:
-  assumes "edges_of_path T = []"
-  shows "T = [] \<or> (\<exists>v. T = [v])"
-  using assms by (induction T rule: edges_of_path.induct) auto
-
 lemma et_nil: "is_et E [] \<Longrightarrow> E = {#}"
   unfolding is_et_def by auto
 
@@ -35,15 +31,10 @@ lemma double_graph_degree:
 proof -
   have "mdegree E\<^sub>2\<^sub>x v = mdegree (mset_set E) v + mdegree (mset_set E) v"
     using assms mdegree_add by auto
-  also have "... = degree E v + degree E v"
-    using mdegree_eq_degree[of E v] by auto
   also have "... = 2 * degree E v"
-    by (auto simp: mult_2)
+    using mdegree_eq_degree[of E v] by (auto simp: semiring_numeral_class.mult_2)
   finally show ?thesis .
 qed
-
-lemma non_inf_degr: "finite E \<Longrightarrow> degree E v \<noteq> \<infinity>"
-  unfolding degree_def2 by auto
 
 lemma et_edges: 
   assumes "is_et E T" 
@@ -104,5 +95,7 @@ qed
 locale eulerian =
   fixes comp_et :: "'a mgraph \<Rightarrow> 'a list"
   assumes eulerian: "is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+
+(* TODO: implement algorithm to compute Eulerian Tour? *)
 
 end

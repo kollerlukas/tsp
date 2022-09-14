@@ -4,18 +4,18 @@ theory DoubleTree
 begin
 
 section \<open>\textsc{DoubleTree} Approximation Algorithm for mTSP\<close>
-                                                
-locale double_tree_algo = 
-  metric_graph_abs E c + 
-  mst E c comp_mst + 
-  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
-begin
 
 text \<open>Hamiltonian Cycle of Eulerian Tour\<close>
 fun hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "hc_of_et [] H = H"
 | "hc_of_et [v] H = v#H"
 | "hc_of_et (v#P) H = (if v \<in> List.set H then hc_of_et P H else hc_of_et P (v#H))"
+                                                
+locale double_tree_algo = 
+  metric_graph_abs E c + 
+  mst E c comp_mst + 
+  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
+begin
 
 lemma hc_of_et_set_eq: "set P \<union> set H = set (hc_of_et P H)"
   by (induction P H rule: hc_of_et.induct) auto
@@ -65,7 +65,11 @@ lemma hc_of_et_last_aux: "H \<noteq> [] \<Longrightarrow> last H = last (hc_of_e
   by (induction P H rule: hc_of_et.induct) auto
 
 lemma hc_of_et_last: "P \<noteq> [] \<Longrightarrow> hd P = last (hc_of_et P [])"
-  using hc_of_et_last_aux by (induction P rule: list012.induct) auto
+proof (induction P rule: list012.induct)
+  case (3 u v P)
+  then show ?case 
+    using hc_of_et_last_aux[of "[u]" "v#P"] by auto
+qed auto
 
 lemma hc_of_et_hd: "P \<noteq> [] \<Longrightarrow> last P = hd (hc_of_et P H)"
   by (induction P H rule: hc_of_et.induct) auto
@@ -126,7 +130,12 @@ definition double_tree where
         P = comp_et T\<^sub>2\<^sub>x in
         hc_of_et P [])"
 
-text \<open>Feasibility of \textsc{DoubleTree}\<close>
+end
+
+subsection \<open>Feasibility of \textsc{DoubleTree}\<close>
+
+context double_tree_algo
+begin
 
 lemma T2x_eulerian:
   assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T"
@@ -151,7 +160,12 @@ lemma "is_hc (double_tree)" (is "is_hc ?H")
   apply (rule hc_of_et_correct, rule eulerian)
   using dt_correctness by auto
 
-text \<open>Approximation of \textsc{DoubleTree}\<close>
+end
+
+subsection \<open>Approximation of \textsc{DoubleTree}\<close>
+
+context double_tree_algo
+begin
 
 lemma cost_of_path_hc_of_et:
   assumes "set P \<union> set H \<subseteq> Vs E"
@@ -220,25 +234,6 @@ proof -
   finally show ?thesis .
 qed
 
-lemma set_tl_subset: "set (tl A) \<subseteq> set A"
-  by (induction A) auto
-
-lemma drop_tl: "i > 0 \<Longrightarrow> drop i xs = drop (i - 1) (tl xs)"
-  using drop_Suc[of "i-1"] Suc_diff_1[of i] by auto
-
-lemma edges_of_path_append_subset2: "set (edges_of_path p) \<subseteq> set (edges_of_path (p @ p'))"
-  by (induction p arbitrary: p' rule: edges_of_path.induct) auto
-
-lemma edges_of_path_drop_take_subset: 
-  "set (edges_of_path (drop i\<^sub>u (take i\<^sub>v H))) \<subseteq> set (edges_of_path H)"
-proof -
-  have "set (edges_of_path (drop i\<^sub>u (take i\<^sub>v H))) \<subseteq> set (edges_of_path (take i\<^sub>v H))"
-    using edges_of_path_append_subset append_take_drop_id[of i\<^sub>u "take i\<^sub>v H"] by metis
-  also have "... \<subseteq> set (edges_of_path H)"
-    using edges_of_path_append_subset2[of "take i\<^sub>v H"] append_take_drop_id[of i\<^sub>v H] by metis
-  finally show ?thesis .
-qed
-
 lemma hc_connected_component:
   assumes "is_hc H" "u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" "v = (tl H) ! i\<^sub>v" "i\<^sub>v < length (tl H)" 
           "i\<^sub>u < i\<^sub>v" 
@@ -263,9 +258,6 @@ proof -
     using walk_symmetric[of ?E' u _ v] by auto
 qed
 
-lemma tl_edges_of_path: "tl (edges_of_path P) = edges_of_path (tl P)"
-  by (induction P rule: edges_of_path.induct) auto
-
 lemma tl_hc_connected:
   assumes "is_hc H"
   shows "is_connected (set (tl (edges_of_path H)))" (is "is_connected ?E'")
@@ -273,7 +265,7 @@ proof (rule is_connectedI)
   fix u v
   assume "u \<in> Vs ?E'" "v \<in> Vs ?E'"
   hence "u \<in> Vs (set (edges_of_path (tl H)))" "v \<in> Vs (set (edges_of_path (tl H)))"
-    by (auto simp: tl_edges_of_path)
+    by (auto simp: edges_of_path_tl)
   hence "u \<in> set (tl H)" "v \<in> set (tl H)"
     using assms edges_of_path_Vs[of "tl H"] by auto
   then obtain i\<^sub>u i\<^sub>v where i\<^sub>u_i\<^sub>v_simps:"u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" 
@@ -292,41 +284,13 @@ proof (rule is_connectedI)
   next
     assume "i\<^sub>u < i\<^sub>v"
     then show "u \<in> connected_component ?E' v"
-      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: tl_edges_of_path)
+      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
   next
     assume "i\<^sub>v < i\<^sub>u"
     hence "v \<in> connected_component ?E' u"
-      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: tl_edges_of_path)
+      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
     then show "u \<in> connected_component ?E' v"
       using connected_components_member_sym[of v ?E' u] by auto
-  qed
-qed
-
-lemma degree_edges_of_path_leq_2:
-  assumes "distinct P" "length P > 1" "v \<in> set P"
-  shows "degree (set (edges_of_path P)) v \<le> 2"
-proof -
-  have "v = hd P \<or> v = last P \<or> (v \<noteq> hd P \<and> v \<noteq> last P)"
-    by auto
-  thus ?thesis
-  proof (elim disjE)
-    assume "v = hd P"
-    hence "degree (set (edges_of_path P)) v = 1"
-      using assms degree_edges_of_path_hd[of P] by auto
-    also have "... \<le> 2"
-      using one_le_numeral by blast
-    finally show ?thesis by (auto simp: tl_edges_of_path)
-  next
-    assume "v = last P"
-    hence "degree (set (edges_of_path P)) v = 1"
-      using assms degree_edges_of_path_last[of P] by auto
-    also have "... \<le> 2"
-      using one_le_numeral by blast
-    finally show ?thesis by (auto simp: tl_edges_of_path)
-  next
-    assume "v \<noteq> hd P \<and> v \<noteq> last P"
-    then show ?thesis
-      using assms degree_edges_of_path_ge_2[of P v] by auto
   qed
 qed
 
@@ -341,33 +305,8 @@ proof (induction H rule: list0123.induct) (* induction just for case distinction
   moreover have "x \<in> set (v#w#P)"
     using calculation hc_vs_set[of "u#v#w#P"] is_hc_nonnilE[of "u#v#w#P"] by auto
   ultimately show ?case
-    using degree_edges_of_path_leq_2[of "v#w#P"] by (auto simp: tl_edges_of_path)
+    using degree_edges_of_path_leq_2[of "v#w#P"] by (auto simp: edges_of_path_tl)
 qed auto
-
-lemma walk_split:
-  assumes "walk_betw X u P v" "u \<noteq> v" "u \<in> E\<^sub>1" "v \<in> E\<^sub>2" "set P \<subseteq> E\<^sub>1 \<union> E\<^sub>2"
-  obtains x y where "{x,y} \<in> set (edges_of_path P)" "x \<in> E\<^sub>1" "y \<in> E\<^sub>2"
-  using assms by (induction rule: induct_walk_betw) auto
-
-lemma connected_bridge:
-  assumes "is_connected X" "X' \<subseteq> X" "Vs X' \<noteq> {}" "Vs X' \<subset> Vs X"
-  obtains u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
-proof -
-  obtain u v where "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
-    using assms by auto
-  moreover hence "u \<in> Vs X" "v \<in> Vs X" "u \<noteq> v"
-    using assms calculation by auto
-  moreover then obtain P where "walk_betw X u P v"
-    using assms is_connectedE2[of X u v] by auto
-  moreover have "set P \<subseteq> Vs X' \<union> (Vs X - Vs X')"
-    using calculation walk_in_Vs[of X u P v] by auto
-  moreover have "set (edges_of_path P) \<subseteq> X"
-    using calculation path_edges_subset[OF walk_between_nonempty_path(1), of X u P v] by auto
-  ultimately obtain u v where "{u,v} \<in> X" "u \<in> Vs X'" "v \<in> Vs X - Vs X'"
-    by (elim walk_split[of X u P v "Vs X'" "Vs X - Vs X'"]) fastforce+
-  thus ?thesis
-    using that by auto
-qed
 
 lemma degree_edges_of_path_hd_leq_1:
   assumes "distinct P"
@@ -478,11 +417,8 @@ proof (rule ccontr)
     using assms by (auto elim: is_hc_nonnilE)
   ultimately show "False"
     using non_acyclic_path_not_distinct[of "tl H", OF \<open>path E (tl H)\<close>] 
-    by (auto simp: tl_edges_of_path[of H])
+    by (auto simp: edges_of_path_tl[of H])
 qed
-
-lemma edges_of_path_tl: "edges_of_path (tl P) = tl (edges_of_path P)"
-  by (induction P rule: edges_of_path.induct) auto
 
 lemma tl_hc_Vs:
   assumes "is_hc H"

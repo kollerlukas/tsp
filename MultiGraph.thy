@@ -1,3 +1,4 @@
+(* Author: Lukas Koller *)
 theory MultiGraph
   imports Main "HOL-Library.Multiset" "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
 begin
@@ -28,28 +29,7 @@ definition "encode_as_graph E\<^sub>M \<equiv> {{(u,i),(v,i)} | u v i. {u,v} \<i
 \<union> {{(v,i),(v,j)} | v i j. v \<in> mVs E\<^sub>M \<and> i < j \<and> j \<le> Max {count E\<^sub>M {u,v} | u. u \<in> mVs E\<^sub>M}}"
 
 lemma mVs_def2: "mVs E\<^sub>M = fst ` Vs (encode_as_graph E\<^sub>M)"
-proof
-  show "mVs E\<^sub>M \<subseteq> fst ` Vs (encode_as_graph E\<^sub>M)"
-  proof
-    fix v
-    assume "v \<in> mVs E\<^sub>M"
-    then obtain e where "v \<in> e" "e \<in> set_mset E\<^sub>M"
-      unfolding mVs_def by (auto elim: vs_member_elim)
-    then have "e \<in># E\<^sub>M"
-      by auto
-    moreover then obtain u where "e = {u,v}"
-      sorry (* graph_invar E\<^sub>M *)
-    ultimately have "{(u,1),(v,1)} \<in> encode_as_graph E\<^sub>M"
-      unfolding encode_as_graph_def using count_greater_eq_one_iff[of E\<^sub>M "{u,v}"] by blast
-    then have "(v,1) \<in> Vs (encode_as_graph E\<^sub>M)"
-      by (auto intro: vs_member_intro)
-    then show "v \<in> fst ` Vs (encode_as_graph E\<^sub>M)"
-      by force
-  qed
-next
-  show "fst ` Vs (encode_as_graph E\<^sub>M) \<subseteq> mVs E\<^sub>M"
-    sorry
-qed
+  sorry
 
 definition "mpath E\<^sub>M P \<equiv> path (encode_as_graph E\<^sub>M) (map (\<lambda>v. (v,1)) P)"
 
