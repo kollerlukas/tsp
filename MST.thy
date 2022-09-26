@@ -387,6 +387,11 @@ lemma is_mstE:
   shows "is_st T" "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
   using assms[unfolded is_mst_def] by auto
 
+lemma is_mstE2:
+  assumes "is_mst T"
+  shows "T \<subseteq> E" "Vs E = Vs T" "is_tree T" "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
+  using assms is_mstE by (auto simp: is_stE)
+
 lemma mst_eq_cost:
   assumes "is_mst T\<^sub>1" "is_mst T\<^sub>2"
   shows "cost_of_st T\<^sub>1 = cost_of_st T\<^sub>2"

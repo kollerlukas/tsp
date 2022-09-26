@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory MultiGraph
-  imports Main "HOL-Library.Multiset" "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
+  imports Main Misc "HOL-Library.Multiset" "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
 begin
 
 type_synonym 'a mgraph = "'a set multiset"
@@ -25,6 +25,24 @@ locale mgraph_abs = mgraph_def +
 
 definition "mVs E\<^sub>M = Vs (set_mset E\<^sub>M)"
 
+lemma mVs_memberE:
+  assumes "v \<in> mVs E"
+  obtains e where "v \<in> e" "e \<in># E"
+  using assms[unfolded mVs_def] by (auto elim: vs_member_elim)
+
+lemma mVs_mset_set:
+  assumes "finite E"
+  shows "mVs (mset_set E) = Vs E"
+  unfolding mVs_def using assms by (auto simp: finite_set_mset_mset_set)
+
+lemma mVs_subset:
+  assumes "E' \<subseteq># E"
+  shows "mVs E' \<subseteq> mVs E"
+  unfolding mVs_def using assms Vs_subset[OF set_mset_mono, of E' E] by auto
+
+lemma mVs_union: "mVs (A + B) = mVs A \<union> mVs B"
+  unfolding mVs_def by (auto simp: Vs_union)
+
 definition "encode_as_graph E\<^sub>M \<equiv> {{(u,i),(v,i)} | u v i. {u,v} \<in># E\<^sub>M \<and> i \<le> count E\<^sub>M {u,v}} 
 \<union> {{(v,i),(v,j)} | v i j. v \<in> mVs E\<^sub>M \<and> i < j \<and> j \<le> Max {count E\<^sub>M {u,v} | u. u \<in> mVs E\<^sub>M}}"
 
@@ -35,6 +53,18 @@ definition "mpath E\<^sub>M P \<equiv> path (encode_as_graph E\<^sub>M) (map (\<
 
 lemma mpath_def2: "mpath E\<^sub>M P \<longleftrightarrow> path (set_mset E\<^sub>M) P"
   sorry
+
+lemma mpath_edges_subset:
+  assumes "mpath E P"
+  shows "set (edges_of_path P) \<subseteq> set_mset E"
+  using path_edges_subset[OF assms[unfolded mpath_def2]] .
+
+thm path_edges_subset
+
+lemma mem_mpath_mVs:
+  assumes "mpath E P" "v \<in> set P"
+  shows "v \<in> mVs E"
+  unfolding mVs_def using mem_path_Vs[OF assms[unfolded mpath_def2]] .
 
 definition "mdegree E\<^sub>M v \<equiv> degree (encode_as_graph E\<^sub>M) (v,1)"
 

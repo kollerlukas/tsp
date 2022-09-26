@@ -62,6 +62,93 @@ lemma set_tl_subset: "set (tl A) \<subseteq> set A"
 lemma drop_tl: "i > 0 \<Longrightarrow> drop i xs = drop (i - 1) (tl xs)"
   using drop_Suc[of "i-1"] Suc_diff_1[of i] by auto
 
+lemma remdups_append: "x \<in> set ys \<Longrightarrow> remdups (xs @ x # ys) = remdups (xs @ ys)"
+  by (induction xs) auto
+
+subsection \<open>Repeated Elements in Lists\<close>
+
+(* inductive consec_neq :: "'a list \<Rightarrow> bool" where (* no repeated elements *)
+  "consec_neq []"
+| "consec_neq [x]"
+| "x \<noteq> y \<Longrightarrow> consec_neq (y#xs) \<Longrightarrow> consec_neq (x#y#xs)"
+
+lemma "consec_neq P \<longleftrightarrow> distinct_adj P"
+  unfolding distinct_adj_def
+  apply (rule iffI)
+  subgoal
+    by (induction P rule: consec_neq.induct) auto
+  subgoal
+    by (induction P rule: list012.induct) (auto intro: consec_neq.intros)
+  done
+
+lemma consec_neq_cons:
+  assumes "consec_neq xs" "length xs > 0 \<Longrightarrow> x \<noteq> hd xs" 
+  shows "consec_neq (x#xs)"
+  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
+
+lemma consec_neq_append:
+  assumes "consec_neq xs" "length xs > 0 \<Longrightarrow> last xs \<noteq> x"
+  shows "consec_neq (xs @ [x])"
+  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
+
+lemma consec_neq_append2:
+  assumes "consec_neq (xs @ [y])" "y \<noteq> x"
+  shows "consec_neq (xs @ [y,x])"
+  using assms consec_neq_append by fastforce
+
+lemma distinct_consec_neq: 
+  assumes "distinct xs"
+  shows "consec_neq xs"
+  using assms by (induction xs rule: list012.induct) (auto intro: consec_neq.intros)
+
+lemma not_in_consec_neq:
+  assumes "consec_neq xs" "x \<notin> set xs" 
+  shows "consec_neq (x#xs)"
+  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
+  
+lemma rev_consec_neq:
+  assumes "consec_neq xs"
+  shows "consec_neq (rev xs)"
+  using assms by (induction xs rule: consec_neq.induct) 
+    (auto intro: consec_neq.intros simp: consec_neq_append2)
+
+lemma path_consec_neq:
+  assumes "path E P" and graph: "graph_invar E"
+  shows "consec_neq P"
+  using assms 
+proof (induction P rule: path.induct)
+  case (path2 u v P)
+  moreover hence "u \<noteq> v"
+    using graph by auto
+  ultimately show ?case 
+    by (auto intro: consec_neq.intros)
+qed (auto intro: consec_neq.intros) *)
+
+lemma distinct_distinct_adj: "distinct xs \<Longrightarrow> distinct_adj xs"
+  by (simp add: distinct_adj_altdef distinct_tl remdups_adj_distinct)
+
+section \<open>(Finite) Set Lemmas\<close>
+
+inductive finite_even :: "'a set \<Rightarrow> bool" where
+  "finite_even {}"
+| "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> finite_even ({a,b} \<union> A)"
+
+thm finite_even.induct
+  
+lemma finite_even_def2: "finite_even A \<longleftrightarrow> finite A \<and> even (card A)"
+proof
+  assume "finite_even A"
+  show "finite A \<and> even (card A)"
+    sorry
+next
+  assume "finite A \<and> even (card A)"
+  show "finite_even A"
+    sorry
+qed
+
+lemma finite_evenI2: "finite A \<Longrightarrow> even (card A) \<Longrightarrow> finite_even A"
+  unfolding finite_even_def2 by simp
+
 section \<open>Metric Lemmas\<close>
 
 lemma mult_2: "(x::'b::{ordered_semiring_0,semiring_numeral}) + x = 2 * x"
@@ -70,7 +157,62 @@ lemma mult_2: "(x::'b::{ordered_semiring_0,semiring_numeral}) + x = 2 * x"
 lemma mult_2_mono: "(x::'b::{ordered_semiring_0,semiring_numeral}) \<le> y \<Longrightarrow> 2 * x \<le> 2 * y"
   by (simp add: add_mono semiring_numeral_class.mult_2)
 
+section \<open>Even Predicate\<close>
+
+text \<open>Even predicate for \<open>enat\<close>\<close>
+fun even' :: "enat \<Rightarrow> bool" where
+  "even' \<infinity> = False"
+| "even' (enat i) = even i"
+
+lemma even_enat_mult2: 
+  assumes "i \<noteq> \<infinity>" 
+  shows "even' (2 * i)"
+proof (cases "2 * i")
+  case (enat j)
+  thus ?thesis 
+    using assms by (auto simp: numeral_eq_enat)
+next
+  case infinity
+  then show ?thesis 
+    using assms imult_is_infinity by auto
+qed
+
+section \<open>Sum Lemmas\<close>
+
+lemma even_sum_of_odd_vals_iff:
+  assumes "finite A" "\<forall>x \<in> A. odd (f x)"
+  shows "even (\<Sum>x \<in> A. f x) \<longleftrightarrow> even (card A)"
+  using assms by (induction A rule: finite_induct) auto
+
 section \<open>Graph Lemmas (Berge)\<close>
+
+lemma graph_subset:
+  assumes "graph_invar E" "E' \<subseteq> E"
+  shows "graph_invar E'"
+  using assms finite_subset[OF Vs_subset] by auto
+
+lemma Vs_nilE: 
+  assumes "graph_invar E" "Vs E = {}"
+  shows "E = {}"
+proof (rule ccontr)
+  assume "E \<noteq> {}"
+  then obtain e where "e \<in> E"
+    by auto
+  moreover then obtain u v where "e = {u,v}" "u \<noteq> v"
+    using assms by auto
+  ultimately have "v \<in> Vs E"
+    by (auto intro: vs_member_intro)
+  thus "False"
+    using assms by auto
+qed
+
+lemma Vs_union: "Vs (A \<union> B) = Vs A \<union> Vs B"
+  unfolding Vs_def by auto
+
+lemma path_distinct_adj:
+  assumes "path E P" and graph: "graph_invar E"
+  shows "distinct_adj P"
+  using assms by (induction P rule: path.induct) auto
 
 lemma path_subset_singleton:
   assumes "path X [v]" "v \<in> Vs X'"
@@ -312,6 +454,12 @@ proof -
   then show ?thesis
     using \<open>{u,v} \<in> E\<close> by (metis card_2_iff card_mono graph)
 qed
+
+lemma handshake: "2 * card E = (\<Sum>v \<in> Vs E. degree E v)"
+  sorry
+
+lemma sum_degree_even: "even' (\<Sum>v \<in> Vs E. degree E v)" (* by handshake thm *)
+  sorry
 
 end
 

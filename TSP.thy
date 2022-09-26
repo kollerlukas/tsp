@@ -8,7 +8,6 @@ begin
 
 text \<open>Hamiltonian cycle\<close>
 definition "is_hc H \<equiv> (H \<noteq> [] \<longrightarrow> (\<exists>v. walk_betw E v H v)) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
-(* TODO: Definition with \<open>is_cycle\<close> *)
 
 lemma is_hcE:
   assumes "is_hc H"
@@ -162,14 +161,18 @@ proof -
 qed
 
 lemma is_hc_def2: "is_hc H \<longleftrightarrow> (H \<noteq> [] \<longrightarrow> is_cycle E H) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
-  oops (* Does not hold! counterexample: graph with 2 vertices *)
+  oops 
+(* TODO: 
+  Definition for \<open>is_hc\<close> with \<open>is_cycle\<close>. 
+  Does not hold! counterexample: graph with 2 vertices 
+*)
 
 end
 
 context pos_w_graph_abs
 begin
 
-text \<open>Traveling-Salesman Problem\<close>
+section \<open>Traveling-Salesman Problem (\textsc{TSP})\<close>
 definition "is_tsp P \<equiv> is_hc P \<and> (\<forall>P'. is_hc P' \<longrightarrow> cost_of_path P \<le> cost_of_path P')"
 
 lemma is_tspE:
@@ -204,7 +207,7 @@ lemma cost_of_path_app_tri_ineq:
   using assms cost_of_path_le cost_of_path_cons_tri_ineq 
   by (induction P\<^sub>1 rule: list012.induct) (auto simp: add_left_mono)
 
-text \<open>metric Traveling-Salesman\<close>
+section \<open>Metric Traveling-Salesman (\textsc{mTSP})\<close>
 definition "is_mtsp P \<equiv> is_tsp P"
 
 lemma is_mtspE:

@@ -3,16 +3,6 @@ theory Eulerian
   imports Main Misc MultiGraph Select
 begin
 
-text \<open>even predicate for \<open>enat\<close>.\<close>
-fun even' :: "enat \<Rightarrow> bool" where
-  "even' \<infinity> = False"
-| "even' i = even i"
-
-thm even_iff_mod_2_eq_zero add_self_mod_2
-
-lemma even_2x: "i \<noteq> \<infinity> \<Longrightarrow> even' (2 * i)"
-  sorry
-
 text \<open>A graph is eulerian iff all vertices have even degree.\<close>
 definition "is_eulerian E \<equiv> (\<forall>v \<in> mVs E. even' (mdegree E v))"
 
@@ -22,26 +12,58 @@ lemma is_eulerianI: "(\<And>v. v \<in> mVs E \<Longrightarrow> even' (mdegree E 
 text \<open>Definition of a Eulerian tour on multigraphs.\<close>
 definition "is_et E T \<equiv> mpath E T \<and> hd T = last T \<and> E = mset (edges_of_path T)"
 
+lemma is_etE:
+  assumes "is_et E T"
+  shows "mpath E T" "hd T = last T" "E = mset (edges_of_path T)"
+  using assms[unfolded is_et_def] by auto
+
 lemma et_nil: "is_et E [] \<Longrightarrow> E = {#}"
   unfolding is_et_def by auto
 
-lemma double_graph_degree:
-  assumes "E\<^sub>2\<^sub>x = mset_set E + mset_set E" "v \<in> mVs E\<^sub>2\<^sub>x"
-  shows "mdegree E\<^sub>2\<^sub>x v = 2 * degree E v"
-proof -
-  have "mdegree E\<^sub>2\<^sub>x v = mdegree (mset_set E) v + mdegree (mset_set E) v"
-    using assms mdegree_add by auto
-  also have "... = 2 * degree E v"
-    using mdegree_eq_degree[of E v] by (auto simp: semiring_numeral_class.mult_2)
-  finally show ?thesis .
-qed
+lemma et_nil1: "is_et E [v] \<Longrightarrow> E = {#}"
+  unfolding is_et_def by auto
 
 lemma et_edges: 
   assumes "is_et E T" 
-  shows "E = mset (edges_of_path T)" (is "E = ?E(T)")
-  using assms[unfolded is_et_def] by auto
+  shows "E = mset (edges_of_path T)"
+  using assms by (auto elim: is_etE)
 
-lemma et_vertices: 
+lemma et_length_neq_1_2:
+  assumes "mgraph_invar E" "is_et E T"
+  shows "length T \<noteq> 1" "length T \<noteq> 2"
+proof -
+  show "length T \<noteq> 1"
+  proof (rule ccontr; simp only: not_not)
+    assume "length T = 1"
+    moreover then obtain v where "T = [v]"
+      using list_hd_singleton by fastforce
+    moreover hence "v \<in> mVs E"
+      using assms mem_mpath_mVs[of E T] by (auto simp: is_etE)
+    moreover then obtain e where "e \<in># E" "v \<in> e"
+      by (auto elim: mVs_memberE)
+    moreover have "E = {#}"
+      using assms calculation et_nil1 by auto
+    ultimately show "False"
+      by auto
+  qed
+
+  show "length T \<noteq> 2"
+  proof (rule ccontr; simp only: not_not)
+    assume "length T = 2"
+    moreover then obtain u v where "T = [u,v]"
+      using list_hd_singleton by (metis Suc_1 length_Suc_conv)
+    moreover hence "u = v"
+      using assms is_etE by fastforce
+    moreover have "{u,v} \<in># E"
+      using assms calculation mpath_edges_subset[of E T] by (auto simp: is_etE)
+    moreover hence "u \<noteq> v"
+      using assms by auto
+    ultimately show "False"
+      by auto
+  qed
+qed
+
+lemma et_vertices_len_neq_1: 
   assumes "is_et E T" "length T \<noteq> 1" (* there is no Eulerian Tour with length 1 *)
   shows "set T = mVs E"
   using assms
@@ -81,6 +103,17 @@ next
   qed
 qed auto
 
+lemma double_graph_degree:
+  assumes "E\<^sub>2\<^sub>x = mset_set E + mset_set E" "v \<in> mVs E\<^sub>2\<^sub>x"
+  shows "mdegree E\<^sub>2\<^sub>x v = 2 * degree E v"
+proof -
+  have "mdegree E\<^sub>2\<^sub>x v = mdegree (mset_set E) v + mdegree (mset_set E) v"
+    using assms mdegree_add by auto
+  also have "... = 2 * degree E v"
+    using mdegree_eq_degree[of E v] by (auto simp: semiring_numeral_class.mult_2)
+  finally show ?thesis .
+qed
+
 lemma double_graph_eulerian:
   assumes "finite E" "E\<^sub>2\<^sub>x = mset_set E + mset_set E"
   shows "is_eulerian E\<^sub>2\<^sub>x"
@@ -89,12 +122,12 @@ proof (rule is_eulerianI)
   assume "v \<in> mVs E\<^sub>2\<^sub>x"
   then show "even' (mdegree E\<^sub>2\<^sub>x v)"
     using assms non_inf_degr[of E v] double_graph_degree[of E\<^sub>2\<^sub>x E v] 
-          even_2x[of "degree E v"] by auto
+          even_enat_mult2[of "degree E v"] by auto
 qed
 
 locale eulerian =
   fixes comp_et :: "'a mgraph \<Rightarrow> 'a list"
-  assumes eulerian: "is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+  assumes eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
 
 (* TODO: implement algorithm to compute Eulerian Tour? *)
 

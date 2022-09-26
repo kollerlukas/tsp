@@ -3,35 +3,60 @@ theory DoubleTree
   imports Main MST TSP Eulerian
 begin
 
-section \<open>\textsc{DoubleTree} Approximation Algorithm for mTSP\<close>
+section \<open>\textsc{DoubleTree} Approximation Algorithm for \textsc{mTSP}\<close>
 
-text \<open>Hamiltonian Cycle of Eulerian Tour\<close>
-fun hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
-  "hc_of_et [] H = H"
-| "hc_of_et [v] H = v#H"
-| "hc_of_et (v#P) H = (if v \<in> List.set H then hc_of_et P H else hc_of_et P (v#H))"
-                                                
-locale double_tree_algo = 
-  metric_graph_abs E c + 
-  mst E c comp_mst + 
-  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
-begin
+text \<open>Compute a Hamiltonian Cycle of an Eulerian Tour.\<close>
+fun comp_hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "comp_hc_of_et [] H = H"
+| "comp_hc_of_et [v] H = v#H"
+| "comp_hc_of_et (v#P) H = (if v \<in> set H then comp_hc_of_et P H else comp_hc_of_et P (v#H))"
 
-lemma hc_of_et_set_eq: "set P \<union> set H = set (hc_of_et P H)"
-  by (induction P H rule: hc_of_et.induct) auto
+lemma comp_hc_of_et_remdups_aux:
+  assumes "distinct H" "length P > 0"
+  shows "comp_hc_of_et P H = last P # remdups (rev (butlast P) @ H)"
+  using assms
+proof (induction P H rule: comp_hc_of_et.induct)
+  case (3 u v P H)
+  thus ?case by (fastforce simp: remdups_append)
+qed (auto simp: distinct_remdups_id)
 
-lemma hc_of_et_non_nil: "P \<noteq> [] \<Longrightarrow> (hc_of_et P H) \<noteq> []"
-  by (induction P H rule: hc_of_et.induct) auto
+text \<open>This lemma is not needed. Just to show a different way of implementing \<open>comp_hc_of_et\<close> 
+using \<open>remdups\<close>.\<close>
+lemma comp_hc_of_et_remdups: 
+  "comp_hc_of_et P [] = (if length P > 0 then last P#remdups (rev (butlast P)) else [])"
+  using comp_hc_of_et_remdups_aux[of "[]" P] by auto
+
+lemma hc_of_et_hd: "P \<noteq> [] \<Longrightarrow> last P = hd (comp_hc_of_et P H)"
+  by (induction P H rule: comp_hc_of_et.induct) auto
+
+lemma hc_of_et_last_aux: "H \<noteq> [] \<Longrightarrow> last H = last (comp_hc_of_et P H)"
+  by (induction P H rule: comp_hc_of_et.induct) auto
+
+lemma hc_of_et_last: "P \<noteq> [] \<Longrightarrow> hd P = last (comp_hc_of_et P [])"
+proof (induction P rule: list012.induct)
+  case (3 u v P)
+  then show ?case 
+    using hc_of_et_last_aux[of "[u]" "v#P"] by auto
+qed auto
+
+lemma hc_of_et_set_eq: "set P \<union> set H = set (comp_hc_of_et P H)"
+  by (induction P H rule: comp_hc_of_et.induct) auto
+
+lemma hc_of_et_non_nil: "P \<noteq> [] \<Longrightarrow> (comp_hc_of_et P H) \<noteq> []"
+  by (induction P H rule: comp_hc_of_et.induct) auto
+
+lemma hc_of_et_distinct: "distinct H \<Longrightarrow> distinct (tl (comp_hc_of_et P H))"
+  by (induction P H rule: comp_hc_of_et.induct) (auto simp: Let_def distinct_tl)
 
 lemma hc_of_et_vs:
   assumes "is_et X P" 
-  shows "set (hc_of_et P []) = mVs X"
+  shows "set (comp_hc_of_et P []) = mVs X"
 proof
-  show "set (hc_of_et P []) \<subseteq> mVs X"
-    using assms[unfolded is_et_def mpath_def2] mem_path_Vs[of "set_mset X" P] 
-          hc_of_et_set_eq[of P "[]"] by (auto simp: mVs_def)
+  show "set (comp_hc_of_et P []) \<subseteq> mVs X"
+    using assms mem_path_Vs[of "set_mset X" P] is_etE[of X P]
+          hc_of_et_set_eq[of P "[]"] by (auto simp: mpath_def2 mVs_def)
 next
-  show "mVs X \<subseteq> set (hc_of_et P [])"
+  show "mVs X \<subseteq> set (comp_hc_of_et P [])"
     unfolding mVs_def
   proof
     fix v
@@ -39,49 +64,106 @@ next
     then obtain e where "e \<in># X" "v \<in> e"
       by (auto elim: vs_member_elim)
     moreover hence "e \<in># mset (edges_of_path P)"
-      using assms[unfolded is_et_def] by auto
-    ultimately show "v \<in> set (hc_of_et P [])"
+      using assms is_etE[of X P] by auto
+    ultimately show "v \<in> set (comp_hc_of_et P [])"
       using v_in_edge_in_path_gen[of e P v] hc_of_et_set_eq[of P] by auto
   qed
 qed
 
+lemma et_distinct_adj:
+  assumes "mgraph_invar X" "is_et X P"
+  shows "distinct_adj P"
+proof -
+  have "path (set_mset X) P"
+    using assms is_etE by (auto simp: mpath_def2)
+  thus ?thesis
+    using assms path_distinct_adj by auto
+qed     
+
+lemma distinct_adj_tl_comp_hc_of_et:
+  assumes "distinct_adj P" "distinct H"
+  shows "distinct_adj (tl (comp_hc_of_et P H))"
+  using assms by (induction P H rule: comp_hc_of_et.induct) 
+    (auto simp: distinct_tl distinct_distinct_adj)
+
+lemma hd_remdups_append:
+  assumes "x = hd (remdups (xs@[x]))"
+  shows "xs = [] \<or> xs = [x] \<or> \<not> distinct_adj xs"
+  using assms by (induction xs) (auto split: if_splits simp: distinct_adj_Cons)
+
+lemma hd_tl_comp_hc_of_et_not_distinct_adj:
+  assumes "u = hd (tl (comp_hc_of_et (u#P@[u]) []))"
+  shows "\<not> distinct_adj (u#P@[u])" (is "\<not> distinct_adj ?P")
+proof -
+  have "u = hd (remdups (rev P@[u]))"
+    using assms by (auto simp: comp_hc_of_et_remdups[of ?P])
+  hence "P = [] \<or> P = [u] \<or> \<not> distinct_adj P"
+    using hd_remdups_append[of u "rev P"] by auto
+  thus ?thesis
+    by (elim disjE) (auto simp: distinct_adj_Cons distinct_adj_append_iff)
+qed
+
+lemma distinct_adj_last_neq_hd_tl:
+  assumes "distinct_adj P" "length P > 1" "hd P = last P"
+  shows "last P \<noteq> hd (tl (comp_hc_of_et P []))"
+proof (rule ccontr; simp)
+  assume "last P = hd (tl (comp_hc_of_et P []))"
+  moreover obtain u P' where "P = u#P'@[u]"
+    using assms
+    by (metis append_butlast_last_id append_self_conv2 distinct_hd_last_neq distinct_singleton 
+        dual_order.strict_trans length_greater_0_conv less_one list.collapse tl_append2)
+    (* TODO: clean up! *)
+  ultimately have "\<not> distinct_adj P"
+    using hd_tl_comp_hc_of_et_not_distinct_adj[of u P'] by auto
+  thus "False"
+    using assms by auto
+qed
+
+lemma distinct_adj_comp_hc_of_et:
+  assumes "distinct_adj P" "P \<noteq> [] \<Longrightarrow> hd P = last P"
+  shows "distinct_adj (comp_hc_of_et P [])"
+  using assms
+proof (induction  P rule: list012.induct) (* induction just for case distinction *)
+  case (3 u v P)
+  moreover hence "last (u#v#P) \<noteq> hd (tl (comp_hc_of_et (u#v#P) []))"
+    using distinct_adj_Cons[of u "v#P"] distinct_adj_last_neq_hd_tl[of "u#v#P"] by auto
+  moreover have "distinct_adj (tl (comp_hc_of_et (u#v#P) []))"
+    using distinct_distinct_adj[OF hc_of_et_distinct[of "[]" "u#v#P"]] by auto
+  ultimately show ?case 
+    using comp_hc_of_et_remdups[of "u#v#P"] by (auto simp: distinct_adj_Cons)  
+qed auto
+
+locale hc_of_et = 
+  metric_graph_abs E c + 
+  mst E c comp_mst + 
+  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
+begin
+
 lemma hc_of_et_path:
   assumes "is_et X P" "set_mset X \<subseteq> E"
-  shows "path E (hc_of_et P [])" (is "path E ?H")
+  shows "path E (comp_hc_of_et P [])" (is "path E ?H")
 proof -
   have "set P \<subseteq> Vs E"
-    using assms[unfolded is_et_def mpath_def2] Vs_subset[of "set_mset X" E] 
-    by (auto simp: mem_path_Vs subsetI)
+    using assms Vs_subset[of "set_mset X" E] is_etE[of X P]
+    by (auto simp: mpath_def2 mem_path_Vs subsetI)
   hence "set ?H \<subseteq> Vs E"
     using hc_of_et_set_eq[of P "[]"] by auto
-  then show ?thesis
+  moreover have "mgraph_invar X"
+    using assms graph finite_subset[OF Vs_subset, of "set_mset X" E] by auto
+  moreover have "distinct_adj (comp_hc_of_et P [])"
+    using calculation assms et_distinct_adj distinct_adj_comp_hc_of_et by (fastforce simp: is_etE)
+  ultimately show ?thesis
     unfolding mpath_def using path_complete_graph[of ?H] by auto
 qed
 
-lemma hc_of_et_distinct: "distinct H \<Longrightarrow> distinct (tl (hc_of_et P H))"
-  by (induction P H rule: hc_of_et.induct) (auto simp: Let_def distinct_tl)
-
-lemma hc_of_et_last_aux: "H \<noteq> [] \<Longrightarrow> last H = last (hc_of_et P H)"
-  by (induction P H rule: hc_of_et.induct) auto
-
-lemma hc_of_et_last: "P \<noteq> [] \<Longrightarrow> hd P = last (hc_of_et P [])"
-proof (induction P rule: list012.induct)
-  case (3 u v P)
-  then show ?case 
-    using hc_of_et_last_aux[of "[u]" "v#P"] by auto
-qed auto
-
-lemma hc_of_et_hd: "P \<noteq> [] \<Longrightarrow> last P = hd (hc_of_et P H)"
-  by (induction P H rule: hc_of_et.induct) auto
-
 lemma hc_of_et_cycle:
   assumes "P \<noteq> []" "is_et X P"
-  shows "hd (hc_of_et P []) = last (hc_of_et P [])" (is "hd ?H = last ?H")
+  shows "hd (comp_hc_of_et P []) = last (comp_hc_of_et P [])" (is "hd ?H = last ?H")
 proof -
   have "hd ?H = last P"
     using assms hc_of_et_hd[of P "[]"] by auto
   also have "... = hd P"
-    using assms[unfolded is_et_def] by auto
+    using assms by (auto simp: is_etE)
   also have "... = last ?H"
     using assms hc_of_et_last by auto
   finally show ?thesis .
@@ -89,9 +171,9 @@ qed
 
 lemma hc_of_et_walk_betw:
   assumes "P \<noteq> []" "is_et X P" "set_mset X \<subseteq> E"
-  obtains v where "walk_betw E v (hc_of_et P []) v"
+  obtains v where "walk_betw E v (comp_hc_of_et P []) v"
 proof
-  let ?H="hc_of_et P []"
+  let ?H="comp_hc_of_et P []"
   let ?v="hd ?H"
   show "walk_betw E ?v ?H ?v"
   proof (rule nonempty_path_walk_between)
@@ -102,7 +184,7 @@ qed
 
 lemma hc_of_et_correct: 
   assumes "is_et X P" "mVs X = Vs E" "set_mset X \<subseteq> E"
-  shows "is_hc (hc_of_et P [])"
+  shows "is_hc (comp_hc_of_et P [])"
 proof (cases "P = []")
   case True
   hence "X = {#}"
@@ -115,7 +197,7 @@ proof (cases "P = []")
     using \<open>P = []\<close> hc_nil_iff by auto
 next
   case False
-  then obtain v where "hc_of_et P [] \<noteq> []" "walk_betw E v (hc_of_et P []) v"
+  then obtain v where "comp_hc_of_et P [] \<noteq> []" "walk_betw E v (comp_hc_of_et P []) v"
     using assms hc_of_et_non_nil by (auto elim: hc_of_et_walk_betw[of P X])
   then show ?thesis
     apply (rule is_hcI_non_nil)
@@ -123,19 +205,33 @@ next
           hc_of_et_cycle[of P X] by auto
 qed
 
+lemma cost_of_path_hc_of_et:
+  assumes "set P \<union> set H \<subseteq> Vs E"
+  shows "cost_of_path (comp_hc_of_et P H) \<le> cost_of_path (rev P @ H)"
+  using assms
+proof (induction P H rule: comp_hc_of_et.induct)
+  case (3 u v P H)
+  then show ?case 
+    using cost_of_path_app_tri_ineq[of "rev (v#P)" H u] by auto
+qed auto
+
+lemma hc_of_et_reduces_cost: "set P \<subseteq> Vs E \<Longrightarrow> cost_of_path (comp_hc_of_et P []) \<le> cost_of_path P"
+  using cost_of_path_hc_of_et[of P "[]"] cost_of_path_rev[of P] by auto
+
+end
+
+locale double_tree_algo = 
+  metric_graph_abs E c + 
+  mst E c comp_mst + 
+  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
+begin
+
 definition double_tree where
   "double_tree = (
     let T = comp_mst c E;
         T\<^sub>2\<^sub>x = mset_set T + mset_set T;
         P = comp_et T\<^sub>2\<^sub>x in
-        hc_of_et P [])"
-
-end
-
-subsection \<open>Feasibility of \textsc{DoubleTree}\<close>
-
-context double_tree_algo
-begin
+        comp_hc_of_et P [])"
 
 lemma T2x_eulerian:
   assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T"
@@ -155,6 +251,15 @@ lemma T2x_edges:
 
 lemmas dt_correctness = T2x_eulerian[OF mst] T2x_vs[OF mst] T2x_edges[OF mst]
 
+end
+
+subsection \<open>Feasibility of \textsc{DoubleTree}\<close>
+
+locale double_tree_algo_feasibility =
+  hc_of_et +
+  double_tree_algo
+begin
+
 lemma "is_hc (double_tree)" (is "is_hc ?H")
   apply (simp only: double_tree_def Let_def)
   apply (rule hc_of_et_correct, rule eulerian)
@@ -164,21 +269,10 @@ end
 
 subsection \<open>Approximation of \textsc{DoubleTree}\<close>
 
-context double_tree_algo
+locale double_tree_algo_approx =
+  hc_of_et +
+  double_tree_algo
 begin
-
-lemma cost_of_path_hc_of_et:
-  assumes "set P \<union> set H \<subseteq> Vs E"
-  shows "cost_of_path (hc_of_et P H) \<le> cost_of_path (rev P @ H)"
-  using assms
-proof (induction P H rule: hc_of_et.induct)
-  case (3 u v P H)
-  then show ?case 
-    using cost_of_path_app_tri_ineq[of "rev (v#P)" H u] by auto
-qed auto
-
-lemma hc_of_et_reduces_cost: "set P \<subseteq> Vs E \<Longrightarrow> cost_of_path (hc_of_et P []) \<le> cost_of_path P"
-  using cost_of_path_hc_of_et[of P "[]"] cost_of_path_rev[of P] by auto
 
 lemma cost_of_et:
   assumes "is_et T P" 
@@ -192,7 +286,7 @@ lemma et_not_single_v:
 proof (induction P rule: list012.induct) (* induction just for case distinction *)
   case (2 v)
   hence "T\<^sub>2\<^sub>x = {#}" "mpath T\<^sub>2\<^sub>x [v]"
-    unfolding is_et_def by auto
+    using is_etE[of T\<^sub>2\<^sub>x "[v]"] by auto
   hence "mVs T\<^sub>2\<^sub>x = {}" "v \<in> mVs T\<^sub>2\<^sub>x"
     unfolding mpath_def2 by (auto simp: mVs_def Vs_def)
   then show ?case by auto
@@ -200,11 +294,11 @@ qed auto
 
 lemma hc_of_et_cost_le_dt:
   assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T" "is_et T\<^sub>2\<^sub>x P"
-  shows "cost_of_path (hc_of_et P []) \<le> 2 * cost_of_st T"
+  shows "cost_of_path (comp_hc_of_et P []) \<le> 2 * cost_of_st T"
 proof -
   have "set P \<subseteq> Vs E"
-    using assms et_vertices[of T\<^sub>2\<^sub>x P, OF _ et_not_single_v] T2x_vs[of T T\<^sub>2\<^sub>x] by auto
-  hence "cost_of_path (hc_of_et P []) \<le> cost_of_path P"
+    using assms et_vertices_len_neq_1[of T\<^sub>2\<^sub>x P, OF _ et_not_single_v] T2x_vs[of T T\<^sub>2\<^sub>x] by auto
+  hence "cost_of_path (comp_hc_of_et P []) \<le> cost_of_path P"
     using hc_of_et_reduces_cost[of P] by auto
   also have "... = (\<Sum>e\<in>#T\<^sub>2\<^sub>x. c e)"
     using assms cost_of_et by auto
@@ -225,7 +319,7 @@ proof -
   let ?T\<^sub>2\<^sub>x="mset_set ?T + mset_set ?T"
   let ?P="comp_et ?T\<^sub>2\<^sub>x"
   
-  have "cost_of_path double_tree = cost_of_path (hc_of_et ?P [])"
+  have "cost_of_path double_tree = cost_of_path (comp_hc_of_et ?P [])"
     unfolding double_tree_def by (auto simp: Let_def)
   also have "... \<le> 2 * cost_of_st ?T"
     using mst hc_of_et_cost_le_dt[of ?T ?T\<^sub>2\<^sub>x ?P] eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2\<^sub>x] by auto
@@ -491,9 +585,7 @@ qed
 
 end
 
-interpretation double_tree_algo 
-  sorry
-
-
+(* interpretation double_tree_algo 
+  sorry *)
 
 end
