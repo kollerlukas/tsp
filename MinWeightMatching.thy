@@ -11,12 +11,25 @@ lemma is_perf_matchI:
   using assms by (auto simp: is_perf_match_def)
 
 lemma is_perf_matchI2:
-  assumes "M \<subseteq> E" "matching M" "\<And>u. u \<in> Vs E \<Longrightarrow> \<exists>e \<in> M. u \<in> e"
+  assumes "M \<subseteq> E" "\<And>u. u \<in> Vs E \<Longrightarrow> \<exists>!e \<in> M. u \<in> e"
   shows "is_perf_match E M"
 proof -
   have "Vs M = Vs E"
-    using assms by (intro equalityI) (auto simp: Vs_subset)
-  thus ?thesis
+    using assms
+  proof (intro equalityI)
+    show "Vs E \<subseteq> Vs M"
+    proof
+      fix v
+      assume "v \<in> Vs E"
+      then obtain e where "e \<in> M" "v \<in> e"
+        using assms by meson
+      thus "v \<in> Vs M"
+        by (auto intro: vs_member_intro)
+    qed
+  qed (auto simp: Vs_subset)
+  moreover hence "matching M"
+    unfolding matching_def2 using assms by auto
+  ultimately show ?thesis
     using assms by (intro is_perf_matchI)
 qed
 
@@ -24,6 +37,44 @@ lemma is_perf_matchE:
   assumes "is_perf_match E M"
   shows "M \<subseteq> E" "matching M" "Vs M = Vs E"
   using assms[unfolded is_perf_match_def] by auto
+
+lemma extend_perf_match:
+  assumes "is_perf_match E M" "u \<notin> Vs E" "v \<notin> Vs E" "{{u,v}} \<union> E \<subseteq> E'" "Vs E' = Vs E \<union> {u,v}"
+  shows "is_perf_match E' ({{u,v}} \<union> M)"
+proof (rule is_perf_matchI2)
+  have "M \<subseteq> E"
+    using assms by (auto simp: is_perf_matchE)
+  thus "{{u,v}} \<union> M \<subseteq> E'"
+    using assms by auto
+
+  show "\<And>w. w \<in> Vs E' \<Longrightarrow> \<exists>!e \<in> {{u,v}} \<union> M. w \<in> e"
+  proof -
+    fix w
+    assume "w \<in> Vs E'"
+    hence "w \<in> {u,v} \<or> w \<in> Vs E - {u,v}"
+      using assms by auto
+    thus "\<exists>!e \<in> {{u,v}} \<union> M. w \<in> e"
+    proof (elim disjE)
+      assume "w \<in> {u,v}"
+      moreover hence "\<exists>!e \<in> {{u,v}}. w \<in> e"
+        by auto
+      moreover have "w \<notin> Vs M"
+        using assms calculation by (auto simp: is_perf_matchE)
+      moreover hence "\<forall>e \<in> M. w \<notin> e"
+        using vs_member[of w M] by auto
+      ultimately show "\<exists>!e \<in> {{u,v}} \<union> M. w \<in> e"
+        by auto
+    next
+      assume "w \<in> Vs E - {u,v}"
+      moreover hence "w \<in> Vs M" "matching M"
+        using assms by (auto simp: is_perf_matchE)
+      moreover hence "\<exists>!e \<in> M. w \<in> e"
+        by (auto simp: matching_def2)
+      ultimately show "\<exists>!e \<in> {{u,v}} \<union> M. w \<in> e"
+        by auto 
+    qed
+  qed
+qed
 
 definition "is_min_match E c M \<equiv> 
   is_perf_match E M \<and> (\<forall>M'. is_perf_match E M' \<longrightarrow> sum c M \<le> sum c M')"

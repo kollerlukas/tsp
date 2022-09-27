@@ -410,7 +410,7 @@ proof (induction P rule: list012.induct) (* induction just for case distinction 
   case (3 u v P)
   then show ?case 
     using degree_edges_of_path_hd by fastforce
-qed auto (* induction just for case distinction *)
+qed auto
 
 lemma non_acyclic_path_not_distinct:
   assumes "path E P" "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")

@@ -131,7 +131,7 @@ section \<open>(Finite) Set Lemmas\<close>
 
 inductive finite_even :: "'a set \<Rightarrow> bool" where
   "finite_even {}"
-| "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> finite_even ({a,b} \<union> A)"
+| "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> finite_even ({a,b} \<union> A)"
 
 thm finite_even.induct
   
@@ -208,6 +208,30 @@ qed
 
 lemma Vs_union: "Vs (A \<union> B) = Vs A \<union> Vs B"
   unfolding Vs_def by auto
+
+lemma Vs_inter_subset: "Vs (A \<inter> B) \<subseteq> Vs A \<inter> Vs B"
+  unfolding Vs_def by auto
+
+lemma Vs_inter_subset1: "Vs (A \<inter> B) \<subseteq> Vs A"
+  unfolding Vs_def by auto
+
+lemma Vs_inter_subset2: "Vs (A \<inter> B) \<subseteq> Vs B"
+  unfolding Vs_def by auto
+
+lemma Vs_subset_restricted_graph: (* needed in CompleteGraph *)
+  fixes V E
+  defines "E\<^sub>V \<equiv> {e \<in> E. e \<subseteq> V}"
+  shows "Vs E\<^sub>V \<subseteq> V"
+proof 
+  fix v
+  assume "v \<in> Vs E\<^sub>V"
+  then obtain e where "e \<in> E\<^sub>V" "v \<in> e"
+    by (auto elim: vs_member_elim)
+  moreover hence "e \<subseteq> V"
+    using assms by auto
+  ultimately show "v \<in> V"
+    by (auto intro: vs_member_intro)
+qed
 
 lemma path_distinct_adj:
   assumes "path E P" and graph: "graph_invar E"
