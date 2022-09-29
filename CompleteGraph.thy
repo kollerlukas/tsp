@@ -88,33 +88,32 @@ proof -
   thus ?thesis
     using assms
   proof (induction "Vs E" arbitrary: E rule: finite_even.induct)
-    case 1
+    case fe_empty
     moreover hence "E = {}"
       using Vs_nilE by blast
     moreover hence "is_perf_match E {}"
       by (auto intro: is_perf_matchI simp: matching_def)
     ultimately show ?case by auto
   next
-    case (2 V u v)
-    let ?E'="{e \<in> E. e \<subseteq> V}"
-    have "card V \<noteq> 1" "V \<subseteq> Vs E"
-      using 2 by (auto simp: finite_even_def2)
-    hence "V = Vs ?E'"
-      using 2 Vs_restricted_complete_graph[of E V] by auto
+    case (fe_insert2 V u v)
+    moreover hence "card V \<noteq> 1" "V \<subseteq> Vs E"
+      by (auto simp: finite_even_def2)
+    moreover hence "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
+      using calculation Vs_restricted_complete_graph[of E V] by auto
     moreover hence "even (card (Vs ?E'))"
-      using "2.hyps" by (auto simp: finite_even_def2)
+      using calculation by (auto simp: finite_even_def2)
     moreover have "?E' \<subseteq> E" "graph_invar ?E'"
-      using "2.prems" graph_subset[of E ?E'] by auto
-    moreover have "\<And>u v. u \<in> Vs ?E' \<Longrightarrow> v \<in> Vs ?E' \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> ?E'"
-      using "2.prems" restricted_graph_complete[of E V] by auto
+      using calculation graph_subset[of E ?E'] by auto
+    moreover have "is_complete ?E'"
+      using calculation restricted_graph_complete[of E V] by auto
     moreover obtain M where "is_perf_match ?E' M"
-      using calculation "2.hyps"(2)[of ?E'] by auto
+      using calculation by fastforce
     moreover have "u \<in> Vs E" "v \<in> Vs E"
-      using "2.hyps" by auto
+      using calculation by auto
     moreover hence "{{u,v}} \<union> ?E' \<subseteq> E"
-      using "2.prems" "2.hyps" by auto
+      using calculation by auto
     ultimately have "is_perf_match E ({{u,v}} \<union> M)"
-      using "2.hyps" by (intro extend_perf_match[of ?E' M]) auto
+      by (intro extend_perf_match[of ?E' M]) auto
     thus ?case by auto
   qed
 qed

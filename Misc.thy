@@ -67,87 +67,73 @@ lemma remdups_append: "x \<in> set ys \<Longrightarrow> remdups (xs @ x # ys) = 
 
 subsection \<open>Repeated Elements in Lists\<close>
 
-(* inductive consec_neq :: "'a list \<Rightarrow> bool" where (* no repeated elements *)
-  "consec_neq []"
-| "consec_neq [x]"
-| "x \<noteq> y \<Longrightarrow> consec_neq (y#xs) \<Longrightarrow> consec_neq (x#y#xs)"
-
-lemma "consec_neq P \<longleftrightarrow> distinct_adj P"
-  unfolding distinct_adj_def
-  apply (rule iffI)
-  subgoal
-    by (induction P rule: consec_neq.induct) auto
-  subgoal
-    by (induction P rule: list012.induct) (auto intro: consec_neq.intros)
-  done
-
-lemma consec_neq_cons:
-  assumes "consec_neq xs" "length xs > 0 \<Longrightarrow> x \<noteq> hd xs" 
-  shows "consec_neq (x#xs)"
-  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
-
-lemma consec_neq_append:
-  assumes "consec_neq xs" "length xs > 0 \<Longrightarrow> last xs \<noteq> x"
-  shows "consec_neq (xs @ [x])"
-  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
-
-lemma consec_neq_append2:
-  assumes "consec_neq (xs @ [y])" "y \<noteq> x"
-  shows "consec_neq (xs @ [y,x])"
-  using assms consec_neq_append by fastforce
-
-lemma distinct_consec_neq: 
-  assumes "distinct xs"
-  shows "consec_neq xs"
-  using assms by (induction xs rule: list012.induct) (auto intro: consec_neq.intros)
-
-lemma not_in_consec_neq:
-  assumes "consec_neq xs" "x \<notin> set xs" 
-  shows "consec_neq (x#xs)"
-  using assms by (induction xs rule: consec_neq.induct) (auto intro: consec_neq.intros)
-  
-lemma rev_consec_neq:
-  assumes "consec_neq xs"
-  shows "consec_neq (rev xs)"
-  using assms by (induction xs rule: consec_neq.induct) 
-    (auto intro: consec_neq.intros simp: consec_neq_append2)
-
-lemma path_consec_neq:
-  assumes "path E P" and graph: "graph_invar E"
-  shows "consec_neq P"
-  using assms 
-proof (induction P rule: path.induct)
-  case (path2 u v P)
-  moreover hence "u \<noteq> v"
-    using graph by auto
-  ultimately show ?case 
-    by (auto intro: consec_neq.intros)
-qed (auto intro: consec_neq.intros) *)
-
 lemma distinct_distinct_adj: "distinct xs \<Longrightarrow> distinct_adj xs"
   by (simp add: distinct_adj_altdef distinct_tl remdups_adj_distinct)
 
 section \<open>(Finite) Set Lemmas\<close>
 
-inductive finite_even :: "'a set \<Rightarrow> bool" where
-  "finite_even {}"
-| "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> finite_even ({a,b} \<union> A)"
+lemma set012_split: 
+  assumes "finite F"
+  obtains x y F' where "F = {} \<or> F = {x} \<or> (F = {x,y} \<union> F' \<and> x \<notin> F' \<and> y \<notin> F' \<and> x \<noteq> y)"
+  using assms
+proof (induction F rule: finite_induct)
+  case insertI1: (insert x F)
+  thus ?case 
+  proof (induction F rule: finite_induct)
+    case insertI2: (insert y F)
+    thus ?case 
+      using insertI1 by auto
+  qed auto
+qed auto
 
-thm finite_even.induct
+text \<open>Induction schema that adds two new elements to a finite set.\<close>
+lemma finite2_induct [consumes 1, case_names empty insert insert2]:
+  assumes "finite F"
+  assumes empty: "P {}"
+      and insert: "\<And>x. P {x}"
+      and insert2: "\<And>x y F. finite F \<Longrightarrow> x \<notin> F \<Longrightarrow> y \<notin> F \<Longrightarrow> x \<noteq> y \<Longrightarrow> P F \<Longrightarrow> P ({x,y} \<union> F)"
+  shows "P F"
+  using assms
+proof (induction F rule: finite_psubset_induct)
+  case (psubset F)
+  moreover then obtain x y F' where 
+    "F = {} \<or> F = {x} \<or> (F = {x,y} \<union> F' \<and> x \<notin> F' \<and> y \<notin> F' \<and> x \<noteq> y)"
+    using set012_split[of F] by metis
+  ultimately show ?case 
+  proof (elim disjE)
+    assume "F = {x,y} \<union> F' \<and> x \<notin> F' \<and> y \<notin> F' \<and> x \<noteq> y"
+    then show ?case
+      using psubset by fastforce
+  qed auto
+qed
+
+lemma finite_even_induct [consumes 2, case_names empty insert2]:
+  assumes "finite F" "even (card F)"
+  assumes empty: "P {}"
+      and insert2: "\<And>x y F. finite F \<Longrightarrow> x \<notin> F \<Longrightarrow> y \<notin> F \<Longrightarrow> x \<noteq> y \<Longrightarrow> P F \<Longrightarrow> P ({x,y} \<union> F)"
+  shows "P F"
+  using assms by (induction F rule: finite2_induct) auto
+
+inductive finite_even :: "'a set \<Rightarrow> bool" where
+  fe_empty: "finite_even {}"
+| fe_insert2: "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> finite_even ({a,b} \<union> A)"
+
+lemma finite_evenI2:
+  assumes "finite A" "even (card A)"
+  shows "finite_even A"
+  using assms
+proof (induction A rule: finite_even_induct)
+  case (insert2 a b A)
+  then show ?case
+    by (intro fe_insert2) auto
+qed (auto intro: finite_even.intros)
   
 lemma finite_even_def2: "finite_even A \<longleftrightarrow> finite A \<and> even (card A)"
 proof
   assume "finite_even A"
-  show "finite A \<and> even (card A)"
-    sorry
-next
-  assume "finite A \<and> even (card A)"
-  show "finite_even A"
-    sorry
-qed
-
-lemma finite_evenI2: "finite A \<Longrightarrow> even (card A) \<Longrightarrow> finite_even A"
-  unfolding finite_even_def2 by simp
+  then show "finite A \<and> even (card A)"
+    by (induction A rule: finite_even.induct) auto
+qed (auto simp: finite_evenI2)
 
 section \<open>Metric Lemmas\<close>
 
