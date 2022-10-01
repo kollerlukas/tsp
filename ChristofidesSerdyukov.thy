@@ -16,7 +16,7 @@ begin
 definition christofides_serdyukov where
   "christofides_serdyukov = (
     let T = comp_mst c E;
-        W = {v | v. v \<in> Vs T \<and> \<not> even' (degree T v)};
+        W = {v \<in> Vs T. \<not> even' (degree T v)};
         M = comp_match ({{u,v} | u v. u \<in> W \<and> v \<in> W \<and> u \<noteq> v}) c;
         J = mset_set T + mset_set M;
         P = comp_et J in
@@ -30,13 +30,16 @@ locale christofides_serdyukov_J =
   christofides_serdyukov_algo E c comp_mst comp_et comp_match
   for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list" and comp_match +
   fixes T W E\<^sub>W M
-  defines "W \<equiv> {v | v. v \<in> Vs T \<and> \<not> even' (degree T v)}"
+  defines "W \<equiv> {v \<in> Vs T. \<not> even' (degree T v)}"
       and "E\<^sub>W \<equiv> {{u,v} | u v. u \<in> W \<and> v \<in> W \<and> u \<noteq> v} \<inter> E"
       and "M \<equiv> comp_match E\<^sub>W c"
   assumes mst_T: "is_mst T"
 begin
 
 lemma subset_T: "T \<subseteq> E"
+  using mst_T by (auto simp: is_mstE2)
+
+lemma Vs_T: "Vs T = Vs E"
   using mst_T by (auto simp: is_mstE2)
 
 lemma graph_T: "graph_invar T"
@@ -47,21 +50,6 @@ lemma finite_T: "finite T"
 
 lemma subset_W: "W \<subseteq> Vs E"
   unfolding W_def using Vs_subset[OF subset_T] by auto
-
-lemma even_card_W: "even (card W)"
-proof -
-  have "even' (\<Sum>v \<in> Vs E. degree E v)"
-    sorry (* follows from handshake thm *)
-  moreover have "(\<Sum>v \<in> Vs E. degree E v) = 
-    (\<Sum>v \<in> Vs E\<^sub>W. degree E v) + (\<Sum>v \<in> Vs E - Vs E\<^sub>W. degree E v)"
-    sorry
-  moreover have "even' (\<Sum>v \<in> Vs E - Vs E\<^sub>W. degree E v)"
-    sorry (* sum of even vals is even *)
-  ultimately have "even' (\<Sum>v \<in> Vs E\<^sub>W. degree E v)"
-    sorry (* a \<noteq> \<infinity> \<and> b \<noteq> \<infinity> \<Longrightarrow> even' (a+b) \<and> even' b \<Longrightarrow> even' a *)
-  thus "even (card W)"
-    using even_sum_of_odd_vals_iff sorry
-qed  (* follows from handshake thm *)
 
 lemma E\<^sub>W_def2: "E\<^sub>W = {{u,v} | u v. u \<in> W \<and> v \<in> W \<and> u \<noteq> v}"
   unfolding E\<^sub>W_def using graph complete subset_W by (auto simp: in_mono)
@@ -82,10 +70,6 @@ next
   qed
 qed
 
-lemma W_eq_Vs_E\<^sub>W: "W = Vs E\<^sub>W"
-  unfolding E\<^sub>W_def3
-  using even_card_W Vs_restricted_complete_graph[OF complete _ subset_W] by (metis odd_one)
-
 lemma subset_E\<^sub>W: "E\<^sub>W \<subseteq> E"
   unfolding E\<^sub>W_def by auto
 
@@ -95,10 +79,16 @@ lemma finite_E\<^sub>W: "finite E\<^sub>W"
 lemma finite_Vs_E\<^sub>W: "finite (Vs E\<^sub>W)"
   using graph subset_E\<^sub>W finite_subset[OF Vs_subset] by auto
 
+lemma even_card_W: "even (card W)"
+  unfolding W_def
+  using graph_abs.even_num_of_odd_degree_vertices[unfolded graph_abs_def, OF graph_T] .
+
+lemma W_eq_Vs_E\<^sub>W: "W = Vs E\<^sub>W"
+  unfolding E\<^sub>W_def3
+  using even_card_W Vs_restricted_complete_graph[OF complete _ subset_W] by (metis odd_one)
+
 lemma even_card_Vs_E\<^sub>W: "even (card (Vs E\<^sub>W))"
   using even_card_W by (auto simp: W_eq_Vs_E\<^sub>W)
-
-thm restricted_graph_complete
 
 lemma complete_E\<^sub>W: "is_complete E\<^sub>W"
   unfolding E\<^sub>W_def3 using restricted_graph_complete[OF complete, of W] by auto
@@ -114,6 +104,9 @@ lemma subset_M: "M \<subseteq> E"
 lemma W_eq_Vs_M: "W = Vs M"
   unfolding M_def using is_min_matchE2[OF match] by (auto simp: W_eq_Vs_E\<^sub>W)
 
+lemma Vs_M_subset: "Vs M \<subseteq> Vs E"
+  using W_eq_Vs_M subset_W by blast
+
 lemma finite_M: "finite M"
   using finite_E subset_M finite_subset by auto
 
@@ -125,7 +118,7 @@ proof (rule is_eulerianI)
   fix v
   assume "v \<in> mVs ?J"
   hence "v \<in> Vs T"
-    sorry
+    using finite_T finite_M Vs_T Vs_M_subset by (auto simp: mVs_union mVs_mset_set)
   hence "v \<in> W \<or> v \<notin> W"
     using mVs_union by auto
   thus "even' (mdegree ?J v)"
@@ -133,20 +126,24 @@ proof (rule is_eulerianI)
     assume "v \<in> W"
     moreover hence "\<not> even' (degree T v)"
       unfolding W_def by auto
+    moreover have "degree T v \<noteq> \<infinity>"
+      using finite_T by (auto simp: non_inf_degr)
     moreover have "degree M v = 1"
       using calculation W_eq_Vs_M degree_matching_in_M[OF matching_M] by auto
-    moreover have "mdegree ?J v = degree T v + 1"
-      sorry
+    moreover hence "mdegree ?J v = degree T v + 1"
+      by (auto simp: mdegree_add mdegree_eq_degree)
     ultimately show "even' (mdegree ?J v)"
-      sorry
+      using not_even_add1 by auto
   next
     assume "v \<notin> W"
     moreover hence "even' (degree T v)"
       unfolding W_def using \<open>v \<in> Vs T\<close> by auto
     moreover have "v \<notin> Vs M"
       using calculation W_eq_Vs_M by auto
-    moreover have "mdegree ?J v = degree T v"
-      sorry
+    moreover hence "degree M v = 0"
+      by (auto simp: degree_not_Vs)
+    moreover hence "mdegree ?J v = degree T v"
+      by (auto simp: mdegree_add mdegree_eq_degree)
     ultimately show "even' (mdegree ?J v)"
       by auto
   qed

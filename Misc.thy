@@ -149,7 +149,7 @@ text \<open>Even predicate for \<open>enat\<close>\<close>
 fun even' :: "enat \<Rightarrow> bool" where
   "even' \<infinity> = False"
 | "even' (enat i) = even i"
-
+             
 lemma even_enat_mult2: 
   assumes "i \<noteq> \<infinity>" 
   shows "even' (2 * i)"
@@ -163,12 +163,140 @@ next
     using assms imult_is_infinity by auto
 qed
 
+lemma even'_enat: 
+  assumes "even' a"
+  obtains a' where "enat a' = a"
+  using assms by (cases a) auto
+
+lemma enat_addE:
+  assumes "enat c = a + b"
+  obtains x y where "enat x = a" "enat y = b"
+  by (metis assms not_enat_eq plus_enat_simps)
+
+lemma even'_addI1:
+  assumes "even' a" "even' b"
+  shows "even' (a + b)"
+proof -
+  obtain x where "enat x = a"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even x"
+    using assms by auto
+  moreover obtain y where "enat y = b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even y"
+    using assms by auto
+  ultimately show ?thesis
+    by auto
+qed
+
+lemma even'_addI2:
+  assumes "\<not> even' a" "a \<noteq> \<infinity>" "\<not> even' b" "b \<noteq> \<infinity>" 
+  shows "even' (a + b)"
+proof -
+  obtain x where "enat x = a"
+    using assms by (auto elim: even'_enat)
+  moreover hence "odd x"
+    using assms by auto
+  moreover obtain y where "enat y = b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "odd y"
+    using assms by auto
+  ultimately show ?thesis
+    by auto
+qed
+
+lemma even'_addE1:
+  assumes "even' (a + b)" "even' b"
+  shows "even' a"
+proof -
+  obtain c where "enat c = a + b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even c"
+    using assms by (cases "a+b") auto
+  moreover obtain x y where "enat x = a" "enat y = b"
+    using assms calculation by (auto elim: enat_addE)
+  ultimately show ?thesis
+    using assms by auto
+qed
+
+lemma even'_addE2:
+  assumes "even' (a + b)" "even' a"
+  shows "even' b"
+proof -
+  obtain c where "enat c = a + b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even c"
+    using assms by (cases "a+b") auto
+  moreover obtain x y where "enat x = a" "enat y = b"
+    using assms calculation by (auto elim: enat_addE)
+  ultimately show ?thesis
+    using assms by auto
+qed
+
+lemma even'_addE3:
+  assumes "even' (a + b)" "\<not> even' b"
+  shows "\<not> even' a"
+proof -
+  obtain c where "enat c = a + b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even c"
+    using assms by (cases "a+b") auto
+  moreover obtain x y where "enat x = a" "enat y = b"
+    using assms calculation by (auto elim: enat_addE)
+  ultimately show ?thesis
+    using assms by auto
+qed
+
+lemma even'_addE4:
+  assumes "even' (a + b)" "\<not> even' a"
+  shows "\<not> even' b"
+proof -
+  obtain c where "enat c = a + b"
+    using assms by (auto elim: even'_enat)
+  moreover hence "even c"
+    using assms by (cases "a+b") auto
+  moreover obtain x y where "enat x = a" "enat y = b"
+    using assms calculation by (auto elim: enat_addE)
+  ultimately show ?thesis
+    using assms by auto
+qed
+
+lemma not_even_add1:
+  assumes "\<not> even' a" "a \<noteq> \<infinity>"
+  shows "even' (a + 1)"
+  using assms by (cases a) auto
+
 section \<open>Sum Lemmas\<close>
 
+lemma finite_sum_neq_inf:
+  assumes "finite X" "\<And>x. x \<in> X \<Longrightarrow> f x \<noteq> (\<infinity>::enat)"
+  shows "sum f X \<noteq> (\<infinity>::enat)"
+  using assms by (induction X rule: finite_induct) (auto simp: plus_eq_infty_iff_enat)
+
 lemma even_sum_of_odd_vals_iff:
-  assumes "finite A" "\<forall>x \<in> A. odd (f x)"
-  shows "even (\<Sum>x \<in> A. f x) \<longleftrightarrow> even (card A)"
-  using assms by (induction A rule: finite_induct) auto
+  assumes "finite X" "\<And>x. x \<in> X \<Longrightarrow> \<not> even' (f x)" "\<And>x. x \<in> X \<Longrightarrow> f x \<noteq> (\<infinity>::enat)"
+  shows "even' (sum f X) \<longleftrightarrow> even' (card X)"
+  using assms 
+proof (induction X rule: finite_induct)
+  case (insert x X)
+  show ?case 
+  proof
+    assume "even' (sum f (insert x X))"
+    thus "even' (enat (card (insert x X)))"
+      using insert by (auto simp: even'_addE4)
+  next
+    assume "even' (enat (card (insert x X)))"
+    hence "\<not> even' (sum f X)"
+      using insert by (auto simp: even'_addE4)
+    thus "even' (sum f (insert x X))"
+      using insert finite_sum_neq_inf[of X f] by (auto simp: even'_addI2)
+  qed
+qed auto
+
+lemma finite_even_sum:
+  assumes "finite X" "\<And>x. x \<in> X \<Longrightarrow> even' (f x)"
+  shows "even' (sum f X)"
+  using assms by (induction X rule: finite_induct) (auto intro: even'_addI1)
 
 lemma sum_one_val:
   assumes "finite X" "a \<in> X" "\<And>x. x \<in> X \<Longrightarrow> x \<noteq> a \<Longrightarrow> f x = 0" "f a = 1"
@@ -669,6 +797,31 @@ qed (auto simp: Vs_empty_empty sum.empty[of "degree {}"])
 
 lemma sum_degree_even: "even' (\<Sum>v \<in> Vs E. degree E v)"
   using finite_E by (auto simp: handshake[symmetric])
+
+lemma even_num_of_odd_degree_vertices: 
+  fixes W
+  defines "W \<equiv> {v \<in> Vs E. \<not> even' (degree E v)}"
+  shows "even (card W)"
+proof -
+  have "even' (sum (degree E) (Vs E))"
+    using finite_E by (auto simp: handshake[symmetric])
+  moreover have "finite W" "W \<subseteq> Vs E"
+    unfolding W_def using graph by auto
+  moreover hence "sum (degree E) (Vs E) = sum (degree E) (Vs E - W) + sum (degree E) W"
+    using graph sum.subset_diff by auto
+  moreover have "\<And>v. v \<in> Vs E - W \<Longrightarrow> even' (degree E v)"
+    unfolding W_def by auto
+  moreover hence "even' (sum (degree E) (Vs E - W))"
+    using graph by (auto intro: finite_even_sum)
+  ultimately have "even' (sum (degree E) W)"
+    using even'_addE2 by auto
+  moreover have "\<And>v. v \<in> W \<Longrightarrow> \<not> even' (degree E v)"
+    unfolding W_def by auto
+  moreover have "\<And>v. v \<in> W \<Longrightarrow> degree E v \<noteq> \<infinity>"
+    using finite_E non_inf_degr by auto
+  ultimately show "even (card W)"
+    using even_sum_of_odd_vals_iff[OF \<open>finite W\<close>, of "degree E"] by auto
+qed
 
 end
 
