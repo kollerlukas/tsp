@@ -57,13 +57,13 @@ lemma Vs_restricted_complete_graph:
 proof (intro equalityI)
   show "V \<subseteq> Vs E\<^sub>V"
   proof (cases "V = {}")
-    case False
+    assume "V \<noteq> {}"
     show ?thesis
     proof
       fix v
       assume "v \<in> V"
       moreover then obtain u where "u \<in> V - {v}"
-        using assms False
+        using assms \<open>V \<noteq> {}\<close>
         by (metis is_singletonI' is_singleton_altdef member_remove remove_def) (* TODO: clean up *)
       moreover have "v \<in> Vs E" "u \<in> Vs E" "u \<noteq> v"
         using assms calculation by auto
@@ -90,7 +90,7 @@ proof -
   proof (induction "Vs E" arbitrary: E rule: finite_even.induct)
     case fe_empty
     moreover hence "E = {}"
-      using Vs_nilE by blast
+      using Vs_emptyE[OF graph] by blast
     moreover hence "is_perf_match E {}"
       by (auto intro: is_perf_matchI simp: matching_def)
     ultimately show ?case by auto

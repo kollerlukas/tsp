@@ -232,13 +232,13 @@ lemma cycle_rotate:
   obtains C' where "is_cycle E C'" "walk_betw E v C' v" 
     "set (edges_of_path C) = set (edges_of_path C')"
 proof (cases "v = hd C")
-  case True
+  assume "v = hd C"
   hence "is_cycle E C" "walk_betw E v C v"
     using assms by (auto elim: is_cycleE_hd)
   thus ?thesis 
     using that by auto
 next
-  case False
+  assume "v \<noteq> hd C"
   then obtain u P\<^sub>1 P\<^sub>2 where [simp]: "C = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
     using assms by (elim cycle_path_split) auto
   let ?C'="v#P\<^sub>2 @ u#P\<^sub>1 @ [v]"

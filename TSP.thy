@@ -65,11 +65,11 @@ lemma hc_vs_set:
   assumes "is_hc H"
   shows "set H = Vs E"
 proof (cases "H = []")
-  case True
+  assume "H = []"
   then show ?thesis 
     using assms by (auto simp: is_hc_nilE)
 next
-  case False
+  assume "H \<noteq> []"
   then have "hd H \<in> set (tl H)"
     using assms[unfolded is_hc_def walk_betw_def] by (metis hd_in_set mem_path_Vs)
   then have "set H = set (tl H)"
@@ -141,7 +141,7 @@ lemma hc_edges_subset:
   assumes "is_hc H"
   shows "set (edges_of_path H) \<subseteq> E"
 proof (cases "H = []")
-  case False
+  assume "H \<noteq> []"
   then obtain v where "walk_betw E v H v"
     using assms by (auto elim: is_hc_nonnilE)
   then show ?thesis

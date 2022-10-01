@@ -170,6 +170,107 @@ lemma even_sum_of_odd_vals_iff:
   shows "even (\<Sum>x \<in> A. f x) \<longleftrightarrow> even (card A)"
   using assms by (induction A rule: finite_induct) auto
 
+lemma sum_one_val:
+  assumes "finite X" "a \<in> X" "\<And>x. x \<in> X \<Longrightarrow> x \<noteq> a \<Longrightarrow> f x = 0" "f a = 1"
+  shows "sum f X = 1"
+  using assms
+proof (induction X rule: finite_induct)
+  case (insert x X)
+  show ?case
+    using insert
+  proof (cases "x = a")
+    assume "x = a"
+    moreover hence "\<And>x. x \<in> X \<Longrightarrow> f x = 0"
+      using insert by fastforce
+    ultimately show ?thesis
+      using insert by auto
+  qed auto
+qed auto
+
+lemma sum_two_val:
+  assumes "finite X" "a \<in> X" "b \<in> X" "a \<noteq> b" "f a = 1" "f b = 1"
+      and "\<And>x. x \<in> X \<Longrightarrow> x \<noteq> a \<Longrightarrow> x \<noteq> b \<Longrightarrow> f x = 0" 
+  shows "sum f X = 2"
+  using assms
+proof (induction X rule: finite_induct)
+  case (insert x X)
+  have "(x = a \<or> x = b) \<or> (x \<noteq> a \<and> x \<noteq> b)"
+    by auto
+  then show ?case
+  proof (rule disjE)
+    assume "x = a \<or> x = b"
+    hence "sum f X = 1"
+      using insert sum_one_val[of X _ f] by auto
+    thus ?thesis
+      using insert by fastforce
+  next
+    assume "x \<noteq> a \<and> x \<noteq> b"
+    thus ?thesis
+      using insert by auto
+  qed
+qed auto
+
+lemma finite_sum_add1:
+  assumes "finite X" "a \<in> X" "f a = 1 + g a" "\<And>x. x \<in> X \<Longrightarrow> x \<noteq> a \<Longrightarrow> f x = g x"
+  shows "sum f X = 1 + sum g X"
+  using assms
+proof (induction X rule: finite_induct)
+  case (insert x X)
+  show ?case
+  proof cases
+    assume [simp]: "x = a"
+    hence "sum f X = sum g X"
+      using insert sum.cong[of X X f g] by blast
+    thus ?case 
+      using insert by (auto simp: add.assoc)
+  next
+    assume "x \<noteq> a"
+    hence "sum f (insert x X) = g x + 1 + sum g X"
+      using insert by (auto simp: add.assoc)
+    also have "... = 1 + g x + sum g X"
+      by (auto simp: add.commute)
+    also have "... = 1 + sum g (insert x X)"
+      using insert by (auto simp: add.assoc)
+    finally show ?case .
+  qed
+qed auto
+
+lemma finite_sum_add2:
+  assumes "finite X" "a \<in> X" "b \<in> X" "a \<noteq> b" 
+      and "f a = 1 + g a" "f b = 1 + g b" 
+      and "\<And>x. x \<in> X \<Longrightarrow> x \<noteq> a \<Longrightarrow> x \<noteq> b \<Longrightarrow> f x = g x"
+  shows "sum f X = 2 + sum g X"
+  using assms
+proof (induction X rule: finite_induct)
+  case (insert x X)
+  have "(x = a \<or> x = b) \<or> (x \<noteq> a \<and> x \<noteq> b)"
+    by auto
+  then show ?case
+  proof (rule disjE)
+    assume "x = a \<or> x = b"
+    hence [simp]: "f x = 1 + g x" and [simp]: "sum f X = 1 + sum g X"
+      using insert finite_sum_add1[of X _ f g] by auto
+
+    have "sum f (insert x X) = f x + sum f X"
+      using insert by auto
+    also have "... = 1 + g x + 1 + sum g X"
+      using insert by (auto simp: add.assoc)
+    also have "... = (1 + 1) + (g x + sum g X)"
+      by (metis add.assoc add.commute)
+    also have "... = 2 + sum g (insert x X)"
+      using insert by (auto simp: add.assoc)
+    finally show ?thesis .
+  next
+    assume "x \<noteq> a \<and> x \<noteq> b"
+    thus ?thesis
+      using insert group_cancel.add2 by fastforce
+  qed
+qed auto
+
+(*
+  TODO: clean up lemmas \<open>thm finite_sum_add1 finite_sum_add2\<close>. Find more abstract versions.
+*)
+
 section \<open>Graph Lemmas (Berge)\<close>
 
 lemma graph_subset:
@@ -177,20 +278,28 @@ lemma graph_subset:
   shows "graph_invar E'"
   using assms finite_subset[OF Vs_subset] by auto
 
-lemma Vs_nilE: 
-  assumes "graph_invar E" "Vs E = {}"
+lemma Vs_emptyE: 
+  assumes graph: "graph_invar E" and "Vs E = {}"
   shows "E = {}"
 proof (rule ccontr)
   assume "E \<noteq> {}"
   then obtain e where "e \<in> E"
     by auto
   moreover then obtain u v where "e = {u,v}" "u \<noteq> v"
-    using assms by auto
+    using graph by auto
   ultimately have "v \<in> Vs E"
     by (auto intro: vs_member_intro)
   thus "False"
     using assms by auto
 qed
+
+lemma Vs_empty_iff: 
+  assumes graph: "graph_invar E"
+  shows "Vs E = {} \<longleftrightarrow> E = {}"
+  using Vs_emptyE[OF graph] by (auto simp: Vs_def)
+
+lemma Vs_empty_empty: "Vs {} = {}"
+  using vs_member_elim by force
 
 lemma Vs_union: "Vs (A \<union> B) = Vs A \<union> Vs B"
   unfolding Vs_def by auto
@@ -216,8 +325,26 @@ proof
   moreover hence "e \<subseteq> V"
     using assms by auto
   ultimately show "v \<in> V"
-    by (auto intro: vs_member_intro)
+    by (auto intro: vs_member_intro)                                         
 qed
+
+lemma Vs_inter_disj: 
+  assumes "graph_invar E\<^sub>1" "graph_invar E\<^sub>2" "Vs E\<^sub>1 \<inter> Vs E\<^sub>2 = {}" 
+  shows "E\<^sub>1 \<inter> E\<^sub>2 = {}"
+proof (rule ccontr)
+  assume "E\<^sub>1 \<inter> E\<^sub>2 \<noteq> {}"
+  then obtain e where "e \<in> E\<^sub>1 \<inter> E\<^sub>2"
+    by auto
+  moreover then obtain u v where "e = {u,v}"
+    using assms by auto
+  ultimately have "u \<in> Vs E\<^sub>1" "u \<in> Vs E\<^sub>2"
+    by (auto intro: vs_member_intro)
+  thus "False"
+    using assms by auto
+qed
+
+lemma finite_E: "finite (Vs E) \<Longrightarrow> finite E"
+  unfolding Vs_def using finite_UnionD by auto
 
 lemma path_distinct_adj:
   assumes "path E P" and graph: "graph_invar E"
@@ -465,11 +592,83 @@ proof -
     using \<open>{u,v} \<in> E\<close> by (metis card_2_iff card_mono graph)
 qed
 
-lemma handshake: "2 * card E = (\<Sum>v \<in> Vs E. degree E v)"
-  sorry
+end
 
-lemma sum_degree_even: "even' (\<Sum>v \<in> Vs E. degree E v)" (* by handshake thm *)
-  sorry
+lemma degree_insert_not_in: "v \<notin> e \<Longrightarrow> degree (insert e E) v = degree E v"
+  by (simp add: degree_def)
+
+lemma degree_singleton_edge0: "v \<notin> e \<Longrightarrow> degree {e} v = 0"
+  by (auto simp: degree_insert_not_in)
+
+lemma degree_singleton_edge1: "v \<in> e \<Longrightarrow> degree {e} v = 1"
+  using one_eSuc by (auto simp: degree_insert[of v e "{}"])
+
+lemmas degree_singleton_edge = degree_singleton_edge0 degree_singleton_edge1
+
+lemma degree_insert_split: "e \<notin> E \<Longrightarrow> degree (insert e E) v = degree E v + degree {e} v"
+  using degree_insert plus_1_eSuc 
+  by (cases "v \<in> e") (auto simp: degree_insert_not_in degree_singleton_edge)
+
+lemma degree_union:
+  assumes "finite E\<^sub>1" "finite E\<^sub>2" "E\<^sub>1 \<inter> E\<^sub>2 = {}"
+  shows "degree (E\<^sub>1 \<union> E\<^sub>2) v = degree E\<^sub>1 v + degree E\<^sub>2 v"
+  using assms
+proof (induction E\<^sub>1 arbitrary: E\<^sub>2 rule: finite_induct)
+  case (insert e E\<^sub>1)
+  thus ?case
+    using degree_insert_split[of e E\<^sub>1] degree_insert_split[of e E\<^sub>2] insert.IH[of "insert e E\<^sub>2"] 
+    by auto
+qed auto
+
+lemma sum_degree_not_Vs: "sum (degree E) (V - Vs E) = 0"
+  using degree_not_Vs[of _ E] by (intro sum.neutral) auto
+
+lemma sum_degree_union:
+  assumes "graph_invar E\<^sub>1" "graph_invar E\<^sub>2" "E\<^sub>1 \<inter> E\<^sub>2 = {}"
+  shows "sum (degree (E\<^sub>1 \<union> E\<^sub>2)) (Vs (E\<^sub>1 \<union> E\<^sub>2)) = sum (degree E\<^sub>1) (Vs E\<^sub>1) + sum (degree E\<^sub>2) (Vs E\<^sub>2)"
+proof -
+  have "sum (degree (E\<^sub>1 \<union> E\<^sub>2)) (Vs (E\<^sub>1 \<union> E\<^sub>2)) = sum (degree E\<^sub>1) (Vs E\<^sub>1 \<union> (Vs E\<^sub>2 - Vs E\<^sub>1)) + sum (degree E\<^sub>2) ((Vs E\<^sub>1 - Vs E\<^sub>2) \<union> Vs E\<^sub>2)"
+    using assms by (auto simp: Vs_union finite_E degree_union sum.distrib)
+  also have "... = sum (degree E\<^sub>1) (Vs E\<^sub>1) + sum (degree E\<^sub>1) (Vs E\<^sub>2 - Vs E\<^sub>1) + sum (degree E\<^sub>2) ((Vs E\<^sub>1 - Vs E\<^sub>2) \<union> Vs E\<^sub>2)"
+    using assms by (subst sum.union_disjoint) auto
+  also have "... = sum (degree E\<^sub>1) (Vs E\<^sub>1) + sum (degree E\<^sub>2) (Vs E\<^sub>2)"
+    using assms by (subst sum.union_disjoint) (auto simp: sum_degree_not_Vs)
+  finally show ?thesis .
+qed (* TODO: clean up proof! *)
+
+lemma sum_degree_singleton_edge:
+  assumes "graph_invar {e}"
+  shows "sum (degree {e}) (Vs {e}) = 2"
+proof -
+  have "sum (degree {e}) (Vs {e}) = 1 + 1"
+    using assms by (auto simp: Vs_def sum.insert degree_singleton_edge)
+  also have "... = 2"
+    using one_add_one .
+  finally show ?thesis .
+qed
+
+context graph_abs
+begin
+
+lemma handshake: "2 * card E = (\<Sum>v \<in> Vs E. degree E v)"
+  using finite_E graph
+proof (induction E rule: finite_induct)
+  case (insert e E)
+  moreover have "graph_invar {e}"
+    apply (rule graph_subset)
+    using insert by blast+
+  moreover have "graph_invar E"
+    apply (rule graph_subset)
+    using insert by blast+
+  ultimately have "sum (degree (insert e E)) (Vs (insert e E)) = 2 + sum (degree E) (Vs E)"
+    using sum_degree_union[of "{e}"] sum_degree_singleton_edge[OF \<open>graph_invar {e}\<close>] by auto
+  also have "... = 2 * card (insert e E)"
+    using insert insert.IH[OF \<open>graph_invar E\<close>, symmetric] by (auto simp: numeral_eq_enat)
+  finally show ?case by auto
+qed (auto simp: Vs_empty_empty sum.empty[of "degree {}"])
+
+lemma sum_degree_even: "even' (\<Sum>v \<in> Vs E. degree E v)"
+  using finite_E by (auto simp: handshake[symmetric])
 
 end
 

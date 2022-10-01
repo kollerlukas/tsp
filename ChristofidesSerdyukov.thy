@@ -48,19 +48,7 @@ lemma finite_T: "finite T"
 lemma subset_W: "W \<subseteq> Vs E"
   unfolding W_def using Vs_subset[OF subset_T] by auto
 
-lemma E\<^sub>W_def2: "E\<^sub>W = {{u,v} | u v. u \<in> W \<and> v \<in> W \<and> u \<noteq> v}"
-  unfolding E\<^sub>W_def using complete subset_W sorry
-
-lemma subset_E\<^sub>W: "E\<^sub>W \<subseteq> E"
-  unfolding E\<^sub>W_def by auto
-
-lemma finite_E\<^sub>W: "finite E\<^sub>W"
-  using subset_E\<^sub>W finite_E finite_subset by auto
-
-lemma finite_Vs_E\<^sub>W: "finite (Vs E\<^sub>W)"
-  using graph subset_E\<^sub>W finite_subset[OF Vs_subset] by auto
-
-lemma even_Vs_E\<^sub>W: "even (card (Vs E\<^sub>W))"
+lemma even_card_W: "even (card W)"
 proof -
   have "even' (\<Sum>v \<in> Vs E. degree E v)"
     sorry (* follows from handshake thm *)
@@ -71,37 +59,60 @@ proof -
     sorry (* sum of even vals is even *)
   ultimately have "even' (\<Sum>v \<in> Vs E\<^sub>W. degree E v)"
     sorry (* a \<noteq> \<infinity> \<and> b \<noteq> \<infinity> \<Longrightarrow> even' (a+b) \<and> even' b \<Longrightarrow> even' a *)
-  thus "even (card (Vs E\<^sub>W))"
+  thus "even (card W)"
     using even_sum_of_odd_vals_iff sorry
 qed  (* follows from handshake thm *)
 
-lemma complete_E\<^sub>W: "\<And>u v. u \<in> Vs E\<^sub>W \<Longrightarrow> v \<in> Vs E\<^sub>W \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E\<^sub>W"
-proof -
-  fix u v
-  assume "u \<in> Vs E\<^sub>W" "v \<in> Vs E\<^sub>W" "u \<noteq> v"
-  moreover hence "u \<in> W" "v \<in> W"
-    sorry
-  moreover have "{u,v} \<in> E"
-    using calculation Vs_subset[OF subset_E\<^sub>W] complete by blast
-  ultimately show "{u,v} \<in> E\<^sub>W"
+lemma E\<^sub>W_def2: "E\<^sub>W = {{u,v} | u v. u \<in> W \<and> v \<in> W \<and> u \<noteq> v}"
+  unfolding E\<^sub>W_def using graph complete subset_W by (auto simp: in_mono)
+
+lemma E\<^sub>W_def3: "E\<^sub>W = {e \<in> E. e \<subseteq> W}"
+proof
+  show "E\<^sub>W \<subseteq> {e \<in> E. e \<subseteq> W}"
     unfolding E\<^sub>W_def by auto
+next
+  show "{e \<in> E. e \<subseteq> W} \<subseteq> E\<^sub>W"
+  proof          
+    fix e
+    assume "e \<in> {e \<in> E. e \<subseteq> W}"
+    moreover then obtain u v where "e = {u,v}" "u \<noteq> v"
+      using graph by auto
+    ultimately show "e \<in> E\<^sub>W"
+      unfolding E\<^sub>W_def2 by auto
+  qed
 qed
 
+lemma W_eq_Vs_E\<^sub>W: "W = Vs E\<^sub>W"
+  unfolding E\<^sub>W_def3
+  using even_card_W Vs_restricted_complete_graph[OF complete _ subset_W] by (metis odd_one)
+
+lemma subset_E\<^sub>W: "E\<^sub>W \<subseteq> E"
+  unfolding E\<^sub>W_def by auto
+
+lemma finite_E\<^sub>W: "finite E\<^sub>W"
+  using subset_E\<^sub>W finite_E finite_subset by auto
+
+lemma finite_Vs_E\<^sub>W: "finite (Vs E\<^sub>W)"
+  using graph subset_E\<^sub>W finite_subset[OF Vs_subset] by auto
+
+lemma even_card_Vs_E\<^sub>W: "even (card (Vs E\<^sub>W))"
+  using even_card_W by (auto simp: W_eq_Vs_E\<^sub>W)
+
+thm restricted_graph_complete
+
+lemma complete_E\<^sub>W: "is_complete E\<^sub>W"
+  unfolding E\<^sub>W_def3 using restricted_graph_complete[OF complete, of W] by auto
+
 lemma perf_match_exists: "\<exists>M. is_perf_match E\<^sub>W M"
-  using graph Vs_subset subset_E\<^sub>W complete_E\<^sub>W perf_match_exists[OF graph_subset _ even_Vs_E\<^sub>W] 
-  by auto 
+  using graph subset_E\<^sub>W complete_E\<^sub>W perf_match_exists[OF graph_subset _ even_card_Vs_E\<^sub>W] by auto 
 
 lemmas match = match[OF perf_match_exists]
 
 lemma subset_M: "M \<subseteq> E"
   using match is_min_matchE2[of E\<^sub>W c M] subset_E\<^sub>W by (auto simp: M_def)
 
-lemma "Vs E\<^sub>W = W" 
-  unfolding E\<^sub>W_def2
-  sorry
-
-lemma Vs_M_eq_W: "Vs M = W"
-  sorry
+lemma W_eq_Vs_M: "W = Vs M"
+  unfolding M_def using is_min_matchE2[OF match] by (auto simp: W_eq_Vs_E\<^sub>W)
 
 lemma finite_M: "finite M"
   using finite_E subset_M finite_subset by auto
@@ -123,7 +134,7 @@ proof (rule is_eulerianI)
     moreover hence "\<not> even' (degree T v)"
       unfolding W_def by auto
     moreover have "degree M v = 1"
-      using calculation Vs_M_eq_W degree_matching_in_M[OF matching_M] by auto
+      using calculation W_eq_Vs_M degree_matching_in_M[OF matching_M] by auto
     moreover have "mdegree ?J v = degree T v + 1"
       sorry
     ultimately show "even' (mdegree ?J v)"
@@ -133,7 +144,7 @@ proof (rule is_eulerianI)
     moreover hence "even' (degree T v)"
       unfolding W_def using \<open>v \<in> Vs T\<close> by auto
     moreover have "v \<notin> Vs M"
-      using calculation Vs_M_eq_W by auto
+      using calculation W_eq_Vs_M by auto
     moreover have "mdegree ?J v = degree T v"
       sorry
     ultimately show "even' (mdegree ?J v)"

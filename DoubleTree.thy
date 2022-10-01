@@ -186,7 +186,7 @@ lemma hc_of_et_correct:
   assumes "is_et X P" "mVs X = Vs E" "set_mset X \<subseteq> E"
   shows "is_hc (comp_hc_of_et P [])"
 proof (cases "P = []")
-  case True
+  assume "P = []"
   hence "X = {#}"
     using assms et_nil[of X] by auto
   hence "Vs E = {}"
@@ -196,7 +196,7 @@ proof (cases "P = []")
   then show ?thesis 
     using \<open>P = []\<close> hc_nil_iff by auto
 next
-  case False
+  assume "P \<noteq> []"
   then obtain v where "comp_hc_of_et P [] \<noteq> []" "walk_betw E v (comp_hc_of_et P []) v"
     using assms hc_of_et_non_nil by (auto elim: hc_of_et_walk_betw[of P X])
   then show ?thesis
