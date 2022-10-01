@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory TSP
-  imports Main Misc CompleteGraph WeightedGraph MST "HOL-Library.Multiset"
+  imports Main Misc CompleteGraph WeightedGraph
 begin
 
 context graph_abs

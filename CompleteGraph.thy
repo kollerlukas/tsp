@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory CompleteGraph
-  imports Main Misc MinWeightMatching "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
+  imports Main Misc "berge/Berge"
 begin
 
 abbreviation "is_complete E \<equiv> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
@@ -76,46 +76,5 @@ proof (intro equalityI)
     qed
   qed auto
 qed (auto simp: Vs_subset_restricted_graph)
-
-lemma perf_match_exists: 
-  assumes graph: "graph_invar E" 
-      and complete: "is_complete E"
-      and "even (card (Vs E))"
-  shows "\<exists>M. is_perf_match E M"
-proof -
-  have "finite_even (Vs E)"
-    using assms finite_subset[OF Vs_subset] by (auto intro: finite_evenI2)
-  thus ?thesis
-    using assms
-  proof (induction "Vs E" arbitrary: E rule: finite_even.induct)
-    case fe_empty
-    moreover hence "E = {}"
-      using Vs_emptyE[OF graph] by blast
-    moreover hence "is_perf_match E {}"
-      by (auto intro: is_perf_matchI simp: matching_def)
-    ultimately show ?case by auto
-  next
-    case (fe_insert2 V u v)
-    moreover hence "card V \<noteq> 1" "V \<subseteq> Vs E"
-      by (auto simp: finite_even_def2)
-    moreover hence "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
-      using calculation Vs_restricted_complete_graph[of E V] by auto
-    moreover hence "even (card (Vs ?E'))"
-      using calculation by (auto simp: finite_even_def2)
-    moreover have "?E' \<subseteq> E" "graph_invar ?E'"
-      using calculation graph_subset[of E ?E'] by auto
-    moreover have "is_complete ?E'"
-      using calculation restricted_graph_complete[of E V] by auto
-    moreover obtain M where "is_perf_match ?E' M"
-      using calculation by fastforce
-    moreover have "u \<in> Vs E" "v \<in> Vs E"
-      using calculation by auto
-    moreover hence "{{u,v}} \<union> ?E' \<subseteq> E"
-      using calculation by auto
-    ultimately have "is_perf_match E ({{u,v}} \<union> M)"
-      by (intro extend_perf_match[of ?E' M]) auto
-    thus ?case by auto
-  qed
-qed
 
 end

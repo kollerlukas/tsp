@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory Misc
-  imports Main "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
+  imports Main "berge/Berge"
 begin
 
 text \<open>This theory contains miscellaneous lemmas and theorems.\<close>

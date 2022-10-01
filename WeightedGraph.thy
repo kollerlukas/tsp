@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory WeightedGraph
-  imports Main Misc "HOL-Library.Multiset" "../archive-of-graph-formalizations/Undirected_Graphs/Berge"
+  imports Main Misc "HOL-Library.Multiset"
 begin
 
 text \<open>Weighted Graph\<close>
