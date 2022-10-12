@@ -161,7 +161,7 @@ begin
 
 lemmas [simp] = J_def T_def W_def E\<^sub>W_def M_def
 
-lemma "is_hc (christofides_serdyukov)"
+lemma cs_is_hc: "is_hc (christofides_serdyukov)"
   unfolding christofides_serdyukov_def Let_def
   apply (rule hc_of_et_correct, rule eulerian)
   using christofides_serdyukov_correctness by auto

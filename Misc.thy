@@ -140,12 +140,6 @@ qed auto
 lemma even_elems_mset_union: "mset (even_elems (tl xs)) + mset (even_elems xs) = mset xs"
   by (induction xs rule: even_elems.induct) (auto simp: even_elems_tl)
 
-fun even_elems' :: "'a list \<Rightarrow> 'a list" where
-  "even_elems' [] = []" 
-| "even_elems' [x] = [x]" 
-| "even_elems' [x,y] = [x]"
-| "even_elems' (x#y#z#xs) = x#even_elems' (z#xs)"
-
 lemma even_elems_butlast: "even (length xs) \<longleftrightarrow> even_elems xs = even_elems (butlast xs)"
   by (induction xs rule: even_elems.induct) auto
 
@@ -200,26 +194,10 @@ lemma finite_even_induct [consumes 2, case_names empty insert2]:
   shows "P F"
   using assms by (induction F rule: finite2_induct) auto
 
-inductive finite_even :: "'a set \<Rightarrow> bool" where
-  fe_empty: "finite_even {}"
-| fe_insert2: "finite_even A \<Longrightarrow> a \<notin> A \<Longrightarrow> b \<notin> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> finite_even ({a,b} \<union> A)"
-
-lemma finite_evenI2:
-  assumes "finite A" "even (card A)"
-  shows "finite_even A"
-  using assms
-proof (induction A rule: finite_even_induct)
-  case (insert2 a b A)
-  then show ?case
-    by (intro fe_insert2) auto
-qed (auto intro: finite_even.intros)
-  
-lemma finite_even_def2: "finite_even A \<longleftrightarrow> finite A \<and> even (card A)"
-proof
-  assume "finite_even A"
-  then show "finite A \<and> even (card A)"
-    by (induction A rule: finite_even.induct) auto
-qed (auto simp: finite_evenI2)
+lemma finite_even_card:
+  assumes "finite X" "x \<notin> X" "y \<notin> X" "x \<noteq> y" 
+  shows "even (card ({x,y} \<union> X)) \<longleftrightarrow> even (card X)"
+  using assms by auto
 
 section \<open>Metric Lemmas\<close>
 
@@ -1053,6 +1031,16 @@ proof -
     using one_add_one .
   finally show ?thesis .
 qed
+
+lemma degree_edges_of_path_hd_leq_1:
+  assumes "distinct P"
+  shows "degree (set (edges_of_path P)) (hd P) \<le> 1" (is "degree ?E\<^sub>P (hd P) \<le> 1")
+  using assms
+proof (induction P rule: list012.induct) (* induction just for case distinction *)
+  case (3 u v P)
+  then show ?case 
+    using degree_edges_of_path_hd by fastforce
+qed auto
 
 context graph_abs
 begin

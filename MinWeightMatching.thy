@@ -95,27 +95,29 @@ lemma perf_match_exists:
   assumes "even (card (Vs E))"
   obtains M where "is_perf_match E M"
 proof -
-  have "finite_even (Vs E)"
-    using graph assms finite_subset[OF Vs_subset] by (auto intro: finite_evenI2)
+  have "finite (Vs E)" "even (card (Vs E))"
+    using graph assms finite_subset[OF Vs_subset] by auto
   thus ?thesis
     using that assms graph complete (* restr_graph_compl restr_graph_Vs[symmetric] *)
-  proof (induction "Vs E" arbitrary: E thesis rule: finite_even.induct)
-    case fe_empty
+  proof (induction "Vs E" arbitrary: E thesis rule: finite_even_induct)
+    case empty
     moreover hence "E = {}"
       by (intro Vs_emptyE) auto
     moreover hence "is_perf_match E {}"
       by (auto intro: is_perf_matchI simp: matching_def)
     ultimately show ?case by auto
   next
-    case (fe_insert2 V u v)
-    moreover hence "V \<subseteq> Vs E"
-      by (auto simp: finite_even_def2)
-    moreover hence "card V \<noteq> 1"
-      using fe_insert2 by (auto simp: finite_even_def2)
+    case (insert2 u v V)
+    moreover have "V \<subseteq> Vs E"
+      by (subst \<open>{u, v} \<union> V = Vs E\<close>[symmetric]) auto
+    moreover have "even (card ({u,v} \<union> V))"
+      using insert2 by auto
+    moreover hence "even (card V)"
+      using insert2 finite_even_card by auto
     moreover have "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
       using calculation by (intro restr_graph_Vs'[symmetric]) auto
     moreover hence "even (card (Vs ?E'))"
-      using calculation by (auto simp: finite_even_def2)
+      using calculation by auto
     moreover have "?E' \<subseteq> E" "graph_invar ?E'"
       using calculation graph_subset[of E ?E'] by auto
     moreover have "is_complete ?E'"
@@ -129,7 +131,7 @@ proof -
     ultimately have "is_perf_match E ({{u,v}} \<union> M)"
       by (intro extend_perf_match[of ?E' M]) auto
     thus ?case 
-      using fe_insert2 by auto
+      using insert2 by auto
   qed
 qed
 

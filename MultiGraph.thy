@@ -5,16 +5,6 @@ begin
 
 type_synonym 'a mgraph = "'a set multiset"
 
-(* definition "mgraph_rel E\<^sub>1 E\<^sub>2 \<equiv> (set_mset E\<^sub>1 = set_mset E\<^sub>2)"
-
-quotient_type 'a graph = "'a mgraph" / mgraph_rel
-  morphisms Rep_graph Abs_graph
-proof (rule equivpI)
-  show "reflp mgraph_rel" by (auto simp: reflp_def mgraph_rel_def)
-  show "symp mgraph_rel" by (auto simp: symp_def mgraph_rel_def)
-  show "transp mgraph_rel" by (auto simp: transp_def mgraph_rel_def)
-qed *)
-
 locale mgraph_def =
   fixes E :: "'a set multiset"
 
@@ -44,7 +34,7 @@ lemma mVs_union: "mVs (A + B) = mVs A \<union> mVs B"
   unfolding mVs_def by (auto simp: Vs_union)
 
 definition "encode_as_graph E\<^sub>M \<equiv> {{(u,i),(v,i)} | u v i. {u,v} \<in># E\<^sub>M \<and> i \<le> count E\<^sub>M {u,v}} 
-\<union> {{(v,i),(v,j)} | v i j. v \<in> mVs E\<^sub>M \<and> i < j \<and> j \<le> Max {count E\<^sub>M {u,v} | u. u \<in> mVs E\<^sub>M}}"
+    \<union> {{(v,i),(v,j)} | v i j. v \<in> mVs E\<^sub>M \<and> i < j \<and> j \<le> Max {count E\<^sub>M {u,v} | u. u \<in> mVs E\<^sub>M}}"
 
 lemma mVs_def2: "mVs E\<^sub>M = fst ` Vs (encode_as_graph E\<^sub>M)"
   sorry

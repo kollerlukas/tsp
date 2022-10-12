@@ -8,22 +8,22 @@ context graph_abs
 begin
 
 text \<open>Convert to graph from \<open>Prim_Dijkstra_Simple\<close>.\<close>
-abbreviation "G \<equiv> Undirected_Graph.graph (Vs E) {(u,v)| u v. {u,v} \<in> E}"
+abbreviation "G\<^sub>E \<equiv> Undirected_Graph.graph (Vs E) {(u,v)| u v. {u,v} \<in> E}"
 
-lemma G_finite: "finite (Vs E)" "finite {(u,v)| u v. {u,v} \<in> E}"
+lemma G\<^sub>E_finite: "finite (Vs E)" "finite {(u,v)| u v. {u,v} \<in> E}"
   using graph finite_subset[of "{(u,v)| u v. {u,v} \<in> E}" "Vs E \<times> Vs E"] 
   by (auto intro: vs_member_intro)
 
-lemma nodes_equiv: "v \<in> Vs E \<longleftrightarrow> v \<in> nodes G"
+lemma nodes_equiv: "v \<in> Vs E \<longleftrightarrow> v \<in> nodes G\<^sub>E"
 proof
   assume "v \<in> Vs E"
-  thus "v \<in> nodes G"
-    using graph_accs[OF G_finite] by auto
+  thus "v \<in> nodes G\<^sub>E"
+    using graph_accs[OF G\<^sub>E_finite] by auto
 next
   let ?E'="{(u,v) |u v. {u,v} \<in> E}"
-  assume "v \<in> nodes G"
+  assume "v \<in> nodes G\<^sub>E"
   hence "v \<in> Vs E \<or> v \<in> fst ` ?E' \<or> v \<in> snd ` ?E'"
-    using graph_accs[OF G_finite] by auto
+    using graph_accs[OF G\<^sub>E_finite] by auto
   thus "v \<in> Vs E"
   proof (elim disjE)
     assume "v \<in> fst ` ?E'"
@@ -40,28 +40,28 @@ next
   qed auto
 qed
 
-lemma edges_equiv: "{u,v} \<in> E \<longleftrightarrow> (u,v) \<in> edges G"
-  using graph graph_accs[OF G_finite] by (auto simp: insert_commute)
+lemma edges_equiv: "{u,v} \<in> E \<longleftrightarrow> (u,v) \<in> edges G\<^sub>E"
+  using graph graph_accs[OF G\<^sub>E_finite] by (auto simp: insert_commute)
 
-lemma edges_equiv2: "E = uedge ` edges G"
+lemma edges_equiv2: "E = uedge ` edges G\<^sub>E"
 proof
-  show "E \<subseteq> uedge ` edges G"
+  show "E \<subseteq> uedge ` edges G\<^sub>E"
   proof
     fix e
     assume "e \<in> E"
     moreover then obtain u v where [simp]: "e = {u,v}"
       using graph by auto
-    ultimately have "(u,v) \<in> edges G"
+    ultimately have "(u,v) \<in> edges G\<^sub>E"
       using edges_equiv[of u v] by auto
-    thus "e \<in> uedge ` edges G"
+    thus "e \<in> uedge ` edges G\<^sub>E"
       unfolding uedge_def by auto
   qed
 next
-  show "uedge ` edges G \<subseteq> E"
+  show "uedge ` edges G\<^sub>E \<subseteq> E"
   proof
     fix e
-    assume "e \<in> uedge ` edges G"
-    moreover then obtain e' where "e = uedge e'" "e' \<in> edges G"
+    assume "e \<in> uedge ` edges G\<^sub>E"
+    moreover then obtain e' where "e = uedge e'" "e' \<in> edges G\<^sub>E"
       by auto   
     moreover then obtain u v where [simp]: "e' = (u,v)"
       by fastforce
@@ -111,16 +111,16 @@ lemma tl_dedges_of_path:
 context graph_abs
 begin
 
-lemma edges_subset_iff: "set (dedges_of_path P) \<subseteq> edges G \<longleftrightarrow> set (edges_of_path P) \<subseteq> E"
+lemma edges_subset_iff: "set (dedges_of_path P) \<subseteq> edges G\<^sub>E \<longleftrightarrow> set (edges_of_path P) \<subseteq> E"
 proof
-  show "set (dedges_of_path P) \<subseteq> edges G \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
+  show "set (dedges_of_path P) \<subseteq> edges G\<^sub>E \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
   proof (induction P rule: dedges_of_path.induct)
     case (3 u v P)
     thus ?case 
       using edges_equiv[of u v] by auto
   qed auto
 next
-  show "set (edges_of_path P) \<subseteq> E \<Longrightarrow> set (dedges_of_path P) \<subseteq> edges G"
+  show "set (edges_of_path P) \<subseteq> E \<Longrightarrow> set (dedges_of_path P) \<subseteq> edges G\<^sub>E"
   proof (induction P rule: dedges_of_path.induct)
     case (3 u v P)
     thus ?case 
@@ -146,27 +146,27 @@ proof (induction P arbitrary: u rule: dedges_of_path.induct)
 qed auto
 
 lemma vpath_of_epathE:
-  assumes "Undirected_Graph.path G u P v"
+  assumes "Undirected_Graph.path G\<^sub>E u P v"
   obtains P' where "P = dedges_of_path P'"
-  using assms vpath_of_epath by auto
+  using assms vpath_of_epath[of G\<^sub>E] by auto
 
-lemma simple_path_equiv: "simple_path P \<longleftrightarrow> Undirected_Graph.simple (dedges_of_path P)"
+lemma simple_path_equiv: "is_simple P \<longleftrightarrow> Undirected_Graph.simple (dedges_of_path P)"
   unfolding Undirected_Graph.simple_def
-  by (auto intro: simple_pathI elim: simple_pathE simp: map_dedges_of_path) 
+  by (auto intro: is_simpleI elim: is_simpleE simp: map_dedges_of_path) 
 
 lemma walk_is_path:
   assumes "walk_betw E u P v"
-  shows "Undirected_Graph.path G u (dedges_of_path P) v"
+  shows "Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
 proof -
   have "path E P" "P \<noteq> []" "hd P = u" "last P = v" "u \<in> Vs E"
     using assms by (auto simp: mem_path_Vs elim: walk_between_nonempty_path)
-  thus "Undirected_Graph.path G u (dedges_of_path P) v"
+  thus "Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
   proof (induction P arbitrary: u rule: path.induct)
     case (path2 u' x P)
-    hence [simp]: "u = u'" and "(u,x) \<in> edges G" 
-      "Undirected_Graph.path G x (dedges_of_path (x#P)) v"
+    hence [simp]: "u = u'" and "(u,x) \<in> edges G\<^sub>E" 
+      "Undirected_Graph.path G\<^sub>E x (dedges_of_path (x#P)) v"
       using edges_equiv[of u x] by auto
-    moreover hence "Undirected_Graph.path G u [(u,x)] x"
+    moreover hence "Undirected_Graph.path G\<^sub>E u [(u,x)] x"
       by (auto intro: path_emptyI)
     ultimately show ?case 
       using \<open>u \<in> Vs E\<close> path_transs1 by auto
@@ -174,7 +174,7 @@ proof -
 qed
 
 lemma path_equiv2:
-  assumes "set P \<subseteq> Vs E" "Undirected_Graph.path G u (dedges_of_path P) v"
+  assumes "set P \<subseteq> Vs E" "Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
   shows "path E P"
   using assms
 proof (induction P arbitrary: u rule: dedges_of_path.induct)
@@ -191,47 +191,47 @@ lemma epath_last_node:
   using assms by (induction P arbitrary: u rule: dedges_of_path.induct) auto
 
 lemma path_is_walk:
-  assumes "P \<noteq> []" "hd P = u" "u \<in> Vs E" "Undirected_Graph.path G u (dedges_of_path P) v"
+  assumes "P \<noteq> []" "hd P = u" "u \<in> Vs E" "Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
   shows "walk_betw E u P v"
 proof (rule nonempty_path_walk_between)
   have "set (edges_of_path P) \<subseteq> E"
-    using assms path_edges[of G u "dedges_of_path P" v] edges_subset_iff by auto
+    using assms path_edges[of G\<^sub>E u "dedges_of_path P" v] edges_subset_iff by auto
   hence "set P \<subseteq> Vs E"
     using assms edges_of_vpath_are_vs list.sel(1) by metis
   thus "path E P" "P \<noteq> []" "hd P = u" "last P = v"
-    using assms path_equiv2 epath_last_node by auto
+    using assms path_equiv2 by (auto simp: epath_last_node)
 qed
 
 lemma walk_equiv_path: "walk_betw E u P v 
-  \<longleftrightarrow> P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
+  \<longleftrightarrow> P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
 proof
   assume "walk_betw E u P v"
   moreover hence "path E P" "P \<noteq> []" "hd P = u" "last P = v" "u \<in> Vs E"
     by (auto simp: mem_path_Vs elim: walk_between_nonempty_path)
-  ultimately show "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
+  ultimately show "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
     using walk_is_path by auto
 next
-  assume assms: "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G u (dedges_of_path P) v"
+  assume assms: "P \<noteq> [] \<and> hd P = u \<and> u \<in> Vs E \<and> Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v"
   show "walk_betw E u P v"
   proof (rule nonempty_path_walk_between)
     have "set (edges_of_path P) \<subseteq> E"
-      using assms path_edges[of G u "dedges_of_path P" v] edges_subset_iff by auto
+      using assms path_edges[of G\<^sub>E u "dedges_of_path P" v] edges_subset_iff by auto
     hence "set P \<subseteq> Vs E"
       using assms edges_of_vpath_are_vs list.sel(1) by metis
     thus "path E P" "P \<noteq> []" "hd P = u" "last P = v"
-      using assms path_equiv2 epath_last_node by auto
+      using assms path_equiv2 by (auto simp: epath_last_node)
   qed
 qed
 
 lemma walk_iff_rtrancl_edges: 
   assumes "u \<in> Vs E" "v \<in> Vs E"
-  shows "(\<exists>P. walk_betw E u P v) \<longleftrightarrow> (u,v) \<in> (edges G)\<^sup>*"
+  shows "(\<exists>P. walk_betw E u P v) \<longleftrightarrow> (u,v) \<in> (edges G\<^sub>E)\<^sup>*"
 proof
   assume "\<exists>P. walk_betw E u P v"
-  thus "(u,v) \<in> (edges G)\<^sup>*"
-    using walk_is_path[of u _ v] rtrancl_edges_iff_path[of u v G] by auto
+  thus "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
+    using walk_is_path[of u _ v] rtrancl_edges_iff_path[of u v G\<^sub>E] by auto
 next
-  assume "(u,v) \<in> (edges G)\<^sup>*"
+  assume "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
   thus "\<exists>P. walk_betw E u P v"
     using assms
   proof (induction rule: rtrancl_induct)
@@ -257,52 +257,52 @@ qed
 
 lemma conn_comp_equiv: 
   assumes "u \<in> Vs E" "v \<in> Vs E"
-  shows "v \<in> connected_component E u \<longleftrightarrow> (u,v) \<in> (edges G)\<^sup>*"
+  shows "v \<in> connected_component E u \<longleftrightarrow> (u,v) \<in> (edges G\<^sub>E)\<^sup>*"
 proof
   assume "v \<in> connected_component E u"
   hence "(\<exists>p. walk_betw E u p v)"
     using assms by (auto elim: in_connected_component_has_path)
-  thus "(u,v) \<in> (edges G)\<^sup>*"
+  thus "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
     using assms walk_iff_rtrancl_edges by auto
 next
-  assume "(u,v) \<in> (edges G)\<^sup>*"
+  assume "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
   hence "(\<exists>p. walk_betw E u p v)"
     using assms walk_iff_rtrancl_edges by auto
   thus "v \<in> connected_component E u"
     by (auto intro: has_path_in_connected_component)
 qed
 
-lemma connected_equiv: "is_connected E \<longleftrightarrow> connected G"
+lemma connected_equiv: "is_connected E \<longleftrightarrow> connected G\<^sub>E"
 proof 
   assume "is_connected E"
-  show "connected G"
+  show "connected G\<^sub>E"
   proof (rule connectedI)
     fix u v
-    assume "u \<in> nodes G" "v \<in> nodes G"
+    assume "u \<in> nodes G\<^sub>E" "v \<in> nodes G\<^sub>E"
     hence "u \<in> Vs E" "v \<in> Vs E"
       using nodes_equiv by auto
     hence "v \<in> connected_component E u"
       using \<open>is_connected E\<close> by (auto elim: is_connectedE)
-    thus "(u,v) \<in> (edges G)\<^sup>*"
+    thus "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
       using \<open>u \<in> Vs E\<close> \<open>v \<in> Vs E\<close> conn_comp_equiv by auto
   qed
 next
-  assume "connected G"
+  assume "connected G\<^sub>E"
   show "is_connected E"
   proof (rule is_connectedI)
     fix u v
     assume "u \<in> Vs E" "v \<in> Vs E"
-    hence "u \<in> nodes G" "v \<in> nodes G"
+    hence "u \<in> nodes G\<^sub>E" "v \<in> nodes G\<^sub>E"
       using nodes_equiv by auto
-    hence "(u,v) \<in> (edges G)\<^sup>*"
-      using \<open>Undirected_Graph.connected G\<close> by (auto elim: connectedD)
+    hence "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
+      using \<open>Undirected_Graph.connected G\<^sub>E\<close> by (auto elim: connectedD)
     thus "v \<in> connected_component E u"
       using \<open>u \<in> Vs E\<close> \<open>v \<in> Vs E\<close> conn_comp_equiv by auto
   qed
 qed
 
 lemma dedges_path_hd_Vs_mem:
-  assumes "Undirected_Graph.path G u (dedges_of_path P) v" "dedges_of_path P \<noteq> []"
+  assumes "Undirected_Graph.path G\<^sub>E u (dedges_of_path P) v" "dedges_of_path P \<noteq> []"
   shows "hd P = u" "u \<in> Vs E"
   using assms 
 proof (induction P rule: dedges_of_path.induct)
@@ -319,16 +319,16 @@ proof (induction P rule: dedges_of_path.induct)
   }
 qed auto
 
-lemma acyclic_equiv: "is_acyclic E \<longleftrightarrow> cycle_free G"
+lemma acyclic_equiv: "is_acyclic E \<longleftrightarrow> cycle_free G\<^sub>E"
 proof
   assume "is_acyclic E"
-  show "cycle_free G"
+  show "cycle_free G\<^sub>E"
   proof (rule cycle_freeI)
     fix P u
-    assume "Undirected_Graph.path G u P u" "P \<noteq> []" "simple P"
+    assume "Undirected_Graph.path G\<^sub>E u P u" "P \<noteq> []" "simple P"
     moreover then obtain P' where "P = dedges_of_path P'"
       using vpath_of_epathE[of u P u] by auto
-    ultimately have "simple_path P'" "0 < length (edges_of_path P')" "walk_betw E u P' u"
+    ultimately have "is_simple P'" "0 < length (edges_of_path P')" "walk_betw E u P' u"
       using simple_path_equiv dedges_of_path_nonnilE dedges_path_hd_Vs_mem 
         walk_equiv_path[of u P' u] by (auto simp: dedges_length[symmetric, of P'])
     hence "is_cycle E P'"
@@ -337,25 +337,28 @@ proof
       using \<open>is_acyclic E\<close> is_acyclicE by auto
   qed
 next
-  assume "cycle_free G"
+  assume "cycle_free G\<^sub>E"
   show "is_acyclic E"
   proof (rule ccontr)
     assume "\<not> is_acyclic E"
     then obtain C where "is_cycle E C"
       by (auto elim: not_acyclicE)
-    then obtain u where "simple_path C" "0 < length (edges_of_path C)" "walk_betw E u C u"
+    then obtain u where "is_simple C" "0 < length (edges_of_path C)" "walk_betw E u C u"
       by (auto elim: is_cycleE)
-    hence "Undirected_Graph.path G u (dedges_of_path C) u" "dedges_of_path C \<noteq> []" 
+    hence "Undirected_Graph.path G\<^sub>E u (dedges_of_path C) u" "dedges_of_path C \<noteq> []" 
       "simple (dedges_of_path C)"
       using walk_equiv_path[of u C u] simple_path_equiv 
       by (auto simp: dedges_length[symmetric, of C])
     thus "False"
-      using \<open>cycle_free G\<close> cycle_freeD[of G] by auto
+      using \<open>cycle_free G\<^sub>E\<close> cycle_freeD[of G\<^sub>E] by auto
   qed
 qed
 
-lemma tree_equiv: "is_tree E \<longleftrightarrow> tree G"
+lemma tree_equiv: "is_tree E \<longleftrightarrow> tree G\<^sub>E"
   using connected_equiv acyclic_equiv by (auto intro: is_treeI simp: is_treeE tree_def)
+
+lemma tree_equiv2: "is_tree (uedge ` edges G\<^sub>E) \<longleftrightarrow> tree G\<^sub>E"
+  using tree_equiv by (subst edges_equiv2[symmetric])
 
 end
 
@@ -364,20 +367,20 @@ locale st_graph_abs = (* spanning tree equivalence *)
   T: graph_abs T for E :: "'a set set " and T :: "'a set set"
 begin
 
-lemma edges_subset_iff: "T \<subseteq> E \<longleftrightarrow> edges T.G \<subseteq> edges E.G"
+lemma edges_subset_iff: "T \<subseteq> E \<longleftrightarrow> edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
 proof
   assume "T \<subseteq> E"
-  show "edges T.G \<subseteq> edges E.G"
+  show "edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
   proof
     fix x
-    assume "x \<in> edges T.G"
+    assume "x \<in> edges T.G\<^sub>E"
     moreover then obtain u v where [simp]: "x = (u,v)"
       using old.prod.exhaust by blast
-    ultimately show "x \<in> edges E.G"
+    ultimately show "x \<in> edges E.G\<^sub>E"
       using T.edges_equiv[of u v] \<open>T \<subseteq> E\<close> E.edges_equiv[of u v] by auto
   qed
 next
-  assume "edges T.G \<subseteq> edges E.G"
+  assume "edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
   show "T \<subseteq> E"
   proof
     fix x
@@ -385,14 +388,17 @@ next
     moreover then obtain u v where [simp]: "x = {u,v}"
       using T.graph by auto
     ultimately show "x \<in> E"
-      using T.edges_equiv[of u v] \<open>edges T.G \<subseteq> edges E.G\<close> E.edges_equiv[of u v] by auto
+      using T.edges_equiv[of u v] \<open>edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E\<close> E.edges_equiv[of u v] by auto
   qed
 qed
 
-lemma st_equiv: "E.is_st T \<longleftrightarrow> is_spanning_tree E.G T.G"
+lemma st_equiv: "E.is_st T \<longleftrightarrow> is_spanning_tree E.G\<^sub>E T.G\<^sub>E"
   apply (rule iffI)
   using T.tree_equiv E.nodes_equiv T.nodes_equiv edges_subset_iff 
   by (auto intro: E.is_stI simp: E.is_stE is_spanning_tree_def)
+
+lemma st_equiv2: "E.is_st (uedge ` edges T.G\<^sub>E) \<longleftrightarrow> is_spanning_tree E.G\<^sub>E T.G\<^sub>E"
+  using st_equiv by (subst T.edges_equiv2[symmetric])
 
 end
 
@@ -401,10 +407,18 @@ begin
 
 lemma st_equiv: 
   fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
+  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
   assumes "graph_invar T"
-  shows "is_st T \<longleftrightarrow> is_spanning_tree G T\<^sub>G"
-  using graph assms st_graph_abs.st_equiv[unfolded st_graph_abs_def graph_abs_def, of E T] by auto
+  shows "is_st T \<longleftrightarrow> is_spanning_tree G\<^sub>E G\<^sub>T"
+  unfolding G\<^sub>T_def using assms by (intro st_graph_abs.st_equiv) unfold_locales
+
+lemma st_equiv2: 
+  fixes G\<^sub>T
+  assumes "graph_invar (uedge ` edges G\<^sub>T)"
+  shows "is_st (uedge ` edges G\<^sub>T) \<longleftrightarrow> is_spanning_tree G\<^sub>E G\<^sub>T"
+  using st_graph_abs.st_equiv2
+  apply (intro st_graph_abs.st_equiv2)
+  sorry
 
 end
 
@@ -414,47 +428,67 @@ begin
 
 lemma cost_of_st_equiv: 
   fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
+  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
   assumes "graph_invar T"
-  shows "cost_of_st T = weight c T\<^sub>G"
+  shows "cost_of_st T = weight c G\<^sub>T"
 proof -
-  have "cost_of_st T = (\<Sum>e \<in> T. c e)"
-    unfolding cost_of_st_def by auto
-  also have "... = (\<Sum>e \<in> uedge ` edges T\<^sub>G. c e)"
+  have "cost_of_st T = sum c (uedge ` edges G\<^sub>T)"
     using assms graph_abs.edges_equiv2[unfolded graph_abs_def, of T] by auto
-  also have "... = Undirected_Graph.weight c T\<^sub>G"
+  also have "... = Undirected_Graph.weight c G\<^sub>T"
     unfolding Undirected_Graph.weight_alt by auto
   finally show ?thesis .
 qed
 
 lemma mst_equiv: 
   fixes T
-  defines "T\<^sub>G \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
-  shows "is_mst T \<longleftrightarrow> is_MST c G T\<^sub>G"
+  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
+  assumes "graph_invar T"
+  shows "is_mst T \<longleftrightarrow> is_MST c G\<^sub>E G\<^sub>T"
 proof 
   assume "is_mst T"
-  hence "is_st T" "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
+  hence "is_st T" and min_st: "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
     by (auto elim: is_mstE)
+  moreover hence "is_spanning_tree G\<^sub>E G\<^sub>T" 
+    using assms st_equiv[OF st_graph_invar] by auto
+  moreover have "\<And>T'. is_spanning_tree G\<^sub>E T' \<Longrightarrow> weight c G\<^sub>T \<le> weight c T'"
+  proof -
+    fix T'
+    assume "is_spanning_tree G\<^sub>E T'"
+    hence "is_st (uedge ` edges T')"
+      apply (intro st_equiv2)
+      sorry
 
-  hence "is_spanning_tree G T\<^sub>G" 
-    "\<forall>T'. is_spanning_tree G T' \<longrightarrow> weight c T\<^sub>G \<le> weight c T'"
-    subgoal
-      using assms st_equiv[OF st_graph_invar] by auto
-    subgoal
+    show "weight c G\<^sub>T \<le> weight c T'"
+
       using assms st_equiv cost_of_st_equiv[OF st_graph_invar]
       sorry
-    sorry
-
-  thus "is_MST c G T\<^sub>G"
+  qed
+  ultimately show "is_MST c G\<^sub>E G\<^sub>T"
     unfolding is_MST_def by auto
 next
-  assume "is_MST c G T\<^sub>G"
-  hence "is_spanning_tree G T\<^sub>G" 
-    "\<forall>T'. is_spanning_tree G T' \<longrightarrow> weight c T\<^sub>G \<le> weight c T'"
+  assume "is_MST c G\<^sub>E G\<^sub>T"
+  hence "is_spanning_tree G\<^sub>E G\<^sub>T" 
+    and min_st: "\<And>G\<^sub>T'. is_spanning_tree G\<^sub>E G\<^sub>T' \<Longrightarrow> weight c G\<^sub>T \<le> weight c G\<^sub>T'"
     unfolding is_MST_def by auto
-
-  show "is_mst T"
-    sorry
+  moreover hence st_T: "is_st T" 
+    using assms st_equiv[OF st_graph_invar] sorry
+  moreover have "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
+  proof -
+    fix T'
+    assume st_T': "is_st T'"
+    hence st_G\<^sub>T: "is_spanning_tree G\<^sub>E (graph (Vs T') {(u, v) |u v. {u, v} \<in> T'})" 
+      (is "is_spanning_tree G\<^sub>E ?G\<^sub>T'")
+      using assms st_equiv[OF st_graph_invar] by auto
+    have "cost_of_st T = weight c G\<^sub>T"
+      unfolding G\<^sub>T_def using st_T by (intro cost_of_st_equiv[OF st_graph_invar])
+    also have "... \<le> weight c ?G\<^sub>T'"
+      using min_st st_G\<^sub>T by auto
+    also have "... = cost_of_st T'"
+      using st_T' by (intro cost_of_st_equiv[OF st_graph_invar, symmetric])
+    finally show "cost_of_st T \<le> cost_of_st T'" .
+  qed
+  ultimately show "is_mst T" 
+    by (intro is_mstI)
 qed (* TODO: fix locale stuff *)
 
 end
