@@ -29,10 +29,10 @@ proof (rule is_connectedI)
     using edges_of_path_Vs[of P] by auto
   then obtain i\<^sub>u i\<^sub>v where u_v_simps: "u = P ! i\<^sub>u" "i\<^sub>u < length P" "v = P ! i\<^sub>v" "i\<^sub>v < length P"
     using set_conv_nth[of P] by auto
-  have "i\<^sub>u = i\<^sub>v \<or> i\<^sub>u < i\<^sub>v \<or> i\<^sub>v < i\<^sub>u"
-    by auto
+  consider "i\<^sub>u = i\<^sub>v" | "i\<^sub>u < i\<^sub>v" | "i\<^sub>v < i\<^sub>u"
+    by linarith
   thus "u \<in> connected_component ?E\<^sub>P v"
-  proof (elim disjE)
+  proof cases
     assume "i\<^sub>u = i\<^sub>v"
     thus ?thesis
       using u_v_simps in_own_connected_component[of "P ! i\<^sub>u" ?E\<^sub>P] by auto
@@ -45,7 +45,7 @@ proof (rule is_connectedI)
   next
     assume "i\<^sub>v < i\<^sub>u"
     thus ?thesis
-      unfolding connected_component_def using assms u_v_simps walk_of_path[of E P i\<^sub>v i\<^sub>u] by auto
+      unfolding connected_component_def using assms u_v_simps walk_on_path[of E P i\<^sub>v i\<^sub>u] by auto
   qed
 qed
 
@@ -71,25 +71,25 @@ qed
 
 section \<open>Simple Paths\<close>
 
-definition "simple_path P \<equiv> distinct (edges_of_path P)"
+definition "is_simple P \<equiv> distinct (edges_of_path P)"
 
-lemma simple_pathI: "distinct (edges_of_path P) \<Longrightarrow> simple_path P"
-  unfolding simple_path_def by auto
+lemma is_simpleI: "distinct (edges_of_path P) \<Longrightarrow> is_simple P"
+  unfolding is_simple_def by auto
 
-lemma simple_pathE: "simple_path P \<Longrightarrow> distinct (edges_of_path P)"
-  unfolding simple_path_def by auto
+lemma is_simpleE: "is_simple P \<Longrightarrow> distinct (edges_of_path P)"
+  unfolding is_simple_def by auto
 
-lemma simple_pathI2: "distinct P \<Longrightarrow> simple_path P"
-  using distinct_edges_of_vpath by (auto intro: simple_pathI) 
+lemma is_simpleI2: "distinct P \<Longrightarrow> is_simple P"
+  using distinct_edges_of_vpath by (auto intro: is_simpleI) 
 
-lemma simple_path_rev: "simple_path P \<Longrightarrow> simple_path (rev P)"
-  using edges_of_path_rev[of P] distinct_rev[of "edges_of_path P"] by (auto simp: simple_path_def)
+lemma simple_path_rev: "is_simple P \<Longrightarrow> is_simple (rev P)"
+  using edges_of_path_rev[of P] distinct_rev[of "edges_of_path P"] by (auto simp: is_simple_def)
 
-lemma simple_path_cons: "simple_path (v#P) \<Longrightarrow> simple_path P"
-  unfolding simple_path_def using distinct_edges_of_paths_cons[of v P] by auto
+lemma simple_path_cons: "is_simple (v#P) \<Longrightarrow> is_simple P"
+  unfolding is_simple_def using distinct_edges_of_paths_cons[of v P] by auto
 
-lemma simple_path_rev_neq:
-  assumes "simple_path P" "length P > 2"
+lemma is_simple_rev_neq:
+  assumes "is_simple P" "length P > 2"
   shows "P \<noteq> rev P"
   using assms
 proof (induction P rule: list0123.induct)
@@ -101,19 +101,19 @@ proof (induction P rule: list0123.induct)
       by (auto simp: edges_of_path_rev)
     thus "False"
       using 4 rev_hd_last_eq[of "edges_of_path (u#v#w#P)"] 
-        distinct_hd_last_neq[OF simple_pathE[of "u#v#w#P"]] by auto
+        distinct_hd_last_neq[OF is_simpleE[of "u#v#w#P"]] by auto
   qed
 qed auto
 
-lemma simple_path_rotate:
-  assumes "simple_path (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "simple_path ?P")
-  shows "simple_path (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "simple_path ?P'")
-proof (rule simple_pathI; rule card_distinct) 
+lemma is_simple_rotate:
+  assumes "is_simple (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "is_simple ?P")
+  shows "is_simple (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "is_simple ?P'")
+proof (rule is_simpleI; rule card_distinct) 
   have "card (set (edges_of_path ?P')) = card (set (edges_of_path ?P))"
     by (auto simp: edges_of_path_rotate)
   also have "... = length (edges_of_path ?P)"
     apply (rule distinct_card)
-    using assms by (auto elim: simple_pathE)
+    using assms by (auto elim: is_simpleE)
   also have "... = length (edges_of_path ?P')"
     by (auto simp: length_edges_of_path_rotate)
   finally show "card (set (edges_of_path ?P')) = length (edges_of_path ?P')" .
@@ -124,22 +124,22 @@ section \<open>Acyclic Graphs\<close>
 text \<open>Definition for a cycle in a graph. A cycle is a vertex-path, thus a cycle needs to contain 
 at least one edge, otherwise the singleton path \<open>[v]\<close> is a cycle. Therefore, no graph would be 
 acyclic.\<close>
-definition "is_cycle E C \<equiv> simple_path C \<and> length (edges_of_path C) > 0 \<and> (\<exists>v. walk_betw E v C v)"
+definition "is_cycle E C \<equiv> (\<exists>v. walk_betw E v C v) \<and> is_simple C \<and> length (edges_of_path C) > 0"
 
 lemma is_cycleI:
-  "simple_path C \<Longrightarrow> length (edges_of_path C) > 0 \<Longrightarrow> walk_betw E v C v \<Longrightarrow> is_cycle E C"
+  "is_simple C \<Longrightarrow> length (edges_of_path C) > 0 \<Longrightarrow> walk_betw E v C v \<Longrightarrow> is_cycle E C"
   unfolding is_cycle_def by auto
 
 lemma is_cycleE:
   assumes "is_cycle E C"
-  obtains v where "simple_path C" "length (edges_of_path C) > 0" "walk_betw E v C v"
+  obtains v where "is_simple C" "length (edges_of_path C) > 0" "walk_betw E v C v"
   using assms[unfolded is_cycle_def] by auto
 
 lemma is_cycleE_hd:
   assumes "is_cycle E C"
-  shows "simple_path C" "length (edges_of_path C) > 0" "walk_betw E (hd C) C (hd C)"
+  shows "is_simple C" "length (edges_of_path C) > 0" "walk_betw E (hd C) C (hd C)"
 proof -
-  show "simple_path C" "0 < length (edges_of_path C)"
+  show "is_simple C" "0 < length (edges_of_path C)"
     using assms by (auto elim: is_cycleE)
   obtain v where "walk_betw E v C v"
     using assms by (auto elim: is_cycleE)
@@ -172,7 +172,7 @@ lemma cycle_length:
   using assms
 proof (induction C rule: list0123.induct)
   case (3 u v)
-  then obtain v' where "simple_path [u,v]" "length (edges_of_path [u,v]) > 0" 
+  then obtain v' where "is_simple [u,v]" "length (edges_of_path [u,v]) > 0" 
     "walk_betw E v' [u,v] v'"
     by (auto elim: is_cycleE)
   hence "u = v'" "v = v'" "path E [u,v]"
@@ -201,7 +201,7 @@ lemma cycle_edge_length:
 lemma cycle_edges_hd_last_neq:
   assumes "graph_invar E" "is_cycle E C"
   shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)" (is "?e\<^sub>1 \<noteq> ?e\<^sub>2")
-  using assms cycle_edge_length distinct_hd_last_neq[OF simple_pathE] by (auto elim: is_cycleE)
+  using assms cycle_edge_length distinct_hd_last_neq[OF is_simpleE] by (auto elim: is_cycleE)
 
 lemma cycle_path_split:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C" "v \<noteq> hd C"
@@ -209,29 +209,21 @@ lemma cycle_path_split:
 proof -
   obtain u where "walk_betw E u C u"
     using assms by (auto elim: is_cycleE)
-  hence [simp]: "hd C = u" "last C = u"
-    by (auto elim: nonempty_path_walk_between)
-  moreover have "C \<noteq> []"
-    using assms cycle_length by auto
-  ultimately obtain C' where "C = u#C'"
-    by (auto elim: split_hd[of C])
-  moreover hence "C' \<noteq> []"
-    using assms cycle_length[of E C] by auto
-  ultimately obtain C'' where [simp]: "C = u#C'' @ [u]"
-    using \<open>last C = u\<close> by (auto elim: split_last[of C'])
-  hence "v \<in> set C''"
+  moreover hence "u = hd C"
+    by (auto simp: walk_between_nonempty_path)
+  moreover hence "u \<noteq> v"
     using assms by auto
-  then obtain P\<^sub>1 P\<^sub>2 where "C = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
-    using split_list[of v C''] by auto
-  thus ?thesis
-    using that by auto
+  moreover obtain P\<^sub>1 P\<^sub>2 where "C = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
+    using assms calculation walk_path_split[of E u C v] by auto
+  ultimately show ?thesis
+    using that by blast
 qed
 
 lemma cycle_rotate:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C"
   obtains C' where "is_cycle E C'" "walk_betw E v C' v" 
     "set (edges_of_path C) = set (edges_of_path C')"
-proof (cases "v = hd C")
+proof cases
   assume "v = hd C"
   hence "is_cycle E C" "walk_betw E v C v"
     using assms by (auto elim: is_cycleE_hd)
@@ -242,19 +234,19 @@ next
   then obtain u P\<^sub>1 P\<^sub>2 where [simp]: "C = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
     using assms by (elim cycle_path_split) auto
   let ?C'="v#P\<^sub>2 @ u#P\<^sub>1 @ [v]"
-  have "path E C" "simple_path C" "length (edges_of_path C) > 0"
+  have "path E C" "is_simple C" "length (edges_of_path C) > 0"
     using assms by (auto elim: is_cycleE walk_between_nonempty_path)
   moreover hence "walk_betw E v ?C' v"
     using path_rotate by (fastforce intro: nonempty_path_walk_between)+
-  moreover have "simple_path ?C'" "length (edges_of_path ?C') > 0"
-    using calculation simple_path_rotate[of u P\<^sub>1 v P\<^sub>2] length_edges_of_path_rotate[of u P\<^sub>1 v P\<^sub>2]
+  moreover have "is_simple ?C'" "length (edges_of_path ?C') > 0"
+    using calculation is_simple_rotate[of u P\<^sub>1 v P\<^sub>2] length_edges_of_path_rotate[of u P\<^sub>1 v P\<^sub>2]
     by auto
   moreover have "is_cycle E ?C'"
     using calculation by (auto intro: is_cycleI)
   moreover have "set (edges_of_path C) = set (edges_of_path ?C')"
     using edges_of_path_rotate by fastforce
   ultimately show ?thesis using that by auto
-qed
+qed (* TODO: might be able to simplify proof with \<open>Misc.walk_rotate\<close>. Need to show \<open>is_simple\<close>. *)
 
 lemma cycle_edges_for_v:
   assumes "graph_invar E" "is_cycle E C" "v \<in> set C"
@@ -319,17 +311,17 @@ lemma not_acyclicE:
 
 lemma not_acyclicE2:
   assumes "graph_invar E" "\<not> is_acyclic E"
-  obtains u v P P' where "simple_path P" "walk_betw E u P v" 
-    "simple_path P'" "walk_betw E u P' v" "P \<noteq> P'"
+  obtains u v P P' where "is_simple P" "walk_betw E u P v" 
+    "is_simple P'" "walk_betw E u P' v" "P \<noteq> P'"
 proof -
   obtain C where "is_cycle E C"
     using assms by (auto elim: not_acyclicE)
-  moreover then obtain v where "simple_path C" "walk_betw E v C v"
+  moreover then obtain v where "is_simple C" "walk_betw E v C v"
     by (auto elim: is_cycleE)
-  moreover hence "simple_path (rev C)" "walk_betw E v (rev C) v"
+  moreover hence "is_simple (rev C)" "walk_betw E v (rev C) v"
     using walk_symmetric[of E v C v] simple_path_rev by auto
   moreover hence "C \<noteq> rev C"
-    using assms calculation simple_path_rev_neq[OF _ cycle_length] by auto
+    using assms calculation is_simple_rev_neq[OF _ cycle_length] by auto
   ultimately show thesis
     using that by auto
 qed
@@ -377,7 +369,7 @@ end
 context w_graph_abs
 begin
 
-definition "cost_of_st T \<equiv> (\<Sum>e\<in>T. c e)"
+abbreviation "cost_of_st T \<equiv> sum c T"
 
 text \<open>Minimum Spanning Tree\<close>
 definition "is_mst T \<equiv> is_st T \<and> (\<forall>T'. is_st T' \<longrightarrow> cost_of_st T \<le> cost_of_st T')"

@@ -59,12 +59,15 @@ lemma mpath_edges_subset:
   shows "set (edges_of_path P) \<subseteq> set_mset E"
   using path_edges_subset[OF assms[unfolded mpath_def2]] .
 
-thm path_edges_subset
-
 lemma mem_mpath_mVs:
   assumes "mpath E P" "v \<in> set P"
   shows "v \<in> mVs E"
   unfolding mVs_def using mem_path_Vs[OF assms[unfolded mpath_def2]] .
+
+lemma mpath_Vs_subset:
+  assumes "mpath E P"
+  shows "set P \<subseteq> mVs E"
+  using mem_mpath_mVs[OF assms] by auto
 
 definition "mdegree E\<^sub>M v \<equiv> degree (encode_as_graph E\<^sub>M) (v,1)"
 

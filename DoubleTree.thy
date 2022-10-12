@@ -97,10 +97,10 @@ lemma hd_tl_comp_hc_of_et_not_distinct_adj:
 proof -
   have "u = hd (remdups (rev P@[u]))"
     using assms by (auto simp: comp_hc_of_et_remdups[of ?P])
-  hence "P = [] \<or> P = [u] \<or> \<not> distinct_adj P"
+  then consider "P = []" | "P = [u]" | "\<not> distinct_adj P"
     using hd_remdups_append[of u "rev P"] by auto
   thus ?thesis
-    by (elim disjE) (auto simp: distinct_adj_Cons distinct_adj_append_iff)
+    by cases (auto simp: distinct_adj_Cons distinct_adj_append_iff)
 qed
 
 lemma distinct_adj_last_neq_hd_tl:
@@ -200,7 +200,7 @@ next
   then obtain v where "comp_hc_of_et P [] \<noteq> []" "walk_betw E v (comp_hc_of_et P []) v"
     using assms hc_of_et_non_nil by (auto elim: hc_of_et_walk_betw[of P X])
   then show ?thesis
-    apply (rule is_hcI_non_nil)
+    apply (rule is_hcI_nonnil)
     using assms hc_of_et_walk_betw[of P X] hc_of_et_vs[of X P] hc_of_et_distinct[of "[]" P] 
           hc_of_et_cycle[of P X] by auto
 qed
@@ -261,7 +261,7 @@ locale double_tree_algo_feasibility =
 begin
 
 lemma "is_hc (double_tree)" (is "is_hc ?H")
-  apply (simp only: double_tree_def Let_def)
+  unfolding double_tree_def Let_def
   apply (rule hc_of_et_correct, rule eulerian)
   using dt_correctness by auto
 
@@ -269,138 +269,11 @@ end
 
 subsection \<open>Approximation of \textsc{DoubleTree}\<close>
 
-locale double_tree_algo_approx =
-  hc_of_et +
-  double_tree_algo
+locale mtsp_opt = 
+  metric_graph_abs E c for E :: "'a set set" and c +
+  fixes OPT
+  assumes opt: "is_mtsp OPT"
 begin
-
-lemma cost_of_et:
-  assumes "is_et T P" 
-  shows "cost_of_path P = (\<Sum>e\<in>#T. c e)"
-  using assms cost_of_path_sum[of P] et_edges[of T P] by auto
-
-lemma et_not_single_v:
-  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T" "is_et T\<^sub>2\<^sub>x P"
-  shows "length P \<noteq> 1"
-  using assms
-proof (induction P rule: list012.induct) (* induction just for case distinction *)
-  case (2 v)
-  hence "T\<^sub>2\<^sub>x = {#}" "mpath T\<^sub>2\<^sub>x [v]"
-    using is_etE[of T\<^sub>2\<^sub>x "[v]"] by auto
-  hence "mVs T\<^sub>2\<^sub>x = {}" "v \<in> mVs T\<^sub>2\<^sub>x"
-    unfolding mpath_def2 by (auto simp: mVs_def Vs_def)
-  then show ?case by auto
-qed auto
-
-lemma hc_of_et_cost_le_dt:
-  assumes "is_mst T" "T\<^sub>2\<^sub>x = mset_set T + mset_set T" "is_et T\<^sub>2\<^sub>x P"
-  shows "cost_of_path (comp_hc_of_et P []) \<le> 2 * cost_of_st T"
-proof -
-  have "set P \<subseteq> Vs E"
-    using assms et_vertices_len_neq_1[of T\<^sub>2\<^sub>x P, OF _ et_not_single_v] T2x_vs[of T T\<^sub>2\<^sub>x] by auto
-  hence "cost_of_path (comp_hc_of_et P []) \<le> cost_of_path P"
-    using hc_of_et_reduces_cost[of P] by auto
-  also have "... = (\<Sum>e\<in>#T\<^sub>2\<^sub>x. c e)"
-    using assms cost_of_et by auto
-  also have "... = (\<Sum>e\<in>T. c e) + (\<Sum>e\<in>T. c e)"
-    using assms by (simp add: sum_unfold_sum_mset)
-  also have "... = 2 * (\<Sum>e\<in>T. c e)"
-    using mult_2 by auto
-  also have "... = 2 * cost_of_st T"
-    by (auto simp: cost_of_st_def)
-  finally show ?thesis .
-qed
-
-lemma dt_mst_approx:
-  assumes "is_mst T"
-  shows "cost_of_path double_tree \<le> 2 * cost_of_st T"
-proof -
-  let ?T="comp_mst c E"
-  let ?T\<^sub>2\<^sub>x="mset_set ?T + mset_set ?T"
-  let ?P="comp_et ?T\<^sub>2\<^sub>x"
-  
-  have "cost_of_path double_tree = cost_of_path (comp_hc_of_et ?P [])"
-    unfolding double_tree_def by (auto simp: Let_def)
-  also have "... \<le> 2 * cost_of_st ?T"
-    using mst hc_of_et_cost_le_dt[of ?T ?T\<^sub>2\<^sub>x ?P] eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2\<^sub>x] by auto
-  also have "... = 2 * cost_of_st T"
-    using assms mst_eq_cost[OF mst, of T] by auto
-  finally show ?thesis .
-qed
-
-lemma hc_connected_component:
-  assumes "is_hc H" "u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" "v = (tl H) ! i\<^sub>v" "i\<^sub>v < length (tl H)" 
-          "i\<^sub>u < i\<^sub>v" 
-  shows "u \<in> connected_component (set (edges_of_path (tl H))) v" 
-    (is "u \<in> connected_component ?E' v")
-proof -
-  let ?P="drop (i\<^sub>u + 1) (take (i\<^sub>v + 2) H)"
-  let ?P'="drop i\<^sub>u (take (i\<^sub>v + 1) (tl H))"
-  have "?P = ?P'"
-    using drop_tl[of "i\<^sub>u + 1" "take (i\<^sub>v + 2) H"] tl_take[of "i\<^sub>v + 2" H] by auto
-
-  have "u = H ! (i\<^sub>u + 1)" "v = H ! (i\<^sub>v + 1)"
-    using assms nth_tl[of _ H] by auto
-  hence "walk_betw E u ?P v" "length ?P > 1"
-    using assms hc_walk_betw1[of H "i\<^sub>u + 1" "i\<^sub>v + 1"] by auto
-  hence "walk_betw (set (edges_of_path ?P')) u ?P' v"
-    using assms \<open>?P = ?P'\<close> walk_on_edges_of_path[of E u ?P v] by auto
-  hence "walk_betw ?E' u ?P' v"
-    using edges_of_path_drop_take_subset[of i\<^sub>u "i\<^sub>v + 1" "tl H"] 
-            walk_subset[of "set (edges_of_path ?P')" ?E'] by auto
-  then show "u \<in> connected_component ?E' v"
-    using walk_symmetric[of ?E' u _ v] by auto
-qed
-
-lemma tl_hc_connected:
-  assumes "is_hc H"
-  shows "is_connected (set (tl (edges_of_path H)))" (is "is_connected ?E'")
-proof (rule is_connectedI)
-  fix u v
-  assume "u \<in> Vs ?E'" "v \<in> Vs ?E'"
-  hence "u \<in> Vs (set (edges_of_path (tl H)))" "v \<in> Vs (set (edges_of_path (tl H)))"
-    by (auto simp: edges_of_path_tl)
-  hence "u \<in> set (tl H)" "v \<in> set (tl H)"
-    using assms edges_of_path_Vs[of "tl H"] by auto
-  then obtain i\<^sub>u i\<^sub>v where i\<^sub>u_i\<^sub>v_simps:"u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" 
-    "v = (tl H) ! i\<^sub>v" "i\<^sub>v < length (tl H)"
-    using set_conv_nth[of "tl H"] by auto
-
-  have "i\<^sub>u = i\<^sub>v \<or> i\<^sub>u < i\<^sub>v \<or> i\<^sub>v < i\<^sub>u"
-    by auto
-  then show "u \<in> connected_component ?E' v"
-  proof (elim disjE)
-    assume "i\<^sub>u = i\<^sub>v"
-    hence "u = v"
-      using i\<^sub>u_i\<^sub>v_simps by auto
-    then show "u \<in> connected_component ?E' v"
-      using in_own_connected_component by auto
-  next
-    assume "i\<^sub>u < i\<^sub>v"
-    then show "u \<in> connected_component ?E' v"
-      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
-  next
-    assume "i\<^sub>v < i\<^sub>u"
-    hence "v \<in> connected_component ?E' u"
-      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
-    then show "u \<in> connected_component ?E' v"
-      using connected_components_member_sym[of v ?E' u] by auto
-  qed
-qed
-
-lemma hc_degree_leq_2:
-  assumes "is_hc H" "x \<in> set H"
-  shows "degree (set (tl (edges_of_path H))) x \<le> 2"
-  using assms i0_lb
-proof (induction H rule: list0123.induct) (* induction just for case distinction *)
-  case (4 u v w P)
-  moreover hence "distinct (v#w#P)" "length (v#w#P) > 1"
-    by (elim is_hc_nonnilE) auto
-  moreover have "x \<in> set (v#w#P)"
-    using calculation hc_vs_set[of "u#v#w#P"] is_hc_nonnilE[of "u#v#w#P"] by auto
-  ultimately show ?case
-    using degree_edges_of_path_leq_2[of "v#w#P"] by (auto simp: edges_of_path_tl)
-qed auto
 
 lemma degree_edges_of_path_hd_leq_1:
   assumes "distinct P"
@@ -413,7 +286,8 @@ proof (induction P rule: list012.induct) (* induction just for case distinction 
 qed auto
 
 lemma non_acyclic_path_not_distinct:
-  assumes "path E P" "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")
+  assumes "path E P" 
+      and "\<not> is_acyclic (set (edges_of_path P))" (is "\<not> is_acyclic ?E\<^sub>P")
   shows "\<not> distinct P"
 proof
   assume "distinct P"
@@ -447,10 +321,10 @@ proof
   ultimately have "length P > 1"
     using card_length[of P] by auto
 
-  have "Vs ?E\<^sub>C = Vs ?E\<^sub>P \<or> Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
+  consider "Vs ?E\<^sub>C = Vs ?E\<^sub>P" | "Vs ?E\<^sub>C \<subset> Vs ?E\<^sub>P"
     using \<open>?E\<^sub>C \<subseteq> ?E\<^sub>P\<close>Vs_subset[of ?E\<^sub>C ?E\<^sub>P] by auto
   thus "False"
-  proof (elim disjE)
+  proof cases
     assume "Vs ?E\<^sub>C = Vs ?E\<^sub>P"
     moreover have "hd P \<in> hd (edges_of_path P)"
       using \<open>length P > 1\<close> hd_v_in_hd_e[of P] by auto
@@ -508,7 +382,7 @@ proof (rule ccontr)
   moreover have "path E (tl H)"
     using assms is_hc_path tl_path_is_path by auto
   moreover have "distinct (tl H)"
-    using assms by (auto elim: is_hc_nonnilE)
+    using assms by (auto elim: is_hcE_nonnil)
   ultimately show "False"
     using non_acyclic_path_not_distinct[of "tl H", OF \<open>path E (tl H)\<close>] 
     by (auto simp: edges_of_path_tl[of H])
@@ -530,6 +404,66 @@ proof -
   finally show ?thesis .
 qed
 
+lemma hc_connected_component:
+  assumes "is_hc H" "u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" "v = (tl H) ! i\<^sub>v" "i\<^sub>v < length (tl H)" 
+          "i\<^sub>u < i\<^sub>v" 
+  shows "u \<in> connected_component (set (edges_of_path (tl H))) v" 
+    (is "u \<in> connected_component ?E' v")
+proof -
+  let ?P="drop (i\<^sub>u + 1) (take (i\<^sub>v + 2) H)"
+  let ?P'="drop i\<^sub>u (take (i\<^sub>v + 1) (tl H))"
+  have "?P = ?P'"
+    using drop_tl[of "i\<^sub>u + 1" "take (i\<^sub>v + 2) H"] tl_take[of "i\<^sub>v + 2" H] by auto
+
+  have "u = H ! (i\<^sub>u + 1)" "v = H ! (i\<^sub>v + 1)"
+    using assms nth_tl[of _ H] by auto
+  hence "walk_betw E u ?P v" "length ?P > 1"
+    using assms hc_walk_betw1[of H "i\<^sub>u + 1" "i\<^sub>v + 1"] by auto
+  hence "walk_betw (set (edges_of_path ?P')) u ?P' v"
+    using assms \<open>?P = ?P'\<close> walk_on_edges_of_path[of E u ?P v] by auto
+  hence "walk_betw ?E' u ?P' v"
+    using edges_of_path_drop_take_subset[of i\<^sub>u "i\<^sub>v + 1" "tl H"] 
+            walk_subset[of "set (edges_of_path ?P')" ?E'] by auto
+  then show "u \<in> connected_component ?E' v"
+    using walk_symmetric[of ?E' u _ v] by auto
+qed
+
+lemma tl_hc_connected:
+  assumes "is_hc H"
+  shows "is_connected (set (tl (edges_of_path H)))" (is "is_connected ?E'")
+proof (rule is_connectedI)
+  fix u v
+  assume "u \<in> Vs ?E'" "v \<in> Vs ?E'"
+  hence "u \<in> Vs (set (edges_of_path (tl H)))" "v \<in> Vs (set (edges_of_path (tl H)))"
+    by (auto simp: edges_of_path_tl)
+  hence "u \<in> set (tl H)" "v \<in> set (tl H)"
+    using assms edges_of_path_Vs[of "tl H"] by auto
+  then obtain i\<^sub>u i\<^sub>v where i\<^sub>u_i\<^sub>v_simps:"u = (tl H) ! i\<^sub>u" "i\<^sub>u < length (tl H)" 
+    "v = (tl H) ! i\<^sub>v" "i\<^sub>v < length (tl H)"
+    using set_conv_nth[of "tl H"] by auto
+
+  consider "i\<^sub>u = i\<^sub>v" | "i\<^sub>u < i\<^sub>v" | "i\<^sub>v < i\<^sub>u"
+    by linarith
+  then show "u \<in> connected_component ?E' v"
+  proof cases
+    assume "i\<^sub>u = i\<^sub>v"
+    hence "u = v"
+      using i\<^sub>u_i\<^sub>v_simps by auto
+    then show "u \<in> connected_component ?E' v"
+      using in_own_connected_component by auto
+  next
+    assume "i\<^sub>u < i\<^sub>v"
+    then show "u \<in> connected_component ?E' v"
+      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
+  next
+    assume "i\<^sub>v < i\<^sub>u"
+    hence "v \<in> connected_component ?E' u"
+      using assms i\<^sub>u_i\<^sub>v_simps hc_connected_component by (auto simp: edges_of_path_tl)
+    then show "u \<in> connected_component ?E' v"
+      using connected_components_member_sym[of v ?E' u] by auto
+  qed
+qed
+
 lemma tl_hc_tree:
   assumes "is_hc H"
   shows "is_tree (set (tl (edges_of_path H)))"
@@ -542,44 +476,100 @@ lemma tl_hc_st:
   by (intro is_stI) auto
 
 lemma mst_mtsp_approx:
-  assumes "is_mst T" "is_mtsp OPT"
+  assumes "is_mst T"
   shows "cost_of_st T \<le> cost_of_path OPT"
   using assms
-proof (cases OPT)
-  case Nil
+proof cases
+  assume "OPT = []"
   hence "E = {}"
-    using assms hc_nil_iff by (auto simp: is_mtspE is_tspE)
+    using opt assms hc_nil_iff by (auto simp: is_tspE)
   hence "T = {}"
     using assms is_mstE is_stE by auto
   hence "cost_of_st T = 0"
-    unfolding cost_of_st_def by auto
+    by auto
   then show ?thesis
     using cost_of_path_pos by auto
 next
-  case (Cons v OPT')
+  assume "OPT \<noteq> []"
   let ?E'="edges_of_path OPT"
   let ?e="hd (edges_of_path OPT)"
   have "is_st (set (tl ?E'))"
-    using assms tl_hc_st[of OPT] by (auto simp: is_mtspE is_tspE)
+    using opt assms tl_hc_st[of OPT] by (auto simp: is_tspE)
   hence "cost_of_st T \<le> cost_of_st (set (tl ?E'))"
     using assms by (auto elim: is_mstE)
-  also have "... = (\<Sum>e\<in>set (tl ?E'). c e)"
-    unfolding cost_of_st_def by auto
-  also have "... \<le> (\<Sum>e\<in>set ?E'. c e)"
+  also have "... \<le> sum c (set ?E')"
     using costs_ge_0 sum_mono2[of "set ?E'" "set (tl ?E')" c] by (auto simp: set_tl_subset)
   also have "... \<le> cost_of_path OPT"
     using cost_of_path_leq_sum[of OPT] by auto
   finally show ?thesis .
 qed
 
-lemma dt_approx:
-  assumes "is_mtsp OPT"
-  shows "cost_of_path double_tree \<le> 2 * cost_of_path OPT"
+end
+
+locale double_tree_algo_approx =
+  hc_of_et +
+  double_tree_algo +
+  mtsp_opt
+begin
+
+lemma cost_of_et:
+  assumes "is_et T\<^sub>2 P" 
+  shows "cost_of_path P = \<Sum>\<^sub># (image_mset c T\<^sub>2)"
+  using assms cost_of_path_sum[of P] et_edges[of T\<^sub>2 P] by auto
+
+lemma et_not_single_v:
+  assumes "is_mst T" "is_et T\<^sub>2 P"
+  shows "length P \<noteq> 1"
+  using assms
+proof (induction P rule: list012.induct) (* induction just for case distinction *)
+  case (2 v)
+  hence "T\<^sub>2 = {#}" "mpath T\<^sub>2 [v]"
+    using is_etE[of T\<^sub>2 "[v]"] by auto
+  hence "mVs T\<^sub>2 = {}" "v \<in> mVs T\<^sub>2"
+    unfolding mpath_def2 by (auto simp: mVs_def Vs_def)
+  then show ?case by auto
+qed auto
+
+lemma hc_of_et_cost_le_dt:
+  assumes "is_mst T" "T\<^sub>2 = mset_set T + mset_set T" "is_et T\<^sub>2 P"
+  shows "cost_of_path (comp_hc_of_et P []) \<le> 2 * cost_of_st T"
+proof -
+  have "set P \<subseteq> Vs E"
+    using assms et_vertices_len_neq_1[of T\<^sub>2 P, OF _ et_not_single_v] T2x_vs[of T T\<^sub>2] by auto
+  hence "cost_of_path (comp_hc_of_et P []) \<le> cost_of_path P"
+    using hc_of_et_reduces_cost[of P] by auto
+  also have "... = \<Sum>\<^sub># (image_mset c T\<^sub>2)"
+    using assms cost_of_et by auto
+  also have "... = sum c T + sum c T"
+    using assms by (simp add: sum_unfold_sum_mset)
+  also have "... = 2 * cost_of_st T"
+    using mult_2 by auto
+  finally show ?thesis .
+qed
+
+lemma dt_mst_approx:
+  assumes "is_mst T"
+  shows "cost_of_path double_tree \<le> 2 * cost_of_st T"
+proof -
+  let ?T="comp_mst c E"
+  let ?T\<^sub>2="mset_set ?T + mset_set ?T"
+  let ?P="comp_et ?T\<^sub>2"
+  
+  have "cost_of_path double_tree = cost_of_path (comp_hc_of_et ?P [])"
+    unfolding double_tree_def by (auto simp: Let_def)
+  also have "... \<le> 2 * cost_of_st ?T"
+    using mst hc_of_et_cost_le_dt[of ?T ?T\<^sub>2 ?P] eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2] by auto
+  also have "... = 2 * cost_of_st T"
+    using assms mst_eq_cost[OF mst, of T] by auto
+  finally show ?thesis .
+qed
+
+lemma dt_approx: "cost_of_path double_tree \<le> 2 * cost_of_path OPT"
 proof -
   have "cost_of_path double_tree \<le> 2 * cost_of_st (comp_mst c E)"
     using dt_mst_approx[OF mst] .
   also have "... \<le> 2 * cost_of_path OPT"
-    using mst_mtsp_approx[OF mst assms] by (auto simp: mult_2_mono)
+    using mst_mtsp_approx[OF mst] by (auto simp: mult_2_mono)
   finally show ?thesis .
 qed
 

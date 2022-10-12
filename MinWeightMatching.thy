@@ -51,10 +51,10 @@ proof (rule is_perf_matchI2)
   proof -
     fix w
     assume "w \<in> Vs E'"
-    hence "w \<in> {u,v} \<or> w \<in> Vs E - {u,v}"
+    then consider "w \<in> {u,v}" | "w \<in> Vs E - {u,v}"
       using assms by auto
     thus "\<exists>!e \<in> {{u,v}} \<union> M. w \<in> e"
-    proof (elim disjE)
+    proof cases
       assume "w \<in> {u,v}"
       moreover hence "\<exists>!e \<in> {{u,v}}. w \<in> e"
         by auto
@@ -76,46 +76,113 @@ proof (rule is_perf_matchI2)
   qed
 qed
 
+lemmas restr_graph_compl' = restr_compl_graph_abs.E\<^sub>V_complete[unfolded
+    graph_abs_def
+    compl_graph_abs_def compl_graph_abs_axioms_def
+    restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
+    restr_graph_abs_def] (* TODO: clean up lemma!? *)
+
+lemmas restr_graph_Vs' = restr_compl_graph_abs.Vs_E\<^sub>V_eq_V[unfolded
+    graph_abs_def
+    compl_graph_abs_def compl_graph_abs_axioms_def
+    restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
+    restr_graph_abs_def] (* TODO: clean up lemma!? *)
+
+context compl_graph_abs
+begin
+
 lemma perf_match_exists: 
-  assumes graph: "graph_invar E" 
-      and complete: "is_complete E"
-      and "even (card (Vs E))"
-  shows "\<exists>M. is_perf_match E M"
+  assumes "even (card (Vs E))"
+  obtains M where "is_perf_match E M"
 proof -
   have "finite_even (Vs E)"
-    using assms finite_subset[OF Vs_subset] by (auto intro: finite_evenI2)
+    using graph assms finite_subset[OF Vs_subset] by (auto intro: finite_evenI2)
   thus ?thesis
-    using assms
-  proof (induction "Vs E" arbitrary: E rule: finite_even.induct)
+    using that assms graph complete (* restr_graph_compl restr_graph_Vs[symmetric] *)
+  proof (induction "Vs E" arbitrary: E thesis rule: finite_even.induct)
     case fe_empty
     moreover hence "E = {}"
-      using Vs_emptyE[OF graph] by blast
+      by (intro Vs_emptyE) auto
     moreover hence "is_perf_match E {}"
       by (auto intro: is_perf_matchI simp: matching_def)
     ultimately show ?case by auto
   next
     case (fe_insert2 V u v)
-    moreover hence "card V \<noteq> 1" "V \<subseteq> Vs E"
+    moreover hence "V \<subseteq> Vs E"
       by (auto simp: finite_even_def2)
-    moreover hence "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
-      using calculation Vs_restricted_complete_graph[of E V] by auto
+    moreover hence "card V \<noteq> 1"
+      using fe_insert2 by (auto simp: finite_even_def2)
+    moreover have "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
+      using calculation by (intro restr_graph_Vs'[symmetric]) auto
     moreover hence "even (card (Vs ?E'))"
       using calculation by (auto simp: finite_even_def2)
     moreover have "?E' \<subseteq> E" "graph_invar ?E'"
       using calculation graph_subset[of E ?E'] by auto
     moreover have "is_complete ?E'"
-      using calculation restricted_graph_complete[of E V] by auto
+      using calculation by (intro restr_graph_compl') auto
     moreover obtain M where "is_perf_match ?E' M"
-      using calculation by fastforce
+      using calculation by blast
     moreover have "u \<in> Vs E" "v \<in> Vs E"
       using calculation by auto
     moreover hence "{{u,v}} \<union> ?E' \<subseteq> E"
       using calculation by auto
     ultimately have "is_perf_match E ({{u,v}} \<union> M)"
       by (intro extend_perf_match[of ?E' M]) auto
-    thus ?case by auto
+    thus ?case 
+      using fe_insert2 by auto
   qed
 qed
+
+end
+
+context restr_compl_graph_abs
+begin
+
+lemma perf_match_exists: 
+  assumes "even (card (Vs E\<^sub>V))"
+  obtains M where "is_perf_match E\<^sub>V M"
+  using assms E\<^sub>V_graph E\<^sub>V_complete
+    compl_graph_abs.perf_match_exists[unfolded 
+      graph_abs_def 
+      compl_graph_abs_def compl_graph_abs_axioms_def, of E\<^sub>V]
+  by fastforce (* TODO: clean up lemma!? *)
+
+end
+
+context compl_graph_abs
+begin
+
+lemma restr_perf_match_exists: 
+  assumes "V \<subseteq> Vs E" "even (card (Vs {e \<in> E. e \<subseteq> V}))"
+  obtains M where "is_perf_match {e \<in> E. e \<subseteq> V} M"
+  using assms graph complete 
+    restr_compl_graph_abs.perf_match_exists[unfolded
+      graph_abs_def
+      compl_graph_abs_def compl_graph_abs_axioms_def
+      restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
+      restr_graph_abs_def, of E V] 
+  by fastforce (* TODO: clean up lemma!? *)
+
+end
+
+context w_graph_abs
+begin
+
+abbreviation "cost_of_match M \<equiv> sum c M"
+
+end
+
+context pos_w_graph_abs
+begin
+
+lemma cost_of_match_sum: "cost_of_match (set M) \<le> \<Sum>\<^sub># (image_mset c (mset M))"
+proof (induction M)
+  case (Cons e M)
+  thus ?case 
+    by (cases "e \<in> set M") (auto simp: add_left_mono insert_absorb add_increasing costs_ge_0)
+qed auto
+
+end
 
 definition "is_min_match E c M \<equiv> 
   is_perf_match E M \<and> (\<forall>M'. is_perf_match E M' \<longrightarrow> sum c M \<le> sum c M')"
