@@ -263,7 +263,7 @@ begin
 lemma dt_is_hc: "is_hc (double_tree)" (is "is_hc ?H")
   unfolding double_tree_def Let_def
   apply (rule hc_of_et_correct, rule eulerian)
-  using dt_correctness by auto
+  using dt_correctness[OF is_connected] by auto
 
 end
 
@@ -459,18 +459,19 @@ proof -
   have "cost_of_path double_tree = cost_of_path (comp_hc_of_et ?P [])"
     unfolding double_tree_def by (auto simp: Let_def)
   also have "... \<le> 2 * cost_of_st ?T"
-    using mst hc_of_et_cost_le_dt[of ?T ?T\<^sub>2 ?P] eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2] by auto
+    using mst[OF is_connected] hc_of_et_cost_le_dt[of ?T ?T\<^sub>2 ?P] 
+      eulerian[OF T2x_eulerian, of ?T ?T\<^sub>2] by auto
   also have "... = 2 * cost_of_st T"
-    using assms mst_eq_cost[OF mst, of T] by auto
+    using assms is_connected mst_eq_cost[OF mst, of T] by auto
   finally show ?thesis .
 qed
 
 lemma dt_approx: "cost_of_path double_tree \<le> 2 * cost_of_path OPT"
 proof -
   have "cost_of_path double_tree \<le> 2 * cost_of_st (comp_mst c E)"
-    using dt_mst_approx[OF mst] .
+    using is_connected dt_mst_approx[OF mst] by auto
   also have "... \<le> 2 * cost_of_path OPT"
-    using mst_mtsp_approx[OF mst] by (auto simp: mult_2_mono)
+    using is_connected mst_mtsp_approx[OF mst] by (auto simp: mult_2_mono)
   finally show ?thesis .
 qed
 

@@ -3,12 +3,21 @@ theory CompleteGraph
   imports Main Misc "berge/Berge"
 begin
 
-abbreviation "is_complete E \<equiv> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
+definition "is_complete E \<equiv> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
+
+lemma is_completeI: "(\<And>u v. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E) \<Longrightarrow> is_complete E"
+  unfolding is_complete_def by auto
+
+lemma is_completeE: "is_complete E \<Longrightarrow> u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E"
+  unfolding is_complete_def by auto
 
 locale compl_graph_abs = 
   graph_abs E for E +
   assumes complete: "is_complete E"
 begin
+
+lemma edge_in_E_intro: "u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E"
+  using complete[unfolded is_complete_def] by auto
 
 text \<open>In a complete graph any sequence of nodes is a path.\<close>
 lemma path_complete_graph: 
@@ -19,7 +28,7 @@ lemma path_complete_graph:
 proof (induction P rule: list012.induct)
   case (3 u v P)
   moreover hence "{u,v} \<in> E"
-    using complete by auto
+    by (auto intro: edge_in_E_intro)
   moreover have "path E (v#P)"
     using calculation by (auto simp: distinct_adj_ConsD)
   ultimately show ?case 
@@ -40,7 +49,7 @@ next
   moreover have "hd P \<in> Vs E"
     using assms calculation by (intro mem_path_Vs) auto
   ultimately have "{w,hd P} \<in> E"
-    using assms complete by auto
+    using assms by (auto intro: edge_in_E_intro)
   hence "path E ([w] @ P)"
     using assms by (intro path_append) auto
   thus ?thesis
@@ -61,7 +70,7 @@ next
   moreover have "last P \<in> Vs E"
     using assms calculation by (intro mem_path_Vs) auto
   ultimately have "{last P,v} \<in> E"
-    using assms complete by auto
+    using assms by (auto intro: edge_in_E_intro)
   thus ?thesis
     using assms by (auto intro: path_append path.intros)
 qed
@@ -93,7 +102,7 @@ next
   moreover have "u \<in> Vs E"
     using assms by (auto intro: vs_member_intro)
   moreover hence "{last P,u} \<in> E"
-    using assms calculation by (auto simp: complete)
+    using assms calculation by (auto intro: edge_in_E_intro)
   moreover have "path E [u,v]"
     using assms by (auto intro: edge_is_path)
   ultimately show ?thesis
@@ -121,13 +130,13 @@ locale restr_compl_graph_abs =
 begin
 
 lemma E\<^sub>V_complete: "is_complete E\<^sub>V"
-proof (rule allI impI)+
+proof (rule is_completeI)
   fix u v
-  assume "u \<in> Vs E\<^sub>V \<and> v \<in> Vs E\<^sub>V \<and> u \<noteq> v"
+  assume "u \<in> Vs E\<^sub>V" "v \<in> Vs E\<^sub>V" "u \<noteq> v"
   moreover hence "u \<in> Vs E" "v \<in> Vs E"
     using Vs_subset[of E\<^sub>V E] by (auto simp: E\<^sub>V_def)
   moreover have "{u,v} \<in> E"
-    using complete calculation by auto
+    using calculation by (auto intro: edge_in_E_intro)
   moreover have "u \<in> V" 
     using calculation Vs_subset_restr_graph by (fastforce simp: E\<^sub>V_def)
   moreover have "v \<in> V"
@@ -135,6 +144,9 @@ proof (rule allI impI)+
   ultimately show "{u,v} \<in> E\<^sub>V"
     by (auto simp: E\<^sub>V_def)
 qed
+
+lemma edge_in_E\<^sub>V_intro: "u \<in> Vs E\<^sub>V \<Longrightarrow> v \<in> Vs E\<^sub>V \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E\<^sub>V"
+  using E\<^sub>V_complete[unfolded is_complete_def] by auto
 
 lemma Vs_E\<^sub>V_eq_V:
   assumes "card V \<noteq> 1"
@@ -154,7 +166,7 @@ proof (intro equalityI)
       moreover have "v \<in> Vs E" "u \<in> Vs E" "u \<noteq> v"
         using V_subset assms calculation by auto
       moreover hence "{u,v} \<in> E"
-        using complete assms by auto
+        using assms by (auto intro: edge_in_E_intro)
       ultimately have "{u,v} \<in> E\<^sub>V"
         unfolding E\<^sub>V_def using assms by auto
       thus "v \<in> Vs E\<^sub>V"
@@ -204,7 +216,7 @@ qed auto *)
 lemma last_short_cut:
   assumes "u \<in> Vs E\<^sub>V" "w \<in> Vs E\<^sub>V"
   shows "last (short_cut E\<^sub>V (u#P @ [w])) = w"
-  using assms E\<^sub>V_complete
+  using assms edge_in_E\<^sub>V_intro
 proof (induction "u#P" arbitrary: u P rule: short_cut.induct)
   case (3 E\<^sub>V u v P)
   thus ?case
@@ -241,7 +253,7 @@ qed
 lemma set_short_cut: 
   assumes "u \<in> Vs E\<^sub>V"
   shows "set (short_cut E\<^sub>V (u#P)) = (set (u#P) \<inter> Vs E\<^sub>V) \<union> {u}"
-  using assms E\<^sub>V_complete
+  using assms edge_in_E\<^sub>V_intro
 proof (induction "u#P" arbitrary: u P rule: short_cut.induct)
   case (3 E\<^sub>V u v P)
   thus ?case 

@@ -11,6 +11,16 @@ lemma is_connectedI:
   "(\<And>u v. u\<in>Vs E \<Longrightarrow> v\<in>Vs E \<Longrightarrow> u \<in> connected_component E v) \<Longrightarrow> is_connected E"
   unfolding is_connected_def by auto
 
+lemma is_connectedI2: 
+  assumes "\<And>u v. u\<in>Vs E \<Longrightarrow> v\<in>Vs E \<Longrightarrow> u \<noteq> v \<Longrightarrow> u \<in> connected_component E v"
+  shows "is_connected E"
+proof (rule is_connectedI)
+  fix u v 
+  assume "u \<in> Vs E" "v \<in> Vs E"
+  thus "u \<in> connected_component E v"
+    using assms by (cases "u = v") (auto simp: in_own_connected_component)
+qed
+
 lemma is_connectedE: "is_connected E \<Longrightarrow> u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<in> connected_component E v"
   unfolding is_connected_def by auto
 
@@ -18,6 +28,21 @@ lemma is_connectedE2:
   assumes "is_connected E" "u \<in> Vs E" "v \<in> Vs E" "u \<noteq> v"
   obtains P where "walk_betw E u P v"
   using assms[unfolded is_connected_def connected_component_def] by fastforce
+
+context compl_graph_abs
+begin
+
+lemma is_connected: "is_connected E"
+proof (intro is_connectedI2)
+  fix u v
+  assume "u \<in> Vs E" "v \<in> Vs E" "u \<noteq> v"
+  moreover hence "{v,u} \<in> E"
+    by (auto intro: edge_in_E_intro)
+  ultimately show "u \<in> connected_component E v"
+    by (subst insert_absorb[symmetric]) (auto intro: in_con_comp_insert)
+qed
+
+end
 
 lemma path_connected:
   assumes "path E P"
@@ -503,7 +528,7 @@ end
 locale mst = 
   w_graph_abs E c for E c +
   fixes comp_mst
-  assumes mst: "is_mst (comp_mst c E)"
+  assumes mst: "is_connected E \<Longrightarrow> is_mst (comp_mst c E)"
 begin
 
 end

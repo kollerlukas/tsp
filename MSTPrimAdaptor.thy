@@ -14,18 +14,17 @@ lemma G\<^sub>E_finite: "finite (Vs E)" "finite {(u,v)| u v. {u,v} \<in> E}"
   using graph finite_subset[of "{(u,v)| u v. {u,v} \<in> E}" "Vs E \<times> Vs E"] 
   by (auto intro: vs_member_intro)
 
-lemma nodes_equiv: "v \<in> Vs E \<longleftrightarrow> v \<in> nodes G\<^sub>E"
-proof
-  assume "v \<in> Vs E"
-  thus "v \<in> nodes G\<^sub>E"
-    using graph_accs[OF G\<^sub>E_finite] by auto
-next
+lemma nodes_equiv1: "v \<in> Vs E \<Longrightarrow> v \<in> nodes G\<^sub>E"
+  using graph_accs[OF G\<^sub>E_finite] by auto
+
+lemma nodes_equiv2: "v \<in> nodes G\<^sub>E \<Longrightarrow> v \<in> Vs E "
+proof -
   let ?E'="{(u,v) |u v. {u,v} \<in> E}"
   assume "v \<in> nodes G\<^sub>E"
-  hence "v \<in> Vs E \<or> v \<in> fst ` ?E' \<or> v \<in> snd ` ?E'"
+  then consider "v \<in> Vs E" | "v \<in> fst ` ?E'" | "v \<in> snd ` ?E'"
     using graph_accs[OF G\<^sub>E_finite] by auto
   thus "v \<in> Vs E"
-  proof (elim disjE)
+  proof cases
     assume "v \<in> fst ` ?E'"
     then obtain u' v' where "v = fst (u',v')" "{u',v'} \<in> E"
       by auto
@@ -40,10 +39,13 @@ next
   qed auto
 qed
 
-lemma edges_equiv: "{u,v} \<in> E \<longleftrightarrow> (u,v) \<in> edges G\<^sub>E"
+lemma edges_equiv1: "{u,v} \<in> E \<longleftrightarrow> (u,v) \<in> edges G\<^sub>E"
   using graph graph_accs[OF G\<^sub>E_finite] by (auto simp: insert_commute)
 
-lemma edges_equiv2: "E = uedge ` edges G\<^sub>E"
+lemma edges_equiv2: "(u,v) \<in> edges G \<longleftrightarrow> {u,v} \<in> uedge ` edges G"
+  using edges_sym' by (fastforce simp: uedge_def doubleton_eq_iff)+
+
+lemma edges_eq: "E = uedge ` edges G\<^sub>E"
 proof
   show "E \<subseteq> uedge ` edges G\<^sub>E"
   proof
@@ -52,23 +54,19 @@ proof
     moreover then obtain u v where [simp]: "e = {u,v}"
       using graph by auto
     ultimately have "(u,v) \<in> edges G\<^sub>E"
-      using edges_equiv[of u v] by auto
-    thus "e \<in> uedge ` edges G\<^sub>E"
-      unfolding uedge_def by auto
+      by (intro iffD1[OF edges_equiv1]) auto
+    thus "e \<in> uedge ` edges G\<^sub>E"   
+      by (auto intro: iffD1[OF edges_equiv2])
   qed
 next
   show "uedge ` edges G\<^sub>E \<subseteq> E"
   proof
     fix e
     assume "e \<in> uedge ` edges G\<^sub>E"
-    moreover then obtain e' where "e = uedge e'" "e' \<in> edges G\<^sub>E"
-      by auto   
-    moreover then obtain u v where [simp]: "e' = (u,v)"
-      by fastforce
-    moreover hence "e = {u,v}"
-      unfolding uedge_def using calculation by auto
+    moreover then obtain u v where "e = {u,v}" "(u,v) \<in> edges G\<^sub>E"
+      by (auto simp: uedge_def)   
     ultimately show "e \<in> E"
-      using edges_equiv[of u v] by auto
+      by (subst \<open>e = {u,v}\<close>) (intro iffD2[OF edges_equiv1])
   qed
 qed
 
@@ -114,17 +112,15 @@ begin
 lemma edges_subset_iff: "set (dedges_of_path P) \<subseteq> edges G\<^sub>E \<longleftrightarrow> set (edges_of_path P) \<subseteq> E"
 proof
   show "set (dedges_of_path P) \<subseteq> edges G\<^sub>E \<Longrightarrow> set (edges_of_path P) \<subseteq> E"
-  proof (induction P rule: dedges_of_path.induct)
-    case (3 u v P)
-    thus ?case 
-      using edges_equiv[of u v] by auto
-  qed auto
+    by (induction P rule: dedges_of_path.induct) (auto intro: iffD2[OF edges_equiv1])
 next
   show "set (edges_of_path P) \<subseteq> E \<Longrightarrow> set (dedges_of_path P) \<subseteq> edges G\<^sub>E"
   proof (induction P rule: dedges_of_path.induct)
     case (3 u v P)
-    thus ?case 
-      using edges_equiv[of u v] by auto
+    moreover hence "(u,v) \<in> edges G\<^sub>E"
+      by (intro iffD1[OF edges_equiv1]) auto
+    ultimately show ?case 
+      by auto
   qed auto
 qed
 
@@ -165,7 +161,7 @@ proof -
     case (path2 u' x P)
     hence [simp]: "u = u'" and "(u,x) \<in> edges G\<^sub>E" 
       "Undirected_Graph.path G\<^sub>E x (dedges_of_path (x#P)) v"
-      using edges_equiv[of u x] by auto
+      using iffD1[OF edges_equiv1] by auto
     moreover hence "Undirected_Graph.path G\<^sub>E u [(u,x)] x"
       by (auto intro: path_emptyI)
     ultimately show ?case 
@@ -180,7 +176,7 @@ lemma path_equiv2:
 proof (induction P arbitrary: u rule: dedges_of_path.induct)
   case (3 u' x P)
   hence "{u',x} \<in> E" "path E (x#P)"
-    using 3 edges_equiv[of u x] by auto  
+    using 3 by (auto intro: iffD2[OF edges_equiv1])  
   thus ?case 
     by (auto intro: path.intros)
 qed auto
@@ -242,14 +238,16 @@ next
       by auto
   next
     case (step y z)
-    hence "{y,z} \<in> E" "y \<in> Vs E"
-      using edges_equiv[of y z] by (auto intro: vs_member_intro[of y "{y,z}"])
-    then obtain P where "walk_betw E u P y" "path E [y,z]"
+    hence "{y,z} \<in> E" 
+      by (intro iffD2[OF edges_equiv1])
+    moreover hence "y \<in> Vs E"
+      by (intro vs_member_intro) auto
+    ultimately obtain P where "walk_betw E u P y" "path E [y,z]"
       using step.prems step.IH by (auto intro: path.intros)
     moreover hence "walk_betw E y [y,z] z"
       by (auto intro: path.intros nonempty_path_walk_between)
-    ultimately have "walk_betw E u (P@[z]) z"
-      using walk_transitive[of E u P y "[y,z]" z] by auto
+    ultimately have "walk_betw E u (P @ tl [y,z]) z"
+      by (intro walk_transitive)
     thus ?case 
       by auto
   qed  
@@ -280,7 +278,7 @@ proof
     fix u v
     assume "u \<in> nodes G\<^sub>E" "v \<in> nodes G\<^sub>E"
     hence "u \<in> Vs E" "v \<in> Vs E"
-      using nodes_equiv by auto
+      using nodes_equiv2 by auto
     hence "v \<in> connected_component E u"
       using \<open>is_connected E\<close> by (auto elim: is_connectedE)
     thus "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
@@ -293,7 +291,7 @@ next
     fix u v
     assume "u \<in> Vs E" "v \<in> Vs E"
     hence "u \<in> nodes G\<^sub>E" "v \<in> nodes G\<^sub>E"
-      using nodes_equiv by auto
+      using nodes_equiv1 by auto
     hence "(u,v) \<in> (edges G\<^sub>E)\<^sup>*"
       using \<open>Undirected_Graph.connected G\<^sub>E\<close> by (auto elim: connectedD)
     thus "v \<in> connected_component E u"
@@ -313,7 +311,7 @@ proof (induction P rule: dedges_of_path.induct)
   next
     case 2
     hence "{u,v} \<in> E"
-      using edges_equiv[of u v] by auto
+      by (auto intro: iffD2[OF edges_equiv1])
     thus ?case 
       by (auto simp: edges_are_Vs)
   }
@@ -356,9 +354,6 @@ qed
 
 lemma tree_equiv: "is_tree E \<longleftrightarrow> tree G\<^sub>E"
   using connected_equiv acyclic_equiv by (auto intro: is_treeI simp: is_treeE tree_def)
-
-lemma tree_equiv2: "is_tree (uedge ` edges G\<^sub>E) \<longleftrightarrow> tree G\<^sub>E"
-  using tree_equiv by (subst edges_equiv2[symmetric])
 
 end
 

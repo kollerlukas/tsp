@@ -13,27 +13,20 @@ thm connected_bridge
 
 subsection \<open>Weighted Graphs\<close>
 
-text \<open>Graph with edge weights.\<close>
-locale w_graph_abs
+text \<open>Graph with edge weights. Locale @{const w_graph_abs}}\<close>
 
-text \<open>Weighted graph with only positive edges weights.\<close>
-locale pos_w_graph_abs
+text \<open>Weighted graph with only positive edges weights. Locale @{const pos_w_graph_abs}\<close>
 
 subsection \<open>Complete Graphs\<close>
 
 text \<open>A graph is complete if there exists an edges for any pair of vertices that are not equal.\<close>
-term is_complete
+thm is_complete_def
 
-lemma "is_complete E \<longleftrightarrow> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
-  by simp
+text \<open>Complete graph locale @{const compl_graph_abs}\<close>
 
-locale compl_graph_abs
+text \<open>A locale that fixes a subgraph of a complete graph. Locale @{const restr_compl_graph_abs}\<close>
 
-text \<open>A locale that fixes a subgraph of a complete graph.\<close>
-locale restr_compl_graph_abs
-
-text \<open>Complete graph with triangle inequality.\<close>
-locale metric_graph_abs
+text \<open>Complete graph with triangle inequality. @{const metric_graph_abs}\<close>
 
 thm metric_graph_abs.cost_of_path_short_cut_tri_ineq
 
@@ -71,8 +64,7 @@ subsection \<open>Minimum Spanning Trees\<close>
 text \<open>A minimum spanning tree is a spanning tree with minimum weight.\<close>
 thm w_graph_abs.is_mst_def
 
-text \<open>A locale that a minimum spanning.\<close>
-locale mst
+text \<open>A locale that a minimum spanning. Locale @{const mst}}\<close>
 
 subsection \<open>Hamiltonian Cycles\<close>
 
@@ -92,8 +84,8 @@ subsection \<open>Eulerian Tours\<close>
 
 thm is_eulerian_def
 
-text \<open>Locale that fixes an algorithm that computes a Eulerian tour for a given multi-graph.\<close>
-locale eulerian
+text \<open>Locale that fixes an algorithm that computes a Eulerian tour for a given multi-graph.
+  Locale @{const eulerian}\<close>
 
 (* TODO: implement and verify an algorithm for Eulerian Tour *)
 
@@ -109,8 +101,7 @@ subsection \<open>Minimum-Weight Perfect Matchings\<close>
 thm is_min_match_def
 
 text \<open>Locale that fixes an algorithm that computes a minimum-weight perfect matching for a given 
-graph.\<close>
-locale min_weight_matching
+graph. Locale @{const min_weight_matching}\<close>
 
 text \<open>Every complete graph with an even number of vertices has a perfect matching.\<close>
 thm compl_graph_abs.perf_match_exists

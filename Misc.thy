@@ -199,6 +199,16 @@ lemma finite_even_card:
   shows "even (card ({x,y} \<union> X)) \<longleftrightarrow> even (card X)"
   using assms by auto
 
+lemma finite_even_cardI:
+  assumes "finite X" "x \<notin> X" "y \<notin> X" "x \<noteq> y" "even (card ({x,y} \<union> X))"
+  shows "even (card X)"
+  using assms by auto
+
+lemma finite_even_cardI2:
+  assumes "finite X" "x \<notin> X" "y \<notin> X" "x \<noteq> y" "even (card X)"
+  shows "even (card ({x,y} \<union> X))"
+  using assms by auto
+
 section \<open>Metric Lemmas\<close>
 
 lemma mult_2: "(x::'b::{ordered_semiring_0,semiring_numeral}) + x = 2 * x"

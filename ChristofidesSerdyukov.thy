@@ -38,10 +38,10 @@ locale christofides_serdyukov_aux =
 begin
 
 lemma subset_T: "T \<subseteq> E"
-  unfolding T_def using mst by (auto simp: is_mstE2)
+  unfolding T_def using is_connected mst by (auto simp: is_mstE2)
 
 lemma Vs_T: "Vs T = Vs E"
-  unfolding T_def using mst by (auto simp: is_mstE2)
+  unfolding T_def using is_connected mst by (auto simp: is_mstE2)
 
 lemma graph_T: "graph_invar T"
   using graph subset_T finite_subset[OF Vs_subset] by blast
@@ -103,7 +103,7 @@ proof -
   also have "... = Vs T \<union> Vs M"
     using finite_T finite_M by (auto simp: mVs_mset_set)
   also have "... = Vs E \<union> Vs M"
-    using mst by (auto simp: T_def is_mstE2)
+    using is_connected mst by (auto simp: T_def is_mstE2)
   also have "... = Vs E"
     using Vs_subset[OF subset_M] by (auto simp: sup_absorb1)
   finally show ?thesis .
@@ -422,7 +422,7 @@ proof -
   also have "... = 2 * cost_of_st T + 2 * cost_of_match M"
     by (auto simp: mult_2)
   also have "... \<le> 2 * cost_of_path OPT + 2 * cost_of_match M"
-    using mst mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
+    using is_connected mst mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
   also have "... \<le> 2 * cost_of_path OPT + cost_of_path OPT"
     using min_match_leq_half_OPT add_left_mono by auto
   also have "... = 3 * cost_of_path OPT"

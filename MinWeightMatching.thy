@@ -76,17 +76,13 @@ proof (rule is_perf_matchI2)
   qed
 qed
 
-lemmas restr_graph_compl' = restr_compl_graph_abs.E\<^sub>V_complete[unfolded
-    graph_abs_def
-    compl_graph_abs_def compl_graph_abs_axioms_def
-    restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
-    restr_graph_abs_def] (* TODO: clean up lemma!? *)
+lemma restr_graph_compl': 
+  "graph_invar E \<Longrightarrow> is_complete E \<Longrightarrow> V \<subseteq> Vs E \<Longrightarrow> is_complete {e \<in> E. e \<subseteq> V}" 
+  by (intro restr_compl_graph_abs.E\<^sub>V_complete) unfold_locales (* TODO: clean up lemma!? *)
 
-lemmas restr_graph_Vs' = restr_compl_graph_abs.Vs_E\<^sub>V_eq_V[unfolded
-    graph_abs_def
-    compl_graph_abs_def compl_graph_abs_axioms_def
-    restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
-    restr_graph_abs_def] (* TODO: clean up lemma!? *)
+lemma restr_graph_Vs':
+  "graph_invar E \<Longrightarrow> is_complete E \<Longrightarrow> V \<subseteq> Vs E \<Longrightarrow> card V \<noteq> 1 \<Longrightarrow> Vs {e \<in> E. e \<subseteq> V} = V"
+  by (intro restr_compl_graph_abs.Vs_E\<^sub>V_eq_V) unfold_locales (* TODO: clean up lemma!? *)
 
 context compl_graph_abs
 begin
@@ -98,7 +94,7 @@ proof -
   have "finite (Vs E)" "even (card (Vs E))"
     using graph assms finite_subset[OF Vs_subset] by auto
   thus ?thesis
-    using that assms graph complete (* restr_graph_compl restr_graph_Vs[symmetric] *)
+    using assms graph complete (* restr_graph_compl restr_graph_Vs *) that
   proof (induction "Vs E" arbitrary: E thesis rule: finite_even_induct)
     case empty
     moreover hence "E = {}"
@@ -108,29 +104,33 @@ proof -
     ultimately show ?case by auto
   next
     case (insert2 u v V)
-    moreover have "V \<subseteq> Vs E"
-      by (subst \<open>{u, v} \<union> V = Vs E\<close>[symmetric]) auto
-    moreover have "even (card ({u,v} \<union> V))"
+    have "even (card V)"
+      apply (rule finite_even_cardI)
       using insert2 by auto
-    moreover hence "even (card V)"
-      using insert2 finite_even_card by auto
-    moreover have "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
-      using calculation by (intro restr_graph_Vs'[symmetric]) auto
-    moreover hence "even (card (Vs ?E'))"
+    moreover have "V \<subseteq> Vs E"
+      using insert2 by auto
+    moreover hence "V = Vs {e \<in> E. e \<subseteq> V}" (is "V = Vs ?E'")
+      using insert2 calculation by (intro restr_graph_Vs'[symmetric]) auto
+    moreover have "even (card (Vs ?E'))" 
       using calculation by auto
-    moreover have "?E' \<subseteq> E" "graph_invar ?E'"
-      using calculation graph_subset[of E ?E'] by auto
+    moreover have "graph_invar ?E'" 
+      apply (rule graph_subset)
+      using insert2 by auto
     moreover have "is_complete ?E'"
-      using calculation by (intro restr_graph_compl') auto
-    moreover obtain M where "is_perf_match ?E' M"
-      using calculation by blast
+      using insert2 calculation by (intro restr_graph_compl') 
+    ultimately obtain M where "is_perf_match ?E' M"
+      using is_completeE[of ?E'] by (elim insert2.hyps(5))
+    moreover have "u \<notin> Vs ?E'" "v \<notin> Vs ?E'" "Vs E = Vs ?E' \<union> {u,v}"
+      using insert2 by (auto simp: \<open>V = Vs {e \<in> E. e \<subseteq> V}\<close>[symmetric])
     moreover have "u \<in> Vs E" "v \<in> Vs E"
-      using calculation by auto
+      using insert2 by auto
+    moreover hence "{u,v} \<in> E"
+      using insert2 by (intro is_completeE)
     moreover hence "{{u,v}} \<union> ?E' \<subseteq> E"
-      using calculation by auto
+      by auto
     ultimately have "is_perf_match E ({{u,v}} \<union> M)"
-      by (intro extend_perf_match[of ?E' M]) auto
-    thus ?case 
+      by (intro extend_perf_match)
+    thus ?case
       using insert2 by auto
   qed
 qed
@@ -143,11 +143,9 @@ begin
 lemma perf_match_exists: 
   assumes "even (card (Vs E\<^sub>V))"
   obtains M where "is_perf_match E\<^sub>V M"
-  using assms E\<^sub>V_graph E\<^sub>V_complete
-    compl_graph_abs.perf_match_exists[unfolded 
-      graph_abs_def 
-      compl_graph_abs_def compl_graph_abs_axioms_def, of E\<^sub>V]
-  by fastforce (* TODO: clean up lemma!? *)
+  apply (rule compl_graph_abs.perf_match_exists[of E\<^sub>V])
+  apply unfold_locales
+  using E\<^sub>V_graph E\<^sub>V_complete assms that by auto (* TODO: clean up lemma!? *)
 
 end
 
@@ -157,13 +155,9 @@ begin
 lemma restr_perf_match_exists: 
   assumes "V \<subseteq> Vs E" "even (card (Vs {e \<in> E. e \<subseteq> V}))"
   obtains M where "is_perf_match {e \<in> E. e \<subseteq> V} M"
-  using assms graph complete 
-    restr_compl_graph_abs.perf_match_exists[unfolded
-      graph_abs_def
-      compl_graph_abs_def compl_graph_abs_axioms_def
-      restr_compl_graph_abs_def restr_compl_graph_abs_axioms_def 
-      restr_graph_abs_def, of E V] 
-  by fastforce (* TODO: clean up lemma!? *)
+  apply (rule restr_compl_graph_abs.perf_match_exists)
+  apply unfold_locales
+  using assms that by auto (* TODO: clean up lemma!? *)
 
 end
 
