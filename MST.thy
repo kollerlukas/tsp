@@ -482,16 +482,10 @@ lemma is_stE:
   shows "T \<subseteq> E" "Vs E = Vs T" "is_tree T"
   using assms[unfolded is_st_def] by auto
 
-lemma st_graph_invar:
+lemma st_is_graph:
   assumes "is_st T"
   shows "graph_invar T"
-proof -
-  have "\<forall>e\<in>T. \<exists>u v. e = {u, v} \<and> u \<noteq> v" 
-    using assms graph is_stE by blast
-  moreover have "finite (Vs T)"
-    using assms graph by (auto simp: is_stE)
-  ultimately show ?thesis by auto
-qed
+  using assms by (intro graph_subset[OF graph is_stE(1)])
 
 end
 

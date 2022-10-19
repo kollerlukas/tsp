@@ -126,7 +126,7 @@ proof (rule is_eulerianI)
       using finite_T by (auto simp: non_inf_degr)
     moreover have "degree M v = 1"
       using calculation W_eq_Vs_M degree_matching_in_M[OF match_M] by auto
-    moreover hence "mdegree J v = degree T v + 1"
+    hence "mdegree J v = degree T v + 1"
       unfolding J_def by (auto simp: mdegree_add mdegree_eq_degree)
     ultimately show "even' (mdegree J v)"
       using not_even_add1 by auto
@@ -136,7 +136,7 @@ proof (rule is_eulerianI)
       unfolding W_def using \<open>v \<in> Vs T\<close> by auto
     moreover have "v \<notin> Vs M"
       using calculation W_eq_Vs_M by auto
-    moreover hence "degree M v = 0"
+    hence "degree M v = 0"
       by (auto simp: degree_not_Vs)
     moreover hence "mdegree J v = degree T v"
       unfolding J_def by (auto simp: mdegree_add mdegree_eq_degree)
@@ -215,11 +215,11 @@ proof -
     using assms by (intro distinct_tl_short_cut)
   moreover have "Vs E\<^sub>V \<subseteq> set P"
     using assms Vs_subset[OF E\<^sub>V_subset] set_tl_subset by fastforce
-  moreover hence "Vs E\<^sub>V \<subseteq> set ?P\<^sub>V"
+  hence "Vs E\<^sub>V \<subseteq> set ?P\<^sub>V"
     using calculation short_cut_Vs_superset[of "hd P" "tl P"] by fastforce
   moreover have "set ?P\<^sub>V = Vs E\<^sub>V"
     using calculation set_short_cut[of "hd P" "tl P"] by auto
-  moreover hence "length ?P\<^sub>V > 1"
+  hence "length ?P\<^sub>V > 1"
     using assms even_card_V Vs_E\<^sub>V_eq_V by (intro list_eq_even_len_gr1) auto
   moreover have "set (tl ?P\<^sub>V) = Vs E\<^sub>V"
     apply (subst \<open>set ?P\<^sub>V = Vs E\<^sub>V\<close>[symmetric])
@@ -308,7 +308,7 @@ proof -
     using calculation by (auto intro: matching_even_edges)
   moreover have "path E\<^sub>V (tl OPT\<^sub>V)"
     using calculation by (intro tl_path_is_path)
-  moreover hence "set (even_edges (tl OPT\<^sub>V)) \<subseteq> E\<^sub>V"
+  hence "set (even_edges (tl OPT\<^sub>V)) \<subseteq> E\<^sub>V"
     by (intro path_even_edges_subset)
   moreover have "even (length (tl OPT\<^sub>V))"
     using even_card_V calculation by (auto simp: Vs_E\<^sub>V_eq_V distinct_card)
@@ -325,7 +325,7 @@ proof -
     using calculation hd_last_eq_distinct_set_iff(2)[of OPT\<^sub>V] by auto
   moreover have "path E\<^sub>V (butlast OPT\<^sub>V)"
     using calculation by (intro butlast_path_is_path)
-  moreover hence "set (even_edges (butlast OPT\<^sub>V)) \<subseteq> E\<^sub>V"
+  hence "set (even_edges (butlast OPT\<^sub>V)) \<subseteq> E\<^sub>V"
     by (intro path_even_edges_subset)
   moreover have "even (length (butlast OPT\<^sub>V))"
     using calculation by (auto simp: distinct_card)

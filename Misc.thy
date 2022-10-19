@@ -521,6 +521,28 @@ lemma Vs_inter_subset1: "Vs (A \<inter> B) \<subseteq> Vs A"
 lemma Vs_inter_subset2: "Vs (A \<inter> B) \<subseteq> Vs B"
   unfolding Vs_def by auto
 
+lemma edge_member_elim:
+  assumes "graph_invar E" and "v \<in> e" "e \<in> E"
+  obtains u where "e = {u,v}"
+proof -
+  obtain u' v' where "e = {u',v'}"
+    using assms by auto
+  then show ?thesis
+    using that assms by auto
+qed
+
+lemma vs_member_elim2:
+  assumes "graph_invar E" and "v \<in> Vs E" 
+  obtains u where "{u,v} \<in> E"
+proof -
+  obtain e where "v \<in> e" "e \<in> E"
+    using assms by (auto elim: vs_member_elim)
+  moreover then obtain u where "e = {u,v}"
+    using assms by (fastforce elim: edge_member_elim)
+  ultimately show ?thesis
+    using that by auto
+qed
+
 locale restr_graph_abs =
   graph_abs E for E :: "'a set set" +
   fixes V E\<^sub>V
@@ -567,6 +589,16 @@ lemma Vs_insert: "Vs (insert e E) = e \<union> Vs E"
 
 lemma finite_E: "finite (Vs E) \<Longrightarrow> finite E"
   unfolding Vs_def using finite_UnionD by auto
+
+lemma finite_VsI:
+  assumes "finite E" "\<And>e. e \<in> E \<Longrightarrow> finite e"
+  shows "finite (Vs E)"
+  unfolding Vs_def using assms by auto
+
+lemma graph_invarI2: 
+  assumes "finite E" "\<forall>e\<in>E. \<exists>u v. e = {u,v} \<and> u \<noteq> v" 
+  shows "graph_invar E"
+  using assms by (auto intro: finite_VsI)
 
 context graph_abs
 begin
