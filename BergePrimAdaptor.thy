@@ -74,16 +74,21 @@ lemma berge_vpath_of_epath:
   shows "P = vpath_of_epath (dedges_of_path P)"
   using assms by (induction P rule: list0123.induct) auto
 
-lemma walk_vpath_elim:
+lemma vpath_of_epath_cancel:
+  "dedges_of_path (vpath_of_epath (dedges_of_path P\<^sub>v)) = dedges_of_path P\<^sub>v"
+  by (induction P\<^sub>v rule: list0123.induct) auto
+
+lemma walk_vpath_elim_epath:
   assumes "walk_betw E u P\<^sub>v v"
-  obtains "P\<^sub>v = [u]" "u = v" | P where "P\<^sub>v = vpath_of_epath P"
+  obtains "P\<^sub>v = [u]" "u = v" 
+  | P where "P\<^sub>v = vpath_of_epath P" "dedges_of_path (vpath_of_epath P) = P"
   using assms walk_between_nonempty_path[OF assms(1)]
 proof (induction P\<^sub>v rule: list012.induct)
   case (3 u v P\<^sub>v)
   hence "u#v#P\<^sub>v = vpath_of_epath (dedges_of_path (u#v#P\<^sub>v))"
     by (intro berge_vpath_of_epath) auto
   then show ?case 
-    using 3 by blast
+    using 3 vpath_of_epath_cancel by metis
 qed auto
 
 lemma prim_vpath_of_epath:
@@ -108,6 +113,15 @@ lemma prim_vpath_of_epathE:
   obtains P' where "P = dedges_of_path P'"
   using assms prim_vpath_of_epath[of G] by auto
 
+lemma epath_split_hd1:
+  assumes "dedges_of_path (vpath_of_epath (e\<^sub>1#e\<^sub>2#P)) = e\<^sub>1#e\<^sub>2#P" "hd (vpath_of_epath (e\<^sub>1#e\<^sub>2#P)) = u"
+  obtains x where "e\<^sub>1 = (u,x)" "fst e\<^sub>2 = x"
+  using assms by (induction P) fastforce+
+
+lemma epath_split_hd2:
+  assumes "dedges_of_path (vpath_of_epath (e\<^sub>1#e\<^sub>2#P)) = e\<^sub>1#e\<^sub>2#P"
+  obtains u x where "e\<^sub>1 = (u,x)" "fst e\<^sub>2 = x"
+  using assms by (induction P) (meson epath_split_hd1)+
 
 
 context graph_abs
@@ -366,13 +380,9 @@ begin
 lemma st_equiv1: "is_st T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
   using st_is_graph by (intro graph_abs2.st_equiv1) unfold_locales
 
-lemma spanning_tree_is_graph:
-  assumes "is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
-  shows "graph_invar T"
-  sorry (* TODO *)
-
-lemma st_equiv2: "is_spanning_tree (prim_of_berge E) (prim_of_berge T) \<Longrightarrow> is_st T"
-  using spanning_tree_is_graph by (intro graph_abs2.st_equiv2) unfold_locales
+lemma st_equiv2: 
+  "graph_invar T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T) \<Longrightarrow> is_st T"
+  by (intro graph_abs2.st_equiv2) unfold_locales
 
 end
 
@@ -397,7 +407,7 @@ proof
 qed
 
 lemma mst_equiv2:
-  assumes "is_MST c (prim_of_berge E) (prim_of_berge T)"
+  assumes "graph_invar T" "is_MST c (prim_of_berge E) (prim_of_berge T)"
   shows "is_mst T"
 proof (intro is_mstI)
   show "is_st T"
@@ -466,6 +476,9 @@ lemma edges_equiv1_uedge: "e \<in> edges G \<Longrightarrow> uedge e \<in> berge
 lemma edges_equiv2: "{u,v} \<in> berge_of_prim G \<Longrightarrow> (u,v) \<in> edges G"
   using berge_edges_invar by (metis doubleton_eq_iff edges_sym')+
 
+lemma edges_equiv2_uedge: "uedge e \<in> berge_of_prim G \<Longrightarrow> e \<in> edges G"
+  unfolding uedge_def using edges_equiv2 by (auto split: prod.splits)
+
 lemma berge_of_prim_def2: "berge_of_prim G = {{u,v} | u v. (u,v) \<in> edges G}"
   unfolding berge_of_prim_def by (auto simp add: uedge_def)
   
@@ -521,27 +534,49 @@ lemma path_edges_subset2:
   shows "set (edges_of_path P) \<subseteq> berge_of_prim G"
   using assms by (induction P rule: dedges_of_path.induct) (auto simp: berge_of_prim_def2)
 
-thm induct_walk_betw
+lemma berge_vpath_hd_of_epath_is_prim_edge:
+  assumes "path (berge_of_prim G) (vpath_of_epath (e#P))" (is "path ?E _")
+      and "dedges_of_path (vpath_of_epath (e#P)) = (e#P)"
+  shows "e \<in> edges G"
+  using assms
+proof (induction P)
+  case Nil
+  then obtain u v where [simp]: "e = (u,v)" and "path ?E [u,v]"
+    by (cases e) auto
+  thus ?case 
+    by (intro edges_equiv2_uedge) (auto simp: uedge_def)
+next
+  case (Cons e\<^sub>1 P)
+  then obtain u x where [simp]: "e = (u,x)" and [simp]: "fst e\<^sub>1 = x"
+    by (elim epath_split_hd2)
+  hence "uedge e \<in> ?E"
+    using Cons path_edges_subset by (auto simp: uedge_def)
+  thus ?case 
+    by (intro edges_equiv2_uedge)
+qed
 
 lemma berge_walk_is_prim_path:
-  assumes "walk_betw (berge_of_prim G) u (vpath_of_epath P) v" (is "walk_betw ?E u ?P v")
+  assumes "walk_betw (berge_of_prim G) u (vpath_of_epath P) v" (is "walk_betw ?E u _ v")
+      and "dedges_of_path (vpath_of_epath P) = P"
   shows "Undirected_Graph.path G u P v"
-  using assms
-proof (induction u "vpath_of_epath P" v arbitrary: P rule: induct_walk_betw)
-  case (path1 v)
-  thus ?case 
-    by (auto elim: vpath_of_epathE)
+  using walk_between_nonempty_path[OF assms(1)] assms(2)
+proof (induction P arbitrary: u rule: list012.induct)
+  case 1
+  thus ?case using walk_nonempty by fastforce
 next
-  case (path2 u v P\<^sub>v w)
-
-  hence "(u,v) \<in> edges G"
-    by (intro edges_equiv2)
-
-
-  thm vpath_of_epathE
-
-  then show ?case 
-    sorry
+  case (2 e)
+  moreover hence "e \<in> edges G"
+    by (intro berge_vpath_hd_of_epath_is_prim_edge)
+  ultimately show ?case 
+    by auto
+next
+  case (3 e\<^sub>1 e\<^sub>2 P)
+  then obtain x where [simp]: "e\<^sub>1 = (u,x)" and [simp]: "fst e\<^sub>2 = x"
+    by (elim epath_split_hd1)
+  moreover have "e\<^sub>1 \<in> edges G"
+    using 3 by (intro berge_vpath_hd_of_epath_is_prim_edge[of e\<^sub>1 "e\<^sub>2#P"])
+  ultimately show ?case 
+    using 3 by auto
 qed
 
 lemma prim_path_is_berge_path:
@@ -585,14 +620,17 @@ lemma walk_iff_rtrancl_edges:
   shows "(\<exists>P. walk_betw (berge_of_prim G) u P v) \<longleftrightarrow> (u,v) \<in> (edges G)\<^sup>*"
 proof
   assume "\<exists>P. walk_betw (berge_of_prim G) u P v"
-  then obtain P\<^sub>v where "walk_betw (berge_of_prim G) u P\<^sub>v v"
+  then obtain P\<^sub>v where "walk_betw (berge_of_prim G) u P\<^sub>v v" 
     by auto
-  then consider "P\<^sub>v = [u]" "u = v" | P where "walk_betw (berge_of_prim G) u (vpath_of_epath P) v"
-    by (auto elim: walk_vpath_elim)
+  then consider "P\<^sub>v = [u]" "u = v" 
+    | P where "walk_betw (berge_of_prim G) u (vpath_of_epath P) v" 
+      "dedges_of_path (vpath_of_epath P) = P"
+    by (auto elim: walk_vpath_elim_epath)
   thus "(u,v) \<in> (edges G)\<^sup>*"
   proof cases
     fix P
-    assume "walk_betw (berge_of_prim G) u (vpath_of_epath P) v"
+    assume "walk_betw (berge_of_prim G) u (vpath_of_epath P) v" 
+      "dedges_of_path (vpath_of_epath P) = P"
     thus "(u,v) \<in> (edges G)\<^sup>*"
       using berge_walk_is_prim_path by (intro iffD2[OF rtrancl_edges_iff_path]) auto
   qed auto
@@ -728,7 +766,7 @@ proof (rule ccontr)
   moreover have "walk_betw (berge_of_prim G) u (vpath_of_epath (dedges_of_path C)) u"
     using calculation by (subst berge_vpath_of_epath[symmetric]) auto
   moreover hence "Undirected_Graph.path G u (dedges_of_path C) u"
-    by (intro berge_walk_is_prim_path)
+    using vpath_of_epath_cancel by (intro berge_walk_is_prim_path)
   moreover have "dedges_of_path C \<noteq> []"
     using calculation by (auto simp: dedges_length[symmetric])
   moreover have "simple (dedges_of_path C)"
@@ -742,148 +780,6 @@ lemma tree_equiv1: "is_tree (berge_of_prim G) \<Longrightarrow> tree G"
 
 lemma tree_equiv2: "tree G \<Longrightarrow> is_tree (berge_of_prim G)" 
   using connected_equiv2 acyclic_equiv2 by (auto intro: is_treeI simp: tree_def)
-
-end
-
-
-(* TODO ... *)
-
-context graph_abs
-begin
-
-text \<open>Convert to graph from \<open>Prim_Dijkstra_Simple\<close>.\<close>
-abbreviation "G\<^sub>E \<equiv> Undirected_Graph.graph (Vs E) {(u,v)| u v. {u,v} \<in> E}"
-
-end
-
-locale st_graph_abs = (* spanning tree equivalence *)
-  E: graph_abs E +
-  T: graph_abs T for E :: "'a set set " and T :: "'a set set"
-begin
-
-lemma edges_subset_iff: "T \<subseteq> E \<longleftrightarrow> edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
-proof
-  assume "T \<subseteq> E"
-  show "edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
-  proof
-    fix x
-    assume "x \<in> edges T.G\<^sub>E"
-    moreover then obtain u v where [simp]: "x = (u,v)"
-      using old.prod.exhaust by blast
-    ultimately show "x \<in> edges E.G\<^sub>E"
-      using T.edges_equiv[of u v] \<open>T \<subseteq> E\<close> E.edges_equiv[of u v] by auto
-  qed
-next
-  assume "edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E"
-  show "T \<subseteq> E"
-  proof
-    fix x
-    assume "x \<in> T"
-    moreover then obtain u v where [simp]: "x = {u,v}"
-      using T.graph by auto
-    ultimately show "x \<in> E"
-      using T.edges_equiv[of u v] \<open>edges T.G\<^sub>E \<subseteq> edges E.G\<^sub>E\<close> E.edges_equiv[of u v] by auto
-  qed
-qed
-
-lemma st_equiv: "E.is_st T \<longleftrightarrow> is_spanning_tree E.G\<^sub>E T.G\<^sub>E"
-  apply (rule iffI)
-  using T.tree_equiv E.nodes_equiv T.nodes_equiv edges_subset_iff 
-  by (auto intro: E.is_stI simp: E.is_stE is_spanning_tree_def)
-
-lemma st_equiv2: "E.is_st (uedge ` edges T.G\<^sub>E) \<longleftrightarrow> is_spanning_tree E.G\<^sub>E T.G\<^sub>E"
-  using st_equiv by (subst T.edges_equiv2[symmetric])
-
-end
-
-context graph_abs
-begin
-
-lemma st_equiv: 
-  fixes T
-  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}" 
-  assumes "graph_invar T"
-  shows "is_st T \<longleftrightarrow> is_spanning_tree G\<^sub>E G\<^sub>T"
-  unfolding G\<^sub>T_def using assms by (intro st_graph_abs.st_equiv) unfold_locales
-
-lemma st_equiv2: 
-  fixes G\<^sub>T
-  assumes "graph_invar (uedge ` edges G\<^sub>T)"
-  shows "is_st (uedge ` edges G\<^sub>T) \<longleftrightarrow> is_spanning_tree G\<^sub>E G\<^sub>T"
-  using st_graph_abs.st_equiv2
-  apply (intro st_graph_abs.st_equiv2)
-  sorry
-
-end
-
-locale nat_w_graph_abs = (* nat weights *)
-  pos_w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> nat"
-begin
-
-lemma cost_of_st_equiv: 
-  fixes T
-  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
-  assumes "graph_invar T"
-  shows "cost_of_st T = weight c G\<^sub>T"
-proof -
-  have "cost_of_st T = sum c (uedge ` edges G\<^sub>T)"
-    using assms graph_abs.edges_equiv2[unfolded graph_abs_def, of T] by auto
-  also have "... = Undirected_Graph.weight c G\<^sub>T"
-    unfolding Undirected_Graph.weight_alt by auto
-  finally show ?thesis .
-qed
-
-lemma mst_equiv: 
-  fixes T
-  defines "G\<^sub>T \<equiv> graph (Vs T) {(u, v) |u v. {u, v} \<in> T}"
-  assumes "graph_invar T"
-  shows "is_mst T \<longleftrightarrow> is_MST c G\<^sub>E G\<^sub>T"
-proof 
-  assume "is_mst T"
-  hence "is_st T" and min_st: "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
-    by (auto elim: is_mstE)
-  moreover hence "is_spanning_tree G\<^sub>E G\<^sub>T" 
-    using assms st_equiv[OF st_graph_invar] by auto
-  moreover have "\<And>T'. is_spanning_tree G\<^sub>E T' \<Longrightarrow> weight c G\<^sub>T \<le> weight c T'"
-  proof -
-    fix T'
-    assume "is_spanning_tree G\<^sub>E T'"
-    hence "is_st (uedge ` edges T')"
-      apply (intro st_equiv2)
-      sorry
-
-    show "weight c G\<^sub>T \<le> weight c T'"
-
-      using assms st_equiv cost_of_st_equiv[OF st_graph_invar]
-      sorry
-  qed
-  ultimately show "is_MST c G\<^sub>E G\<^sub>T"
-    unfolding is_MST_def by auto
-next
-  assume "is_MST c G\<^sub>E G\<^sub>T"
-  hence "is_spanning_tree G\<^sub>E G\<^sub>T" 
-    and min_st: "\<And>G\<^sub>T'. is_spanning_tree G\<^sub>E G\<^sub>T' \<Longrightarrow> weight c G\<^sub>T \<le> weight c G\<^sub>T'"
-    unfolding is_MST_def by auto
-  moreover hence st_T: "is_st T" 
-    using assms st_equiv[OF st_graph_invar] sorry
-  moreover have "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
-  proof -
-    fix T'
-    assume st_T': "is_st T'"
-    hence st_G\<^sub>T: "is_spanning_tree G\<^sub>E (graph (Vs T') {(u, v) |u v. {u, v} \<in> T'})" 
-      (is "is_spanning_tree G\<^sub>E ?G\<^sub>T'")
-      using assms st_equiv[OF st_graph_invar] by auto
-    have "cost_of_st T = weight c G\<^sub>T"
-      unfolding G\<^sub>T_def using st_T by (intro cost_of_st_equiv[OF st_graph_invar])
-    also have "... \<le> weight c ?G\<^sub>T'"
-      using min_st st_G\<^sub>T by auto
-    also have "... = cost_of_st T'"
-      using st_T' by (intro cost_of_st_equiv[OF st_graph_invar, symmetric])
-    finally show "cost_of_st T \<le> cost_of_st T'" .
-  qed
-  ultimately show "is_mst T" 
-    by (intro is_mstI)
-qed (* TODO: fix locale stuff *)
 
 end
 
