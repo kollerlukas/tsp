@@ -30,6 +30,9 @@ fun list01234 where
 
 section \<open>List Lemmas\<close>
 
+lemma hd_singleton: "xs \<noteq> [] \<Longrightarrow> tl xs = [] \<Longrightarrow> xs = [hd xs]"
+  by (induction xs) auto
+
 lemma distinct_hd_last_neq: "distinct xs \<Longrightarrow> length xs > 1 \<Longrightarrow> hd xs \<noteq> last xs"
   by (induction xs) auto
 
@@ -896,7 +899,7 @@ context graph_abs
 begin
 
 lemma walk_path_split: (* TODO: remove assumption *)
-  assumes "graph_invar E" "walk_betw E u P u" "v \<in> set P" "u \<noteq> v"
+  assumes (* "graph_invar E" *) "walk_betw E u P u" "v \<in> set P" "u \<noteq> v"
   obtains P\<^sub>1 P\<^sub>2 where "P = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
 proof -
   have [simp]: "hd P = u" "last P = u" and "P \<noteq> []"
@@ -916,7 +919,7 @@ proof -
 qed
 
 lemma walk_rotateE:
-  assumes "graph_invar E" "walk_betw E u P u" "v \<in> set P"
+  assumes (* "graph_invar E" *)"walk_betw E u P u" "v \<in> set P"
   obtains P' where "walk_betw E v P' v" "set (edges_of_path P) = set (edges_of_path P')"
 proof cases
   assume "u = v"
