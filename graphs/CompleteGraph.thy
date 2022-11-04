@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory CompleteGraph
-  imports Main Misc "berge/Berge"
+  imports Main "../misc/Misc" "../berge/Berge"
 begin
 
 definition "is_complete E \<equiv> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
@@ -199,20 +199,6 @@ proof (rule subset_path)
     using assms by auto
 qed
 
-(* lemma last_short_cut:
-  assumes "set P \<subseteq> Vs E\<^sub>V" "w \<in> Vs E\<^sub>V"
-  shows "last (short_cut E\<^sub>V (P @ [w])) = w"
-  using assms E\<^sub>V_complete
-proof (induction P rule: list012.induct)
-  case (3 u v P)
-  thus ?case
-  proof cases
-    assume "{u,v} \<in> E\<^sub>V"
-    thus ?case
-      using 3 short_cut_nonnil by force
-  qed auto
-qed auto *)
-
 lemma last_short_cut:
   assumes "u \<in> Vs E\<^sub>V" "w \<in> Vs E\<^sub>V"
   shows "last (short_cut E\<^sub>V (u#P @ [w])) = w"
@@ -289,5 +275,64 @@ lemma restr_graph_Vs: "V \<subseteq> Vs E \<Longrightarrow> card V \<noteq> 1 \<
   by (intro restr_compl_graph_abs.Vs_E\<^sub>V_eq_V) unfold_locales
 
 end
+
+section \<open>Computing Complete Graphs\<close>
+
+text \<open>Compute a complete graph for a list of vertices.\<close>
+fun compl_graph :: "'a list \<Rightarrow> 'a set list" where
+  "compl_graph [] = []"
+| "compl_graph (u#vs) = (map (\<lambda>v. {u,v}) vs) @ compl_graph vs"
+
+lemma Vs_compl_graph_len_neq1:
+  assumes "length vs \<noteq> 1"
+  shows "Vs (set (compl_graph vs)) = set vs"
+  using assms by (induction vs rule: list012.induct) (auto simp: Vs_def)
+
+lemma Vs_compl_graphE:
+  obtains "Vs (set (compl_graph vs)) = {}" "length vs \<le> 1" | "Vs (set (compl_graph vs)) = set vs"
+proof (induction vs rule: list012.induct)
+  case (3 u v vs)
+  moreover hence "Vs (set (compl_graph (u#v#vs))) = set (u#v#vs)"
+    by (intro Vs_compl_graph_len_neq1) auto
+  ultimately show ?case
+    by auto
+qed (auto simp: Vs_def)
+
+lemma "v \<in> set vs \<Longrightarrow> {u,v} \<in> set (compl_graph (u#vs))"
+  by auto
+
+lemma compl_graph_append_subset: "set (compl_graph vs\<^sub>2) \<subseteq> set (compl_graph (vs\<^sub>1 @ vs\<^sub>2))"
+  by (induction vs\<^sub>1) auto
+
+lemma compl_graph_is_complete: "is_complete (set (compl_graph vs))"
+proof (intro is_completeI)
+  fix u v
+  assume "u \<in> Vs (set (compl_graph vs))" "v \<in> Vs (set (compl_graph vs))" "u \<noteq> v"
+  moreover then consider "Vs (set (compl_graph vs)) = {}" "length vs \<le> 1" 
+    | "Vs (set (compl_graph vs)) = set vs"
+    by (elim Vs_compl_graphE)
+  ultimately have "u \<in> set vs" "v \<in> set vs"
+    by auto
+  moreover assume "u \<noteq> v"
+  ultimately consider vs\<^sub>1 vs\<^sub>2 where "vs = vs\<^sub>1 @ u#vs\<^sub>2" "v \<in> set vs\<^sub>2" 
+    | vs\<^sub>1 vs\<^sub>2 where "vs = vs\<^sub>1 @ v#vs\<^sub>2" "u \<in> set vs\<^sub>2"       
+    by (elim list_split_for_2elems[of u vs v])
+  thus "{u,v} \<in> set (compl_graph vs)"
+  proof cases
+    fix vs\<^sub>1 vs\<^sub>2
+    assume "vs = vs\<^sub>1 @ u#vs\<^sub>2" "v \<in> set vs\<^sub>2"
+    moreover hence "{u,v} \<in> set (compl_graph (u#vs\<^sub>2))"
+      by auto
+    ultimately show ?thesis
+      using compl_graph_append_subset by blast
+  next
+    fix vs\<^sub>1 vs\<^sub>2
+    assume "vs = vs\<^sub>1 @ v#vs\<^sub>2" "u \<in> set vs\<^sub>2"
+    moreover hence "{u,v} \<in> set (compl_graph (v#vs\<^sub>2))"
+      by auto
+    ultimately show ?thesis
+      using compl_graph_append_subset by blast
+  qed
+qed
 
 end

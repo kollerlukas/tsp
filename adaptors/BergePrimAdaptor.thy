@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory BergePrimAdaptor
-  imports Main Misc "Prim_Dijkstra_Simple.Undirected_Graph" MST
+  imports Main "../misc/Misc" "Prim_Dijkstra_Simple.Undirected_Graph" "../problems/MST"
     (* "Prim_Dijkstra_Simple.Prim_Impl" *)
 begin
 
@@ -325,37 +325,34 @@ lemma tree_equiv2: "tree (prim_of_berge E) \<Longrightarrow> is_tree E"
 
 end
 
-locale graph_abs2 = 
-  E\<^sub>1: graph_abs E\<^sub>1 +
-  E\<^sub>2: graph_abs E\<^sub>2 for E\<^sub>1 :: "'a set set" and E\<^sub>2 :: "'a set set"
+context graph_abs2
 begin
 
 lemma st_equiv1: 
-  assumes "E\<^sub>1.is_st E\<^sub>2"
+  assumes "is_st E\<^sub>1 E\<^sub>2"
   shows "is_spanning_tree (prim_of_berge E\<^sub>1) (prim_of_berge E\<^sub>2)"
   unfolding is_spanning_tree_def
 proof (intro conjI)
   have "is_tree E\<^sub>2"
-    using assms by (elim E\<^sub>1.is_stE)
+    using assms by (elim is_stE)
   thus "tree (prim_of_berge E\<^sub>2)"
     by (intro E\<^sub>2.tree_equiv1)
 
   have "Vs E\<^sub>1 = Vs E\<^sub>2"
-    using assms by (elim E\<^sub>1.is_stE)
+    using assms by (elim is_stE)
   thus "nodes (prim_of_berge E\<^sub>2) = nodes (prim_of_berge E\<^sub>1)"
     by auto
 
   have "E\<^sub>2 \<subseteq> E\<^sub>1"
-    using assms by (elim E\<^sub>1.is_stE)
+    using assms by (elim is_stE)
   thus "edges (prim_of_berge E\<^sub>2) \<subseteq> edges (prim_of_berge E\<^sub>1)"
     by auto
 qed
 
 lemma st_equiv2: 
   assumes "is_spanning_tree (prim_of_berge E\<^sub>1) (prim_of_berge E\<^sub>2)"
-  shows "E\<^sub>1.is_st E\<^sub>2"
-  using assms[unfolded is_spanning_tree_def] 
-proof (intro E\<^sub>1.is_stI)
+  shows "is_st E\<^sub>1 E\<^sub>2" 
+proof (intro is_stI)
   have "tree (prim_of_berge E\<^sub>2)"
     using assms[unfolded is_spanning_tree_def] by auto
   thus "is_tree E\<^sub>2"
@@ -377,73 +374,31 @@ end
 context graph_abs
 begin
 
-lemma st_equiv1: "is_st T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
+lemma st_equiv1: "is_st E T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
   using st_is_graph by (intro graph_abs2.st_equiv1) unfold_locales
 
 lemma st_equiv2: 
-  "graph_invar T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T) \<Longrightarrow> is_st T"
+  "graph_invar T \<Longrightarrow> is_spanning_tree (prim_of_berge E) (prim_of_berge T) \<Longrightarrow> is_st E T"
   by (intro graph_abs2.st_equiv2) unfold_locales
-
-end
-
-locale nat_w_graph_abs = (* nat weights *)
-  pos_w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> nat"
-begin
-
-lemma cost_of_st_eq: "graph_invar T \<Longrightarrow> cost_of_st T = weight c (prim_of_berge T)"
-  by (subst graph_abs.edges_eq[of T]; unfold_locales) (auto simp: Undirected_Graph.weight_alt)
-
-lemma mst_equiv1:
-  assumes "is_mst T"
-  shows "is_MST c (prim_of_berge E) (prim_of_berge T)"
-  unfolding is_MST_def
-proof
-  have "is_st T"
-    using assms by (auto elim: is_mstE)
-  thus "is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
-    by (intro st_equiv1)
-  show " \<forall>T'. is_spanning_tree (prim_of_berge E) T' \<longrightarrow> weight c (prim_of_berge T) \<le> weight c T'"
-    sorry
-qed
-
-lemma mst_equiv2:
-  assumes "graph_invar T" "is_MST c (prim_of_berge E) (prim_of_berge T)"
-  shows "is_mst T"
-proof (intro is_mstI)
-  show "is_st T"
-    using assms[unfolded is_MST_def] by (auto intro: st_equiv2)
-  show "\<And>T'. is_st T' \<Longrightarrow> cost_of_st T \<le> cost_of_st T'"
-  proof -
-    fix T'
-    assume "is_st T'"
-    moreover hence "graph_invar T'"
-      by (intro st_is_graph)
-    moreover hence "is_spanning_tree (prim_of_berge E) (prim_of_berge T')"
-      using calculation by (intro st_equiv1)
-    moreover hence "weight c (prim_of_berge T) \<le> weight c (prim_of_berge T')"
-      using assms[unfolded is_MST_def] by auto
-    moreover have "graph_invar T"
-      using \<open>is_st T\<close> by (intro st_is_graph)
-    ultimately show "cost_of_st T \<le> cost_of_st T'"
-      by (auto simp: cost_of_st_eq)
-  qed
-qed
 
 end
 
 text \<open>Translate graph from \<open>Prim_Dijkstra_Simple.Undirected_Graph\<close> to graph from \<open>Berge\<close>.\<close>
 definition "berge_of_prim G \<equiv> uedge ` edges G"
 
+lemma berge_of_prim_def2: "berge_of_prim G = {{u,v} | u v. (u,v) \<in> edges G}"
+  unfolding berge_of_prim_def by (auto simp add: uedge_def)
+
 locale prim_graph_abs =
   fixes V E G
   defines "G \<equiv> graph V E"
   assumes finite_V: "finite V" and finite_E: "finite E"
-      and E_irrefl: "irrefl E" and V_subset: "V \<subseteq> fst ` E \<union> snd ` E"
+      and irrefl_E: "irrefl E" and V_subset: "V \<subseteq> fst ` E \<union> snd ` E"
 begin
 
 lemma edges_G[simp]: "edges G = E \<union> E\<inverse>" 
   and nodes_G[simp]: "nodes G = fst ` E \<union> snd ` E"
-  unfolding G_def using graph_accs[OF finite_V finite_E] E_irrefl V_subset 
+  unfolding G_def using graph_accs[OF finite_V finite_E] irrefl_E V_subset 
   by (auto simp: irrefl_def)
 
 lemma berge_edges_invar:
@@ -467,6 +422,9 @@ lemma berge_finite_Vs: "finite (Vs (berge_of_prim G))"
 lemma berge_graph: "graph_invar (berge_of_prim G)"
   using berge_finite berge_edges_invar by (intro graph_invarI2) metis+
 
+sublocale graph_abs "berge_of_prim G"
+  using berge_graph by unfold_locales
+
 lemma edges_equiv1: "(u,v) \<in> edges G \<Longrightarrow> {u,v} \<in> berge_of_prim G"
   unfolding berge_of_prim_def uedge_def by auto
 
@@ -478,9 +436,6 @@ lemma edges_equiv2: "{u,v} \<in> berge_of_prim G \<Longrightarrow> (u,v) \<in> e
 
 lemma edges_equiv2_uedge: "uedge e \<in> berge_of_prim G \<Longrightarrow> e \<in> edges G"
   unfolding uedge_def using edges_equiv2 by (auto split: prod.splits)
-
-lemma berge_of_prim_def2: "berge_of_prim G = {{u,v} | u v. (u,v) \<in> edges G}"
-  unfolding berge_of_prim_def by (auto simp add: uedge_def)
   
 lemma berge_nodes[simp]: "Vs (berge_of_prim G) = nodes G"
 proof 
@@ -514,6 +469,9 @@ lemma nodes_equiv1: "v \<in> nodes G \<Longrightarrow> v \<in> Vs (berge_of_prim
 
 lemma nodes_equiv2: "v \<in> Vs (berge_of_prim G) \<Longrightarrow> v \<in> nodes G"
   by auto
+
+lemma edges_eq: "edges G = {(u,v) | u v. {u,v} \<in> berge_of_prim G}"
+  using edges_equiv1 edges_equiv2 by auto
 
 
 
@@ -780,6 +738,289 @@ lemma tree_equiv1: "is_tree (berge_of_prim G) \<Longrightarrow> tree G"
 
 lemma tree_equiv2: "tree G \<Longrightarrow> is_tree (berge_of_prim G)" 
   using connected_equiv2 acyclic_equiv2 by (auto intro: is_treeI simp: tree_def)
+
+end
+
+locale prim_graph_abs2 =
+  G: prim_graph_abs V E G + 
+  T: prim_graph_abs V E' T for V E E' G T
+begin
+
+lemma st_equiv1: 
+  assumes "is_st (berge_of_prim G) (berge_of_prim T)" 
+  shows "is_spanning_tree G T"
+  unfolding is_spanning_tree_def
+proof (intro conjI)
+  have "is_tree (berge_of_prim T)"
+    using assms by (elim is_stE)
+  thus "tree T"
+    by (intro T.tree_equiv1)
+
+  have "Vs (berge_of_prim G) = Vs (berge_of_prim T)"
+    using assms by (elim is_stE)
+  thus "nodes T = nodes G"
+    by auto
+
+  have "berge_of_prim T \<subseteq> berge_of_prim G"
+    using assms by (elim is_stE)
+  thus "edges T \<subseteq> edges G"
+    by (subst T.edges_eq; subst G.edges_eq) auto
+qed
+
+lemma st_equiv2: 
+  assumes "is_spanning_tree G T" 
+  shows "is_st (berge_of_prim G) (berge_of_prim T)"
+proof (intro is_stI)
+  have "tree T"
+    using assms[unfolded is_spanning_tree_def] by auto
+  thus "is_tree (berge_of_prim T)"
+    by (intro T.tree_equiv2)
+
+  have "nodes G = nodes T" 
+    using assms[unfolded is_spanning_tree_def] by auto
+  thus "Vs (berge_of_prim G) = Vs (berge_of_prim T)"
+    by auto
+
+  have "edges T \<subseteq> edges G"
+    using assms[unfolded is_spanning_tree_def] by auto
+  thus "berge_of_prim T \<subseteq> berge_of_prim G"
+    unfolding berge_of_prim_def2 by auto
+qed
+
+end
+
+lemma uedge_union_converse: "uedge ` (A \<union> A\<inverse>) = uedge ` A"
+  unfolding uedge_def by auto
+
+lemma uedge_set: "uedge ` A = {{u,v} |u v. (u,v) \<in> A}"
+  unfolding uedge_def by auto
+
+lemma Vs_uedge: "Vs (uedge ` A) = fst ` A \<union> snd ` A"
+  unfolding Vs_def uedge_def by force
+
+lemma vertex_in_uedge:
+  assumes "e \<in> A" "v \<in> uedge e"
+  shows "v \<in> fst ` A \<union> snd ` A"
+proof -
+  have "v \<in> Vs (uedge ` A)"
+    using assms by (intro vs_member_intro) auto
+  thus ?thesis
+    by (auto simp: Vs_uedge) 
+qed
+
+locale prim_subgraph_abs =
+  prim_graph_abs V E G for V E G +
+  fixes E\<^sub>T
+  assumes E\<^sub>T_subset: "E\<^sub>T \<subseteq> E" 
+      (* Berge cannot represent a graph with a single node! *)
+      and card_nodes_G: "card (nodes G) \<ge> 2"
+begin
+
+lemma finite_E\<^sub>T: "finite E\<^sub>T"
+  by (intro finite_subset[OF E\<^sub>T_subset finite_E])
+
+lemma irrefl_E\<^sub>T: "irrefl E\<^sub>T"
+  by (intro irrefl_subset[OF irrefl_E E\<^sub>T_subset])
+
+lemma prim_subgraph_nodes: "nodes (graph V E\<^sub>T) = V \<union> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+  using finite_V finite_E\<^sub>T by (auto simp: graph_accs(1))
+
+lemma prim_subgraph_edges: "edges (graph V E\<^sub>T) = E\<^sub>T \<union> E\<^sub>T\<inverse>"
+  using finite_V finite_E\<^sub>T irrefl_E\<^sub>T by (auto simp: graph_accs(2) irrefl_def)
+
+lemma st_V_subset:
+  assumes "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))"
+      (is "is_st (berge_of_prim G) (berge_of_prim ?T)")
+  shows "V \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+proof -
+  have "V \<subseteq> Vs (berge_of_prim G)"
+    using V_subset by auto
+  also have "... = Vs (berge_of_prim ?T)"
+    using assms by (elim is_stE)
+  also have "... = Vs (uedge ` (E\<^sub>T \<union> E\<^sub>T\<inverse>))"
+    unfolding berge_of_prim_def2 using assms by (auto simp: prim_subgraph_edges uedge_set)
+  also have "... = fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+    by (auto simp: uedge_union_converse Vs_uedge)
+  finally show ?thesis .
+qed
+
+lemma connected_graph_get_edge_for_node:
+  assumes "connected (graph V E\<^sub>T)" 
+      and "u \<in> nodes (graph V E\<^sub>T)" "v \<in> nodes (graph V E\<^sub>T)" "u \<noteq> v"
+  obtains e where "e \<in> E\<^sub>T" "u \<in> uedge e"
+proof -
+  have "(u,v) \<in> (edges (graph V E\<^sub>T))\<^sup>*"
+    using assms[unfolded connected_def] by auto
+  then obtain P where "Undirected_Graph.path (graph V E\<^sub>T) u P v"
+    using rtrancl_edges_iff_path by fastforce
+  then obtain e P' where "Undirected_Graph.path (graph V E\<^sub>T) u (e#P') v"
+    using assms by (cases P) auto
+  hence "e \<in> E\<^sub>T \<union> E\<^sub>T\<inverse>" and "u \<in> uedge e"
+    by (auto simp: prim_subgraph_edges)
+  then obtain e' where "e' \<in> E\<^sub>T" "u \<in> uedge e'"
+    by fastforce
+  thus ?thesis
+    using that by auto
+qed
+
+lemma connected_graph_nodes_subset:
+  assumes "connected (graph V E\<^sub>T)" "u \<in> nodes (graph V E\<^sub>T)" "v \<in> nodes (graph V E\<^sub>T)" "u \<noteq> v"
+  shows "nodes (graph V E\<^sub>T) \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+proof
+  fix x
+  assume vertex_x: "x \<in> nodes (graph V E\<^sub>T)"
+  consider "x \<noteq> u" | "x \<noteq> v"
+    using assms by auto
+  thus "x \<in> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+  proof cases
+    assume "x \<noteq> u"
+    then obtain e where "e \<in> E\<^sub>T" "x \<in> uedge e"
+      using assms vertex_x by (elim connected_graph_get_edge_for_node)
+    hence "x \<in> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+      by (intro vertex_in_uedge)
+    thus ?thesis
+      by auto
+  next
+    assume "x \<noteq> v"
+    then obtain e where "e \<in> E\<^sub>T" "x \<in> uedge e"
+      using assms vertex_x by (elim connected_graph_get_edge_for_node)
+    hence "x \<in> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+      by (intro vertex_in_uedge)
+    thus ?thesis
+      by auto
+  qed
+qed
+
+lemma spanning_tree_V_subset:
+  assumes "is_spanning_tree G (graph V E\<^sub>T)"
+  obtains "V \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+  using nodes_finite assms[unfolded is_spanning_tree_def] card_nodes_G
+proof (induction "nodes (graph V E\<^sub>T)" rule: finite2_induct)
+  case (insert x)
+  hence "card {x} \<ge> 2"
+    by auto
+  thus ?case 
+    by auto
+next
+  case (insert2 u v)
+  moreover hence "connected (graph V E\<^sub>T)"
+    unfolding tree_def by auto
+  ultimately have "nodes (graph V E\<^sub>T) \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+    by (intro that connected_graph_nodes_subset) auto
+  hence "V \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
+     by (auto simp: prim_subgraph_nodes)
+   thus ?case
+    by (intro that connected_graph_nodes_subset) auto
+qed auto (* induction just for case distinction *)
+
+lemmas subgraph_props = finite_V st_V_subset finite_E\<^sub>T irrefl_E\<^sub>T spanning_tree_V_subset
+
+lemma st_equiv1: 
+  assumes "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))" 
+  shows "is_spanning_tree G (graph V E\<^sub>T)"
+  unfolding G_def
+  using assms subgraph_props
+  apply (intro prim_graph_abs2.st_equiv1)
+  apply unfold_locales
+  apply (auto simp: G_def)
+  done
+
+lemma st_equiv2: 
+  assumes "is_spanning_tree G (graph V E\<^sub>T)" 
+  shows "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))" 
+  unfolding G_def
+  using assms subgraph_props
+  apply (intro prim_graph_abs2.st_equiv2)
+  apply unfold_locales
+  apply (auto simp: G_def)
+  done
+
+end
+
+context prim_graph_abs
+begin
+
+lemma st_equiv1: 
+  assumes "E\<^sub>T \<subseteq> E" "card (nodes G) \<ge> 2" and "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))" 
+  shows "is_spanning_tree G (graph V E\<^sub>T)"
+  using assms unfolding G_def by (intro prim_subgraph_abs.st_equiv1) unfold_locales
+
+lemma st_equiv2: 
+  assumes "E\<^sub>T \<subseteq> E" "card (nodes G) \<ge> 2" and "is_spanning_tree G (graph V E\<^sub>T)"
+  shows "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))" 
+  using assms unfolding G_def by (intro prim_subgraph_abs.st_equiv2) unfold_locales
+
+end
+
+text \<open>Minimum Spanning-Tree equivalence\<close>
+
+locale nat_w_graph_abs = (* nat weights *)
+  pos_w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> nat"
+begin
+
+lemma cost_of_st_eq1: "graph_invar T \<Longrightarrow> cost_of_st\<^sub>c T = weight c (prim_of_berge T)"
+  by (subst graph_abs.edges_eq[of T]; unfold_locales) (auto simp: weight_alt)
+
+lemma cost_of_st_eq2: "cost_of_st\<^sub>c (berge_of_prim T) = weight c T"
+  unfolding weight_alt berge_of_prim_def by auto
+
+lemma mst_equiv1:
+  assumes "is_mst E c T"
+  shows "is_MST c (prim_of_berge E) (prim_of_berge T)"
+  unfolding is_MST_def
+proof
+  have "is_st E T"
+    using assms by (elim is_mstE)
+  thus "is_spanning_tree (prim_of_berge E) (prim_of_berge T)"
+    by (intro st_equiv1)
+  have "is_st E T"
+    using assms by (elim is_mstE)
+  then consider "graph_invar T" "T = {}" | "graph_invar T" "card (Vs T) \<ge> 2"
+    using graph_subset[OF graph is_stE(1)] by (auto elim: st_card_Vs)
+  thus "\<forall>T'. is_spanning_tree (prim_of_berge E) T' \<longrightarrow> weight c (prim_of_berge T) \<le> weight c T'"
+  proof (intro allI impI; cases)
+    fix T'
+    assume "is_spanning_tree (prim_of_berge E) T'" and "T = {}" "graph_invar T"
+    hence "weight c (prim_of_berge T) = 0"
+      by (auto simp: cost_of_st_eq1[symmetric])
+    thus "weight c (prim_of_berge T) \<le> weight c T'"
+      by auto
+  next
+    fix T'
+    assume "is_spanning_tree (prim_of_berge E) T'" and "card (Vs T) \<ge> 2" "graph_invar T"
+    hence "weight c (prim_of_berge T) = cost_of_st\<^sub>c T"
+      by (auto simp: cost_of_st_eq1)
+    also have "... \<le> cost_of_st\<^sub>c (berge_of_prim T')"
+      sorry
+    also have "... \<le> weight c T'"
+      by (auto simp: cost_of_st_eq2)
+    finally show "weight c (prim_of_berge T) \<le> weight c T'"
+      by auto
+  qed
+qed
+
+lemma mst_equiv2:
+  assumes "graph_invar T" "is_MST c (prim_of_berge E) (prim_of_berge T)"
+  shows "is_mst E c T"
+proof (intro is_mstI)
+  show "is_st E T"
+    using assms[unfolded is_MST_def] by (auto intro: st_equiv2)
+  show "\<And>T'. is_st E T' \<Longrightarrow> cost_of_st\<^sub>c T \<le> cost_of_st\<^sub>c T'"
+  proof -
+    fix T'
+    assume "is_st E T'"
+    moreover hence "graph_invar T'"
+      by (intro st_is_graph)
+    moreover hence "is_spanning_tree (prim_of_berge E) (prim_of_berge T')"
+      using calculation by (intro st_equiv1)
+    moreover hence "weight c (prim_of_berge T) \<le> weight c (prim_of_berge T')"
+      using assms[unfolded is_MST_def] by auto
+    moreover have "graph_invar T"
+      using \<open>is_st E T\<close> by (intro st_is_graph)
+    ultimately show "cost_of_st\<^sub>c T \<le> cost_of_st\<^sub>c T'"
+      by (auto simp: cost_of_st_eq1)
+  qed
+qed
 
 end
 

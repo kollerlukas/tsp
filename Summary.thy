@@ -1,5 +1,6 @@
 theory Summary
-  imports Main Misc WeightedGraph CompleteGraph MST TSP DoubleTree ChristofidesSerdyukov
+  imports Main "misc/Misc" "graphs/WeightedGraph" "graphs/CompleteGraph" "problems/MST" 
+    "problems/TSP" "algorithms/DoubleTree" "algorithms/ChristofidesSerdyukov"
 begin
 
 section \<open>Definitions\<close>
@@ -44,7 +45,7 @@ text \<open>A cycle is a path s.t. (i) it starts and ends at the same node, (ii)
 thm is_cycle_def
 
 text \<open>A vertex that is contained in a cycle has a degree greater-equal to 2.\<close>
-thm cycle_degree
+thm graph_abs.cycle_degree
 
 text \<open>A graph is acyclic if no cycle is contained in the graph.\<close>
 thm is_acyclic_def
@@ -57,22 +58,22 @@ thm is_tree_def
 subsection \<open>Spanning Trees\<close>
 
 text \<open>A spanning tree is a subgraph s.t. (i) it is a tree and (ii) it contains every vertex.\<close>
-thm graph_abs.is_st_def
+thm is_st_def
 
 subsection \<open>Minimum Spanning Trees\<close>
 
 text \<open>A minimum spanning tree is a spanning tree with minimum weight.\<close>
-thm w_graph_abs.is_mst_def
+thm is_mst_def
 
 text \<open>A locale that a minimum spanning. Locale @{const mst}}\<close>
 
 subsection \<open>Hamiltonian Cycles\<close>
 
-thm graph_abs.is_hc_def
+thm is_hc_def
 
 subsection \<open>Traveling-Salesman Problem\<close>
 
-thm pos_w_graph_abs.is_tsp_def
+thm is_tsp_def
 
 term metric_graph_abs.is_mtsp
 
@@ -118,11 +119,15 @@ thm double_tree_algo.double_tree_def
 
 subsection \<open>Feasibilty\<close>
 
-thm double_tree_algo_feasibility.dt_is_hc
+thm metric_graph_abs.dt_is_hc
 
 subsection \<open>Approximation\<close>
 
-thm double_tree_algo_approx.dt_approx
+thm metric_graph_abs.dt_approx
+
+subsection \<open>Refinement with Hoare-Logic\<close>
+
+thm metric_graph_abs.refine_double_tree
 
 section \<open>\textsc{Christofides-Serdyukov} Approximation Algorithm for \textsc{mTSP}\<close>
 
@@ -134,11 +139,15 @@ text \<open>christofides_serdyukov_algo.christofides_serdyukov\<close>
 
 subsection \<open>Feasibilty\<close>
 
-thm christofides_serdyukov_algo_feasibility.cs_is_hc
+thm metric_graph_abs.cs_is_hc
 
 subsection \<open>Approximation\<close>
 
-thm christofides_serdyukov_algo_approx.cs_approx
+thm metric_graph_abs.cs_approx
+
+subsection \<open>Refinement with Hoare-Logic\<close>
+
+thm metric_graph_abs.refine_christofides_serdyukov
 
 section \<open>Miscellaneous\<close>
 

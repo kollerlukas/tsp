@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory MinWeightMatching
-  imports Main WeightedGraph CompleteGraph
+  imports Main "../misc/Misc" "../graphs/WeightedGraph" "../graphs/CompleteGraph"
 begin
 
 definition "is_perf_match E M \<equiv> M \<subseteq> E \<and> matching M \<and> Vs M = Vs E"
@@ -145,7 +145,7 @@ lemma perf_match_exists:
   obtains M where "is_perf_match E\<^sub>V M"
   apply (rule compl_graph_abs.perf_match_exists[of E\<^sub>V])
   apply unfold_locales
-  using E\<^sub>V_graph E\<^sub>V_complete assms that by auto (* TODO: clean up lemma!? *)
+  using graph_E\<^sub>V E\<^sub>V_complete assms that by auto (* TODO: clean up lemma!? *)
 
 end
 
@@ -161,17 +161,19 @@ lemma restr_perf_match_exists:
 
 end
 
+abbreviation "cost_of_match c M \<equiv> sum c M"
+
 context w_graph_abs
 begin
 
-abbreviation "cost_of_match M \<equiv> sum c M"
+abbreviation "cost_of_match\<^sub>c M \<equiv> sum c M"
 
 end
 
 context pos_w_graph_abs
 begin
 
-lemma cost_of_match_sum: "cost_of_match (set M) \<le> \<Sum>\<^sub># (image_mset c (mset M))"
+lemma cost_of_match_sum: "cost_of_match\<^sub>c (set M) \<le> \<Sum>\<^sub># (image_mset c (mset M))"
 proof (induction M)
   case (Cons e M)
   thus ?case 
@@ -181,16 +183,17 @@ qed auto
 end
 
 definition "is_min_match E c M \<equiv> 
-  is_perf_match E M \<and> (\<forall>M'. is_perf_match E M' \<longrightarrow> sum c M \<le> sum c M')"
+  is_perf_match E M \<and> (\<forall>M'. is_perf_match E M' \<longrightarrow> cost_of_match c M \<le> cost_of_match c M')"
 
 lemma is_min_matchE:
   assumes "is_min_match E c M"
-  shows "is_perf_match E M" "\<And>M'. is_perf_match E M' \<Longrightarrow> sum c M \<le> sum c M'"
+  shows "is_perf_match E M" "\<And>M'. is_perf_match E M' \<Longrightarrow> cost_of_match c M \<le> cost_of_match c M'"
   using assms[unfolded is_min_match_def] by auto
 
 lemma is_min_matchE2:
   assumes "is_min_match E c M"
-  shows "M \<subseteq> E" "matching M" "Vs M = Vs E" "\<And>M'. is_perf_match E M' \<Longrightarrow> sum c M \<le> sum c M'"
+  shows "M \<subseteq> E" "matching M" "Vs M = Vs E" 
+    "\<And>M'. is_perf_match E M' \<Longrightarrow> cost_of_match c M \<le> cost_of_match c M'"
   using is_min_matchE[OF assms] is_perf_matchE[of E M] by auto 
 
 locale min_weight_matching =

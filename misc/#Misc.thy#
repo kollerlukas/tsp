@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory Misc
-  imports Main "HOL-Library.Multiset" "berge/Berge"
+  imports Main "HOL-Library.Multiset" "../berge/Berge"
 begin
 
 text \<open>This theory contains miscellaneous lemmas and theorems.\<close>
@@ -29,6 +29,9 @@ fun list01234 where
 | "list01234 (u#v#w#x#P) = list01234 (v#w#x#P)"
 
 section \<open>List Lemmas\<close>
+
+lemma hd_singleton: "xs \<noteq> [] \<Longrightarrow> tl xs = [] \<Longrightarrow> xs = [hd xs]"
+  by (induction xs) auto
 
 lemma distinct_hd_last_neq: "distinct xs \<Longrightarrow> length xs > 1 \<Longrightarrow> hd xs \<noteq> last xs"
   by (induction xs) auto
@@ -105,6 +108,51 @@ lemma set_tl_eq_set:
   assumes "length xs > 1" "distinct (tl xs)" "hd xs = last xs"
   shows "set (tl xs) = set xs"
   using assms by (induction xs rule: list012.induct) auto
+
+lemma list_split_for_2elems:
+  assumes "a \<in> set xs" "b \<in> set xs" "a \<noteq> b"
+  obtains xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ a#xs\<^sub>2" "b \<in> set xs\<^sub>2"
+  | xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ b#xs\<^sub>2" "a \<in> set xs\<^sub>2"
+  using assms 
+proof (induction xs arbitrary: a b thesis)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x xs)
+  then consider "x = a" "b \<in> set xs" | "x = b" "a \<in> set xs" | "a \<in> set xs" "b \<in> set xs"
+    by auto
+  thus ?case 
+  proof cases
+    assume "x = a" "b \<in> set xs"
+    thus ?case
+      using Cons by fastforce
+  next
+    assume "x = b" "a \<in> set xs"
+    thus ?case
+      using Cons by fastforce
+  next
+    assume "a \<in> set xs" "b \<in> set xs"
+    then consider xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ a#xs\<^sub>2" "b \<in> set xs\<^sub>2"
+      | xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ b#xs\<^sub>2" "a \<in> set xs\<^sub>2"
+      using Cons by blast
+    thus ?case
+    proof cases
+      fix xs\<^sub>1 xs\<^sub>2
+      assume "xs = xs\<^sub>1 @ a#xs\<^sub>2" "b \<in> set xs\<^sub>2"
+      moreover hence "x#xs = (x#xs\<^sub>1) @ a#xs\<^sub>2"
+        by auto
+      ultimately show ?case
+        using Cons by blast
+    next
+      fix xs\<^sub>1 xs\<^sub>2
+      assume "xs = xs\<^sub>1 @ b#xs\<^sub>2" "a \<in> set xs\<^sub>2"
+      moreover hence "x#xs = (x#xs\<^sub>1) @ b#xs\<^sub>2"
+        by auto
+      ultimately show ?case
+        using Cons by blast
+    qed
+  qed
+qed
 
 subsection \<open>Repeated Elements in Lists\<close>
 
@@ -208,6 +256,11 @@ lemma finite_even_cardI2:
   assumes "finite X" "x \<notin> X" "y \<notin> X" "x \<noteq> y" "even (card X)"
   shows "even (card ({x,y} \<union> X))"
   using assms by auto
+
+section \<open>Tuple Set Lemmas\<close>
+
+lemma irrefl_subset: "irrefl B \<Longrightarrow> A \<subseteq> B \<Longrightarrow> irrefl A"
+  unfolding irrefl_def by auto
 
 section \<open>Metric Lemmas\<close>
 
@@ -543,47 +596,6 @@ proof -
     using that by auto
 qed
 
-locale restr_graph_abs =
-  graph_abs E for E :: "'a set set" +
-  fixes V E\<^sub>V
-  defines "E\<^sub>V \<equiv> {e \<in> E. e \<subseteq> V}"
-begin
-
-lemma E\<^sub>V_subset: "E\<^sub>V \<subseteq> E"                                  
-  unfolding E\<^sub>V_def by auto
-
-lemma E\<^sub>V_graph: "graph_invar E\<^sub>V"
-  by (intro graph_subset[OF graph]) (auto simp: E\<^sub>V_def)
-
-lemma Vs_subset_restr_graph: "Vs E\<^sub>V \<subseteq> V"
-proof 
-  fix v
-  assume "v \<in> Vs E\<^sub>V"
-  then obtain e where "e \<in> E\<^sub>V" "v \<in> e"
-    by (auto elim: vs_member_elim)
-  moreover hence "e \<subseteq> V"
-    by (auto simp: E\<^sub>V_def)
-  ultimately show "v \<in> V"
-    by (auto intro: vs_member_intro)                                         
-qed
-
-end
-
-lemma Vs_inter_disj: 
-  assumes "graph_invar E\<^sub>1" "graph_invar E\<^sub>2" "Vs E\<^sub>1 \<inter> Vs E\<^sub>2 = {}" 
-  shows "E\<^sub>1 \<inter> E\<^sub>2 = {}"
-proof (rule ccontr)
-  assume "E\<^sub>1 \<inter> E\<^sub>2 \<noteq> {}"
-  then obtain e where "e \<in> E\<^sub>1 \<inter> E\<^sub>2"
-    by auto
-  moreover then obtain u v where "e = {u,v}"
-    using assms by auto
-  ultimately have "u \<in> Vs E\<^sub>1" "u \<in> Vs E\<^sub>2"
-    by (auto intro: vs_member_intro)
-  thus "False"
-    using assms by auto
-qed
-
 lemma Vs_insert: "Vs (insert e E) = e \<union> Vs E"
   unfolding Vs_def by auto
 
@@ -883,8 +895,11 @@ proof -
   finally show ?thesis .
 qed
 
-lemma walk_path_split:
-  assumes "graph_invar E" "walk_betw E u P u" "v \<in> set P" "u \<noteq> v"
+context graph_abs
+begin
+
+lemma walk_path_split: (* TODO: remove assumption *)
+  assumes (* "graph_invar E" *) "walk_betw E u P u" "v \<in> set P" "u \<noteq> v"
   obtains P\<^sub>1 P\<^sub>2 where "P = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
 proof -
   have [simp]: "hd P = u" "last P = u" and "P \<noteq> []"
@@ -904,7 +919,7 @@ proof -
 qed
 
 lemma walk_rotateE:
-  assumes "graph_invar E" "walk_betw E u P u" "v \<in> set P"
+  assumes (* "graph_invar E" *)"walk_betw E u P u" "v \<in> set P"
   obtains P' where "walk_betw E v P' v" "set (edges_of_path P) = set (edges_of_path P')"
 proof cases
   assume "u = v"
@@ -923,6 +938,8 @@ next
     using edges_of_path_rotate by fastforce
   ultimately show ?thesis using that by auto
 qed
+
+end
 
 lemma edges_of_path_nil:
   assumes "edges_of_path T = []"
@@ -1004,11 +1021,8 @@ proof (induction P rule: list0123.induct)
     by (auto intro: vs_member_intro[of _ "{u,v}" E])
 qed auto
 
-context graph_abs
-begin
-
 lemma card_vertices_ge2:
-  assumes "E \<noteq> {}" 
+  assumes graph: "graph_invar E" and "E \<noteq> {}" 
   shows "card (Vs E) \<ge> 2"
 proof -
   obtain u v where "{u,v} \<in> E" "u \<noteq> v"
@@ -1018,6 +1032,12 @@ proof -
   then show ?thesis
     using \<open>{u,v} \<in> E\<close> by (metis card_2_iff card_mono graph)
 qed
+
+context graph_abs
+begin
+
+lemma card_Vs_E_ge2: "E \<noteq> {} \<Longrightarrow> card (Vs E) \<ge> 2"
+  using graph by (intro card_vertices_ge2)
 
 end
 
@@ -1279,5 +1299,87 @@ proof (induction P rule: short_cut.induct)
       using 3 by (subst short_cut_edges_append) auto
   qed auto
 qed auto
+
+locale graph_abs2 = 
+  E\<^sub>1: graph_abs E\<^sub>1 +
+  E\<^sub>2: graph_abs E\<^sub>2 for E\<^sub>1 :: "'a set set" and E\<^sub>2 :: "'a set set"
+begin
+
+lemma Vs_inter_disj:
+  assumes "Vs E\<^sub>1 \<inter> Vs E\<^sub>2 = {}" 
+  shows "E\<^sub>1 \<inter> E\<^sub>2 = {}"
+proof (rule ccontr)
+  assume "E\<^sub>1 \<inter> E\<^sub>2 \<noteq> {}"
+  then obtain e where "e \<in> E\<^sub>1 \<inter> E\<^sub>2"
+    by auto
+  moreover then obtain u v where "e = {u,v}"
+    using E\<^sub>1.graph E\<^sub>2.graph by auto
+  ultimately have "u \<in> Vs E\<^sub>1" "u \<in> Vs E\<^sub>2"
+    by (auto intro: vs_member_intro)
+  thus "False"
+    using assms by auto
+qed
+
+end
+
+locale graph_subgraph_abs =
+  graph_abs E for E +
+  fixes E'
+  assumes subset: "E' \<subseteq> E"
+begin
+
+lemma graph_E': "graph_invar E'"
+  using graph subset finite_subset[OF Vs_subset[of E' E]] by auto
+
+sublocale graph_abs2 E E'
+  using graph graph_E' by unfold_locales
+
+end
+
+locale restr_graph_abs =
+  graph_abs E for E :: "'a set set" +
+  fixes V E\<^sub>V
+  defines "E\<^sub>V \<equiv> {e \<in> E. e \<subseteq> V}"
+begin
+
+lemma E\<^sub>V_subset: "E\<^sub>V \<subseteq> E"                                  
+  unfolding E\<^sub>V_def by auto
+
+sublocale E\<^sub>V: graph_subgraph_abs E E\<^sub>V
+  using E\<^sub>V_subset by unfold_locales
+
+lemmas graph_E\<^sub>V = E\<^sub>V.E\<^sub>2.graph
+
+lemma Vs_subset_restr_graph: "Vs E\<^sub>V \<subseteq> V"
+proof 
+  fix v
+  assume "v \<in> Vs E\<^sub>V"
+  then obtain e where "e \<in> E\<^sub>V" "v \<in> e"
+    by (auto elim: vs_member_elim)
+  moreover hence "e \<subseteq> V"
+    by (auto simp: E\<^sub>V_def)
+  ultimately show "v \<in> V"
+    by (auto intro: vs_member_intro)                                         
+qed
+
+end
+
+locale path_edges_subgraph_abs = 
+  graph_abs E for E +
+  fixes P
+  assumes path: "path E P"
+begin
+
+abbreviation "E\<^sub>P \<equiv> set (edges_of_path P)"
+
+lemma E\<^sub>P_subset: "E\<^sub>P \<subseteq> E"
+  using path path_edges_subset by auto
+
+sublocale E\<^sub>P: graph_subgraph_abs E E\<^sub>P
+  using E\<^sub>P_subset by unfold_locales
+
+lemmas graph_E\<^sub>P = E\<^sub>P.E\<^sub>2.graph
+
+end
 
 end

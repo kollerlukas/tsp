@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory MultiGraph
-  imports Main Misc "berge/Berge" "HOL-Library.Multiset"
+  imports Main "../misc/Misc" "../berge/Berge" "HOL-Library.Multiset"
 begin
 
 type_synonym 'a mgraph = "'a set multiset"

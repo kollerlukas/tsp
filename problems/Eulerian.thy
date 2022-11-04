@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory Eulerian
-  imports Main Misc MultiGraph Select
+  imports Main "../misc/Misc" "../graphs/MultiGraph" (* "../misc/Select" *)
 begin
 
 text \<open>A graph is eulerian iff all vertices have even degree.\<close>

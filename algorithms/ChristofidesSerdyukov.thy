@@ -1,6 +1,7 @@
 (* Author: Lukas Koller *)
 theory ChristofidesSerdyukov
-  imports Main MST TSP Eulerian MinWeightMatching DoubleTree
+  imports Main "../problems/MST" "../problems/TSP" "../problems/Eulerian" 
+    "../problems/MinWeightMatching" "../algorithms/DoubleTree"
 begin
 
 section \<open>\textsc{Christofides-Serdyukov} Approximation Algorithm for \textsc{mTSP}\<close>
@@ -38,10 +39,10 @@ locale christofides_serdyukov_aux =
 begin
 
 lemma subset_T: "T \<subseteq> E"
-  unfolding T_def using is_connected mst by (auto simp: is_mstE2)
+  unfolding T_def using mst[OF is_connected] by (auto simp: is_mstE2)
 
 lemma Vs_T: "Vs T = Vs E"
-  unfolding T_def using is_connected mst by (auto simp: is_mstE2)
+  unfolding T_def using mst[OF is_connected] by (auto simp: is_mstE2)
 
 lemma graph_T: "graph_invar T"
   using graph subset_T finite_subset[OF Vs_subset] by blast
@@ -103,7 +104,7 @@ proof -
   also have "... = Vs T \<union> Vs M"
     using finite_T finite_M by (auto simp: mVs_mset_set)
   also have "... = Vs E \<union> Vs M"
-    using is_connected mst by (auto simp: T_def is_mstE2)
+    using mst[OF is_connected] by (auto simp: T_def is_mstE2)
   also have "... = Vs E"
     using Vs_subset[OF subset_M] by (auto simp: sup_absorb1)
   finally show ?thesis .
@@ -161,7 +162,7 @@ begin
 
 lemmas [simp] = J_def T_def W_def E\<^sub>W_def M_def
 
-lemma cs_is_hc: "is_hc (christofides_serdyukov)"
+lemma cs_is_hc: "is_hc E (christofides_serdyukov)"
   unfolding christofides_serdyukov_def Let_def
   apply (rule hc_of_et_correct, rule eulerian)
   using christofides_serdyukov_correctness by auto
@@ -195,7 +196,7 @@ lemma short_cut_hc:
   assumes "u \<in> V" "walk_betw E u P u" "distinct (tl P)" "set (tl P) = Vs E" 
   obtains P\<^sub>V where "walk_betw E\<^sub>V u P\<^sub>V u"
     and "distinct (tl P\<^sub>V)" "set (tl P\<^sub>V) = Vs E\<^sub>V" 
-    and "cost_of_path P\<^sub>V \<le> cost_of_path P"
+    and "cost_of_path\<^sub>c P\<^sub>V \<le> cost_of_path\<^sub>c P"
 proof -
   have "path E P" "P \<noteq> []" "hd P = u" "last P = u"
     using assms by (auto elim: walk_between_nonempty_path)
@@ -225,7 +226,7 @@ proof -
     apply (subst \<open>set ?P\<^sub>V = Vs E\<^sub>V\<close>[symmetric])
     apply (intro set_tl_eq_set)
     using calculation by auto
-  moreover have "cost_of_path ?P\<^sub>V \<le> cost_of_path P"
+  moreover have "cost_of_path\<^sub>c ?P\<^sub>V \<le> cost_of_path\<^sub>c P"
     using calculation path_Vs_subset by (intro cost_of_path_short_cut_tri_ineq)
   ultimately show ?thesis
     using that by auto
@@ -235,7 +236,7 @@ lemma short_cut_OPT:
   assumes "V \<noteq> {}" "OPT \<noteq> []"
   obtains u OPT\<^sub>V where "walk_betw E\<^sub>V u OPT\<^sub>V u" "u \<in> V"
     and "distinct (tl OPT\<^sub>V)" "set (tl OPT\<^sub>V) = Vs E\<^sub>V" 
-    and "cost_of_path OPT\<^sub>V \<le> cost_of_path OPT"
+    and "cost_of_path\<^sub>c OPT\<^sub>V \<le> cost_of_path\<^sub>c OPT"
 proof -
   obtain u where OPT_prems: "walk_betw E u OPT u" "distinct (tl OPT)" "set (tl OPT) = Vs E"
     using assms(2) opt by (auto elim: is_tsp_nonnilE)
@@ -244,7 +245,7 @@ proof -
     assume "u \<in> V"
     moreover then obtain OPT\<^sub>V where "walk_betw E\<^sub>V u OPT\<^sub>V u"
       and "distinct (tl OPT\<^sub>V)" "set (tl OPT\<^sub>V) = Vs E\<^sub>V" 
-      and "cost_of_path OPT\<^sub>V \<le> cost_of_path OPT"
+      and "cost_of_path\<^sub>c OPT\<^sub>V \<le> cost_of_path\<^sub>c OPT"
       using OPT_prems by (auto elim: short_cut_hc)
     ultimately show ?thesis
       by (intro that) auto
@@ -255,7 +256,7 @@ proof -
     moreover hence "v \<in> set OPT"
       using V_subset OPT_prems set_tl_subset[of OPT] by auto
     moreover obtain P\<^sub>1 P\<^sub>2 where [simp]: "OPT = u#P\<^sub>1 @ v#P\<^sub>2 @ [u]"
-      using calculation walk_path_split[OF graph OPT_prems(1)] by auto
+      using calculation walk_path_split[OF OPT_prems(1)] by auto
     hence "path E (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])"
       using OPT_prems by auto
     hence "path E (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "path E ?OPT'")
@@ -268,9 +269,9 @@ proof -
       using OPT_prems by auto
     moreover obtain OPT\<^sub>V where "walk_betw E\<^sub>V v OPT\<^sub>V v"
       and "distinct (tl OPT\<^sub>V)" "set (tl OPT\<^sub>V) = Vs E\<^sub>V" 
-      and "cost_of_path OPT\<^sub>V \<le> cost_of_path ?OPT'"
+      and "cost_of_path\<^sub>c OPT\<^sub>V \<le> cost_of_path\<^sub>c ?OPT'"
       using calculation by (auto elim: short_cut_hc)
-    moreover hence "cost_of_path OPT\<^sub>V \<le> cost_of_path OPT"
+    moreover hence "cost_of_path\<^sub>c OPT\<^sub>V \<le> cost_of_path\<^sub>c OPT"
       by (auto simp: cost_of_path_rotate)
     ultimately show ?thesis
       by (intro that) auto
@@ -291,13 +292,13 @@ lemma perf_matchings_leq_cost_OPT:
   assumes "V \<noteq> {}"
   obtains M\<^sub>1 M\<^sub>2 P where "is_perf_match E\<^sub>V (set M\<^sub>1)" "is_perf_match E\<^sub>V (set M\<^sub>2)" 
     and "mset M\<^sub>1 + mset M\<^sub>2 = mset (edges_of_path P)"
-    and "cost_of_path P \<le> cost_of_path OPT"
+    and "cost_of_path\<^sub>c P \<le> cost_of_path\<^sub>c OPT"
 proof -
   have "OPT \<noteq> []"
     using assms OPT_nil by auto
   then obtain u OPT\<^sub>V where "walk_betw E\<^sub>V u OPT\<^sub>V u" "u \<in> V" 
     and "distinct (tl OPT\<^sub>V)" "set (tl OPT\<^sub>V) = Vs E\<^sub>V" 
-    and "cost_of_path OPT\<^sub>V \<le> cost_of_path OPT"
+    and "cost_of_path\<^sub>c OPT\<^sub>V \<le> cost_of_path\<^sub>c OPT"
     using assms short_cut_OPT by auto
   moreover hence "path E\<^sub>V OPT\<^sub>V" "OPT\<^sub>V \<noteq> []" "hd OPT\<^sub>V = u" "last OPT\<^sub>V = u"
     by (auto elim: walk_between_nonempty_path)
@@ -344,7 +345,7 @@ proof -
     by (intro that) auto
 qed
 
-lemma min_match_leq_half_OPT: "2 * cost_of_match M \<le> cost_of_path OPT"
+lemma min_match_leq_half_OPT: "2 * cost_of_match\<^sub>c M \<le> cost_of_path\<^sub>c OPT"
 proof cases
   assume "V = {}"
   hence "Vs E\<^sub>V = {}"
@@ -352,12 +353,12 @@ proof cases
   hence "Vs M = {}" "M \<subseteq> E\<^sub>V"
     using is_min_matchE2[OF min_match_M] by auto
   moreover hence "graph_invar M"
-    by (intro graph_subset[OF E\<^sub>V_graph])
+    by (intro graph_subset[OF graph_E\<^sub>V])
   ultimately have "M = {}"
     using Vs_empty_iff[of M] by auto 
-  hence "2 * cost_of_match M = 0"
+  hence "2 * cost_of_match\<^sub>c M = 0"
     by auto
-  also have "... \<le> cost_of_path OPT"
+  also have "... \<le> cost_of_path\<^sub>c OPT"
     using cost_of_path_pos by auto
   finally show ?thesis .
 next
@@ -365,48 +366,48 @@ next
   (* obtain two matching \<open>M\<close> and \<open>M'\<close> s.t \<open>M + M' = edges_of_path P\<close> *)
   then obtain M\<^sub>1 M\<^sub>2 P where "is_perf_match E\<^sub>V (set M\<^sub>1)" "is_perf_match E\<^sub>V (set M\<^sub>2)" 
     and match_union: "mset M\<^sub>1 + mset M\<^sub>2 = mset (edges_of_path P)"
-    and cost_P: "cost_of_path P \<le> cost_of_path OPT" 
+    and cost_P: "cost_of_path\<^sub>c P \<le> cost_of_path\<^sub>c OPT" 
     using perf_matchings_leq_cost_OPT by auto
-  moreover hence "cost_of_match M \<le> cost_of_match (set M\<^sub>1)"
-    and "cost_of_match M \<le> cost_of_match (set M\<^sub>2)"
+  moreover hence "cost_of_match\<^sub>c M \<le> cost_of_match\<^sub>c (set M\<^sub>1)"
+    and "cost_of_match\<^sub>c M \<le> cost_of_match\<^sub>c (set M\<^sub>2)"
     using min_match_M by (auto elim: is_min_matchE)
-  ultimately have "2 * cost_of_match M \<le> cost_of_match (set M\<^sub>1) + cost_of_match (set M\<^sub>2)"
+  ultimately have "2 * cost_of_match\<^sub>c M \<le> cost_of_match\<^sub>c (set M\<^sub>1) + cost_of_match\<^sub>c (set M\<^sub>2)"
     by (auto simp: mult_2[symmetric] add_mono)
   also have "... \<le> \<Sum>\<^sub># (image_mset c (mset M\<^sub>1)) + \<Sum>\<^sub># (image_mset c (mset M\<^sub>2))"
     using cost_of_match_sum by (auto simp: add_mono)
   also have "... = \<Sum>\<^sub># (image_mset c (mset M\<^sub>1 + mset M\<^sub>2))"
     by auto
-  also have "... \<le> cost_of_path OPT"
+  also have "... \<le> cost_of_path\<^sub>c OPT"
     using cost_P by (auto simp: match_union cost_of_path_sum)
   finally show ?thesis .
 qed
 
 end
-
+                          
 context christofides_serdyukov_algo_approx
 begin
 
 lemmas defs[simp] = J_def T_def W_def E\<^sub>W_def M_def
 
-lemma cost_cs_leq: "cost_of_path christofides_serdyukov \<le> cost_of_st T + cost_of_match M"
+lemma cost_cs_leq: "cost_of_path\<^sub>c christofides_serdyukov \<le> cost_of_st\<^sub>c T + cost_of_match\<^sub>c M"
 proof -
   have "mpath J (comp_et J)" and et_edges: "J = mset (edges_of_path (comp_et J))"
     using eulerian[OF eulerian_J] by (auto elim: is_etE) 
   hence comp_et_subset: "set (comp_et J) \<subseteq> Vs E"
     using mpath_Vs_subset[of J] Vs_J by auto
 
-  have "cost_of_path christofides_serdyukov = cost_of_path (comp_hc_of_et (comp_et J) [])"
+  have "cost_of_path\<^sub>c christofides_serdyukov = cost_of_path\<^sub>c (comp_hc_of_et (comp_et J) [])"
     unfolding christofides_serdyukov_def by (auto simp: Let_def)
-  also have "... \<le> cost_of_path (comp_et J)"
+  also have "... \<le> cost_of_path\<^sub>c (comp_et J)"
     using comp_et_subset by (intro hc_of_et_reduces_cost)
   also have "... \<le>  \<Sum>\<^sub># (image_mset c J)"
     using et_edges by (auto simp: cost_of_path_sum)
-  also have "... = cost_of_st T + cost_of_match M"
+  also have "... = cost_of_st\<^sub>c T + cost_of_match\<^sub>c M"
     by (auto simp: sum_unfold_sum_mset)
   finally show ?thesis .
 qed
 
-lemma min_match_leq_half_OPT: "2 * cost_of_match M \<le> cost_of_path OPT"
+lemma min_match_leq_half_OPT: "2 * cost_of_match\<^sub>c M \<le> cost_of_path\<^sub>c OPT"
   unfolding defs
   apply (intro christofides_serdyukov_algo_approx_restr_E.min_match_leq_half_OPT)
   apply unfold_locales
@@ -414,20 +415,86 @@ lemma min_match_leq_half_OPT: "2 * cost_of_match M \<le> cost_of_path OPT"
   using even_card_W apply simp
   using perf_match_exists match by auto (* TODO: clean up! *)
 
-lemma cs_approx: "2 * cost_of_path christofides_serdyukov \<le> 3 * cost_of_path OPT"
+lemma cs_approx: "2 * cost_of_path\<^sub>c christofides_serdyukov \<le> 3 * cost_of_path\<^sub>c OPT"
 proof -
-  have "2 * cost_of_path christofides_serdyukov 
-      \<le> (cost_of_st T + cost_of_match M) + (cost_of_st T + cost_of_match M)"
+  have "2 * cost_of_path\<^sub>c christofides_serdyukov 
+      \<le> (cost_of_st\<^sub>c T + cost_of_match\<^sub>c M) + (cost_of_st\<^sub>c T + cost_of_match\<^sub>c M)"
     using cost_cs_leq by (auto simp: mult_2[symmetric] add_mono)
-  also have "... = 2 * cost_of_st T + 2 * cost_of_match M"
+  also have "... = 2 * cost_of_st\<^sub>c T + 2 * cost_of_match\<^sub>c M"
     by (auto simp: mult_2)
-  also have "... \<le> 2 * cost_of_path OPT + 2 * cost_of_match M"
-    using is_connected mst mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
-  also have "... \<le> 2 * cost_of_path OPT + cost_of_path OPT"
+  also have "... \<le> 2 * cost_of_path\<^sub>c OPT + 2 * cost_of_match\<^sub>c M"
+    using mst[OF is_connected] mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
+  also have "... \<le> 2 * cost_of_path\<^sub>c OPT + cost_of_path\<^sub>c OPT"
     using min_match_leq_half_OPT add_left_mono by auto
-  also have "... = 3 * cost_of_path OPT"
+  also have "... = 3 * cost_of_path\<^sub>c OPT"
     by (auto simp: mult_3)
   finally show ?thesis .
+qed
+
+end
+
+context metric_graph_abs
+begin
+
+abbreviation "christofides_serdyukov \<equiv> christofides_serdyukov_algo.christofides_serdyukov E c"
+
+theorem cs_is_hc: 
+  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+  shows "is_hc E (christofides_serdyukov comp_mst comp_et comp_match)"
+  using assms by (intro christofides_serdyukov_algo_feasibility.cs_is_hc) unfold_locales
+
+theorem cs_approx: 
+  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and "is_mtsp OPT"
+  shows "2 * cost_of_path\<^sub>c (christofides_serdyukov comp_mst comp_et comp_match) \<le> 3 * cost_of_path\<^sub>c OPT"
+  using assms by (intro christofides_serdyukov_algo_approx.cs_approx) unfold_locales
+
+(* ----- refine Christofides-Serdyukov algorithm with Hoare-Logic ----- *)
+
+lemma refine_christofides_serdyukov:
+  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+    and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+    and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+    and "is_mtsp OPT"
+  shows "VARS T W M J v P P' H { True }
+  T := comp_mst c E;
+  W := {v \<in> Vs T. \<not> even' (degree T v)};
+  M := comp_match ({e \<in> E. e \<subseteq> W}) c;
+  J := mset_set T + mset_set M;
+  P := comp_et J;
+  P' := P;
+  H := [];
+  WHILE P' \<noteq> [] 
+  INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et J \<and> J = mset_set T + mset_set M 
+    \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
+    \<and> T = comp_mst c E }
+  DO
+    v := hd P';
+    P' := tl P';
+    IF v \<in> set H \<and> P' \<noteq> [] THEN
+      H := H
+    ELSE
+      H := v#H
+    FI
+  OD { is_hc E H \<and> 2 * cost_of_path\<^sub>c H \<le> 3 * cost_of_path\<^sub>c OPT }"
+proof (vcg, goal_cases)
+  case (1 T W M J v P P' H)
+  then show ?case 
+    by (auto simp: comp_hc_of_et_tl_simps)
+next
+  case (2 T W M J v P P' H)
+  moreover hence "H = christofides_serdyukov comp_mst comp_et comp_match"
+    using assms 2 
+    apply (subst christofides_serdyukov_algo.christofides_serdyukov_def) (* TODO: why do I need subst here?! *)
+    apply unfold_locales 
+    apply (auto simp: Let_def)
+    done
+  ultimately show ?case 
+    using assms cs_is_hc cs_approx by auto
 qed
 
 end
