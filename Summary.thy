@@ -1,6 +1,7 @@
 theory Summary
-  imports Main "misc/Misc" "graphs/WeightedGraph" "graphs/CompleteGraph" "problems/MST" 
-    "problems/TSP" "algorithms/DoubleTree" "algorithms/ChristofidesSerdyukov"
+  imports Main "misc/Misc" "graphs/WeightedGraph" "graphs/CompleteGraph" 
+    "problems/MinSpanningTree" "problems/TravelingSalesman" 
+    "algorithms/DoubleTree" "algorithms/ChristofidesSerdyukov"
 begin
 
 section \<open>Definitions\<close>

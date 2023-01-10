@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory Misc
-  imports Main "HOL-Library.Multiset" "../berge/Berge"
+  imports Main "HOL-Library.Multiset" tsp.Berge
 begin
 
 text \<open>This theory contains miscellaneous lemmas and theorems.\<close>
@@ -27,6 +27,11 @@ fun list01234 where
 | "list01234 [u,v] = undefined"
 | "list01234 [u,v,w] = undefined"
 | "list01234 (u#v#w#x#P) = list01234 (v#w#x#P)"
+
+(* function just for the induction schema *)
+fun pair_list where
+  "pair_list [] = undefined"
+| "pair_list ((x,y)#xs) = pair_list xs"
 
 section \<open>List Lemmas\<close>
 
@@ -154,6 +159,11 @@ next
   qed
 qed
 
+lemma append_tl_butlast_eq:
+  assumes "xs \<noteq> []" "ys \<noteq> []" "last xs = x" "hd ys = x"
+  shows "xs @ tl ys = butlast xs @ ys"
+  using assms by (induction xs rule: list012.induct) auto
+
 subsection \<open>Repeated Elements in Lists\<close>
 
 lemma distinct_distinct_adj: "distinct xs \<Longrightarrow> distinct_adj xs"
@@ -198,6 +208,36 @@ lemma even_elem_append:
 
 section \<open>(Finite) Set Lemmas\<close>
 
+lemma mem_not_empty: "x \<in> A \<Longrightarrow> A \<noteq> {}"
+  by auto
+
+lemma insert_union_subset: "A\<^sub>1 \<union> A\<^sub>2 \<subseteq> B \<Longrightarrow> a \<in> B \<Longrightarrow> insert a A\<^sub>1 \<union> A\<^sub>2 \<subseteq> B"
+  by auto
+
+lemma inter_emptyI:
+  assumes "\<And>x. x \<in> B \<Longrightarrow> x \<notin> A"
+  shows "A \<inter> B = {}"
+  using assms by blast
+
+lemma card_neq_1_obtain_mem:
+  assumes "card A \<noteq> 1" "a \<in> A"
+  obtains b where "b \<in> A" "a \<noteq> b"
+proof -
+  consider "infinite A" | "card A > 1"
+    using assms by (metis One_nat_def Suc_lessI card_gt_0_iff empty_iff)
+  thus ?thesis
+  proof cases 
+    assume "infinite A"
+    thus ?thesis
+      using that by (metis assms(1) finite.emptyI is_singletonI' is_singleton_altdef)
+  next
+    assume "card A > 1"
+    thus ?thesis
+      using assms
+      by (metis One_nat_def card.infinite card_le_Suc0_iff_eq leD not_one_less_zero that)
+  qed
+qed (* TODO: clean up proof! *)
+
 lemma set012_split: 
   assumes "finite F"
   obtains "F = {}"
@@ -214,22 +254,30 @@ proof (induction F rule: finite_induct)
   qed auto
 qed auto
 
+lemma set12_split: 
+  assumes "finite F" "x \<in> F"
+  obtains x where "F = {x}"
+  | x y F' where "F = {x,y} \<union> F'" "x \<notin> F'" "y \<notin> F'" "x \<noteq> y"
+  using assms by (elim set012_split) auto
+
 text \<open>Induction schema that adds two new elements to a finite set.\<close>
-lemma finite2_induct [consumes 1, case_names empty insert insert2]:
+lemma finite2_induct [consumes 1, case_names empty singleton insert2]:
   assumes "finite F"
   assumes empty: "P {}"
-      and insert: "\<And>x. P {x}"
+      and singleton: "\<And>x. P {x}"
       and insert2: "\<And>x y F. finite F \<Longrightarrow> x \<notin> F \<Longrightarrow> y \<notin> F \<Longrightarrow> x \<noteq> y \<Longrightarrow> P F \<Longrightarrow> P ({x,y} \<union> F)"
   shows "P F"
   using assms
 proof (induction F rule: finite_psubset_induct)
   case (psubset F)
-  moreover then obtain x y F' where 
-    "F = {} \<or> F = {x} \<or> (F = {x,y} \<union> F' \<and> x \<notin> F' \<and> y \<notin> F' \<and> x \<noteq> y)"
-    using set012_split[of F] by metis
-  ultimately show ?case 
-  proof (elim disjE)
-    assume "F = {x,y} \<union> F' \<and> x \<notin> F' \<and> y \<notin> F' \<and> x \<noteq> y"
+  then consider "F = {}" | x where "F = {x}" 
+    | x y F' where "F = {x,y} \<union> F'" "x \<notin> F'" "y \<notin> F'" "x \<noteq> y"
+    by (elim set012_split)
+  thus ?case 
+    using psubset
+  proof cases
+    fix x y F'
+    assume "F = {x,y} \<union> F'" "x \<notin> F'" "y \<notin> F'" "x \<noteq> y"
     then show ?case
       using psubset by fastforce
   qed auto
@@ -256,6 +304,12 @@ lemma finite_even_cardI2:
   assumes "finite X" "x \<notin> X" "y \<notin> X" "x \<noteq> y" "even (card X)"
   shows "even (card ({x,y} \<union> X))"
   using assms by auto
+
+lemma finite_card_geq2: "finite A \<Longrightarrow> a \<in> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> b \<in> A \<Longrightarrow> card A \<ge> 2"
+  by (induction A rule: finite2_induct) auto
+
+lemma card'_leq: "card' A \<le> enat k \<Longrightarrow> card A \<le> k"
+  by (metis card'_finite_enat enat_ile enat_ord_simps(1))
 
 section \<open>Tuple Set Lemmas\<close>
 
@@ -574,6 +628,9 @@ lemma Vs_inter_subset1: "Vs (A \<inter> B) \<subseteq> Vs A"
 lemma Vs_inter_subset2: "Vs (A \<inter> B) \<subseteq> Vs B"
   unfolding Vs_def by auto
 
+lemma complete_Vs_subset: "Vs {{u,v} | u v. u \<in> V \<and> v \<in> V \<and> u \<noteq> v} \<subseteq> V"
+  by (auto simp: Vs_def)
+
 lemma edge_member_elim:
   assumes "graph_invar E" and "v \<in> e" "e \<in> E"
   obtains u where "e = {u,v}"
@@ -611,6 +668,51 @@ lemma graph_invarI2:
   assumes "finite E" "\<forall>e\<in>E. \<exists>u v. e = {u,v} \<and> u \<noteq> v" 
   shows "graph_invar E"
   using assms by (auto intro: finite_VsI)
+
+lemma graph_Un:
+  assumes "finite A" "\<And>a. a \<in> A \<Longrightarrow> graph_invar a" 
+  shows "graph_invar (\<Union> A)"
+  using assms
+proof (induction A rule: finite_induct)
+  case empty
+  then show ?case 
+    by (auto simp: Vs_empty_empty)
+next
+  case (insert a A)
+  hence "graph_invar (\<Union> A)"
+    by (intro insert.IH) fastforce
+  moreover have "graph_invar a"
+    using insert.prems by blast
+  ultimately have "finite (Vs (\<Union> (insert a A)))"
+    by (auto simp: Union_insert Vs_union)
+  thus ?case 
+    using insert.prems by fastforce
+qed
+
+lemma vs_not_member: "v \<notin> Vs E \<Longrightarrow> (\<And>e. e \<in> E \<Longrightarrow> v \<notin> e)"
+  using vs_member by auto
+
+lemma graph_neq_vertex_aux: 
+  assumes "v \<in> Vs E\<^sub>1" "v \<notin> Vs E\<^sub>2" 
+  shows "E\<^sub>1 \<noteq> E\<^sub>2"
+proof -
+  obtain e where "v \<in> e" "e \<in> E\<^sub>1"
+    using assms by (elim vs_member_elim)
+  moreover have "\<And>e. e \<in> E\<^sub>2 \<Longrightarrow> v \<notin> e"
+    using assms(2) by (rule vs_not_member)
+  ultimately show ?thesis
+    by auto
+qed
+
+lemma graph_neq_vertex: 
+  assumes "Vs E\<^sub>1 \<noteq> Vs E\<^sub>2" 
+  shows "E\<^sub>1 \<noteq> E\<^sub>2"
+proof -
+  consider v where "v \<in> Vs E\<^sub>1" "v \<notin> Vs E\<^sub>2" | v where "v \<in> Vs E\<^sub>2" "v \<notin> Vs E\<^sub>1"
+    using assms by auto
+  thus ?thesis
+    by (auto intro: graph_neq_vertex_aux)
+qed
 
 context graph_abs
 begin
@@ -940,6 +1042,11 @@ next
 qed
 
 end
+
+lemma walk_transitive2:
+  assumes "walk_betw E u P\<^sub>1 v" "walk_betw E v P\<^sub>2 w"
+  shows "walk_betw E u (butlast P\<^sub>1 @ P\<^sub>2) w"
+  using assms by (subst append_tl_butlast_eq[symmetric, of _ _ v]) (auto intro: walk_transitive)
 
 lemma edges_of_path_nil:
   assumes "edges_of_path T = []"
@@ -1322,6 +1429,13 @@ qed
 
 end
 
+locale graph_abs2' = 
+  E\<^sub>1: graph_abs E\<^sub>1 +
+  E\<^sub>2: graph_abs E\<^sub>2 for E\<^sub>1 :: "'a set set" and E\<^sub>2 :: "'b set set"
+begin
+
+end
+
 locale graph_subgraph_abs =
   graph_abs E for E +
   fixes E'
@@ -1333,6 +1447,17 @@ lemma graph_E': "graph_invar E'"
 
 sublocale graph_abs2 E E'
   using graph graph_E' by unfold_locales
+
+end
+
+locale edge_subgraph_abs =
+  graph_abs E for E +
+  fixes u v
+  assumes edge: "{u,v} \<in> E"
+begin
+
+sublocale graph_subgraph_abs E "{{u,v}}"
+  using edge by unfold_locales simp
 
 end
 

@@ -1,17 +1,12 @@
 (* Author: Lukas Koller *)
 theory MultiGraph
-  imports Main "../misc/Misc" "../berge/Berge" "HOL-Library.Multiset"
+  imports Main tsp.Misc tsp.Berge "HOL-Library.Multiset"
 begin
 
 type_synonym 'a mgraph = "'a set multiset"
 
 locale mgraph_def =
   fixes E :: "'a set multiset"
-
-abbreviation "mgraph_invar E \<equiv> graph_invar (set_mset E)"
-
-locale mgraph_abs = mgraph_def +
-  assumes mgraph: "mgraph_invar E"
 
 definition "mVs E\<^sub>M = Vs (set_mset E\<^sub>M)"
 
@@ -33,11 +28,41 @@ lemma mVs_subset:
 lemma mVs_union: "mVs (A + B) = mVs A \<union> mVs B"
   unfolding mVs_def by (auto simp: Vs_union)
 
+abbreviation "mgraph_invar E \<equiv> (\<forall>e\<in>#E. \<exists>u v. e = {u,v} \<and> u \<noteq> v) \<and> finite (mVs E)"
+
+lemma mgraph_invar_def2: "mgraph_invar E \<longleftrightarrow> graph_invar (set_mset E)"
+  by (simp add: mVs_def)
+
+locale mgraph_abs = mgraph_def +
+  assumes mgraph: "mgraph_invar E"
+
 definition "encode_as_graph E\<^sub>M \<equiv> {{(u,i),(v,i)} | u v i. {u,v} \<in># E\<^sub>M \<and> i \<le> count E\<^sub>M {u,v}} 
     \<union> {{(v,i),(v,j)} | v i j. v \<in> mVs E\<^sub>M \<and> i < j \<and> j \<le> Max {count E\<^sub>M {u,v} | u. u \<in> mVs E\<^sub>M}}"
 
 lemma mVs_def2: "mVs E\<^sub>M = fst ` Vs (encode_as_graph E\<^sub>M)"
   sorry
+
+context mgraph_abs
+begin
+
+lemma graph_encode: "graph_invar (encode_as_graph E)"
+proof (intro graph_invarI2)
+  have "finite {{(u,i),(v,i)} |u v i. {u,v} \<in># E \<and> i \<le> count E {u,v}}"
+   
+    sorry
+  moreover have "finite {{(v,i),(v,j)} |v i j. v \<in> mVs E \<and> i < j \<and> j \<le> Max {count E {u,v} |u. u \<in> mVs E}}"
+    sorry
+  ultimately show "finite (encode_as_graph E)"
+    by (auto simp: encode_as_graph_def)
+  
+  show "\<forall>e\<in>encode_as_graph E. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+    using mgraph by (fastforce simp: encode_as_graph_def)
+qed
+
+sublocale E': graph_abs "encode_as_graph E"
+  using graph_encode by unfold_locales
+
+end
 
 definition "mpath E\<^sub>M P \<equiv> path (encode_as_graph E\<^sub>M) (map (\<lambda>v. (v,1)) P)"
 
@@ -67,6 +92,9 @@ proof -
     unfolding mdegree_def by auto
   also have "... = card' {e \<in> encode_as_graph (E\<^sub>1 + E\<^sub>2). (v,1) \<in> e}"
     unfolding degree_def2 by auto
+
+  thm degree_union
+
   show ?thesis
     sorry
 qed

@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
-theory MST                                           
-  imports Main "../misc/Misc" "../graphs/CompleteGraph" "../graphs/WeightedGraph" 
+theory MinSpanningTree                                           
+  imports Main tsp.Misc tsp.CompleteGraph tsp.WeightedGraph 
 begin
 
 section \<open>Connected Graphs\<close>
@@ -520,7 +520,8 @@ end
 
 abbreviation "cost_of_st c T \<equiv> sum c T"
 
-text \<open>Minimum Spanning Tree\<close>
+section \<open>Minimum Spanning Tree\<close>
+
 definition "is_mst E c T \<equiv> is_st E T \<and> (\<forall>T'. is_st E T' \<longrightarrow> cost_of_st c T \<le> cost_of_st c T')"
 
 lemma is_mstI:

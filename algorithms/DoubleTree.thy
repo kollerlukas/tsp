@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory DoubleTree
-  imports Main "../problems/MST" "../problems/TSP" "../problems/Eulerian" "HOL-Hoare.Hoare_Logic"
+  imports Main tsp.MinSpanningTree tsp.TravelingSalesman tsp.EulerianTour "HOL-Hoare.Hoare_Logic"
 begin
 
 section \<open>\textsc{DoubleTree} Approximation Algorithm for \textsc{mTSP}\<close>
@@ -82,7 +82,7 @@ proof -
   have "path (set_mset X) P"
     using assms is_etE by (auto simp: mpath_def2)
   thus ?thesis
-    using assms path_distinct_adj by auto
+    using assms path_distinct_adj by (auto simp: mgraph_invar_def2)
 qed     
 
 lemma distinct_adj_tl_comp_hc_of_et:
@@ -154,7 +154,8 @@ proof -
   hence "set ?H \<subseteq> Vs E"
     using hc_of_et_set_eq[of P "[]"] by auto
   moreover have "mgraph_invar X"
-    using assms graph finite_subset[OF Vs_subset, of "set_mset X" E] by auto
+    using assms graph finite_subset[OF Vs_subset, of "set_mset X" E] 
+    by (auto simp: mgraph_invar_def2)
   moreover have "distinct_adj (comp_hc_of_et P [])"
     using calculation assms et_distinct_adj distinct_adj_comp_hc_of_et by (fastforce simp: is_etE)
   ultimately show ?thesis
@@ -422,7 +423,7 @@ begin
 lemma cost_of_et:
   assumes "is_et T\<^sub>2 P" 
   shows "cost_of_path\<^sub>c P = \<Sum>\<^sub># (image_mset c T\<^sub>2)"
-  using assms cost_of_path_sum[of P] et_edges[of T\<^sub>2 P] by auto
+  using assms cost_of_path_sum[of c P] et_edges[of T\<^sub>2 P] by auto
 
 lemma et_not_single_v:
   assumes "is_mst E c T" "is_et T\<^sub>2 P"
@@ -543,8 +544,5 @@ next
 qed
 
 end
-
-(* interpretation double_tree_algo 
-  sorry *)
 
 end

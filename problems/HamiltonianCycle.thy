@@ -1,10 +1,14 @@
-(* Author: Lukas Koller *)
-theory TSP
-  imports Main "../misc/Misc" "../graphs/CompleteGraph" "../graphs/WeightedGraph"
+theory HamiltonianCycle
+  imports Main tsp.Misc
 begin
 
-text \<open>Hamiltonian cycle\<close>
+section \<open>Hamiltonian cycle\<close>
 definition "is_hc E H \<equiv> (H \<noteq> [] \<longrightarrow> (\<exists>v. walk_betw E v H v)) \<and> set (tl H) = Vs E \<and> distinct (tl H)"
+
+lemma is_hcI:
+  assumes "H \<noteq> [] \<Longrightarrow> (\<exists>v. walk_betw E v H v)" "Vs E = set (tl H)" "distinct (tl H)"
+  shows "is_hc E H"
+  unfolding is_hc_def using assms by auto
 
 lemma is_hcE:
   assumes "is_hc E H"
@@ -178,78 +182,95 @@ lemma hc_set_butlast:
 
 end
 
-section \<open>Traveling-Salesman Problem (\textsc{TSP})\<close>
-definition "is_tsp E c P \<equiv> is_hc E P \<and> (\<forall>P'. is_hc E P' \<longrightarrow> cost_of_path c P \<le> cost_of_path c P')"
+section \<open>Hamiltonian path\<close>
+definition "is_hp E u P v \<equiv> walk_betw E u P v \<and> set P = Vs E \<and> distinct P"
+(* TODO: connect definitions of Hamiltonian Path and Hamiltonian cycle. *)
 
-lemma is_tspE:
-  assumes "is_tsp E c P"
-  shows "is_hc E P" "\<And>P'. is_hc E P' \<Longrightarrow> cost_of_path c P \<le> cost_of_path c P'"
-  using assms[unfolded is_tsp_def] by auto
+lemma is_hpI:
+  assumes "walk_betw E u P v" "set P = Vs E" "distinct P"
+  shows "is_hp E u P v"
+  unfolding is_hp_def using assms by auto 
 
-lemma is_tsp_nilE:
-  assumes "is_tsp E c P" "P = []"
-  shows "Vs E = {}"
-  using assms[unfolded is_tsp_def is_hc_def] by auto
+lemma is_hpE:
+  assumes "is_hp E u P v"
+  shows "walk_betw E u P v" "set P = Vs E" "distinct P"
+  using assms[unfolded is_hp_def] by auto
 
-lemma is_tsp_nonnilE:
-  assumes "is_tsp E c P" "P \<noteq> []"
-  obtains v where "walk_betw E v P v" "Vs E = set (tl P)" "distinct (tl P)" 
-    "\<And>P'. is_hc E P' \<Longrightarrow> cost_of_path c P \<le> cost_of_path c P'"
-  using assms[unfolded is_tsp_def] by (auto simp: is_hc_def)
+lemma hp_subset: "E \<subseteq> E' \<Longrightarrow> Vs E = Vs E' \<Longrightarrow> is_hp E u P v \<Longrightarrow> is_hp E' u P v"
+  unfolding is_hp_def using walk_subset by metis
 
-locale metric_graph_abs = 
-  compl_graph_abs E + 
-  pos_w_graph_abs E c for E c +
-  assumes tri_ineq: "u\<in>Vs E \<Longrightarrow> v\<in>Vs E \<Longrightarrow> w\<in>Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-begin
+lemma hp_rev: "is_hp E u P v \<Longrightarrow> is_hp E v (rev P) u"
+  unfolding is_hp_def using walk_symmetric by fastforce
 
-lemma cost_of_path_cons_tri_ineq:
-  assumes "set (u#v#P) \<subseteq> Vs E"
-  shows "cost_of_path\<^sub>c (u#P) \<le> cost_of_path\<^sub>c (u#v#P)"
-  using assms
-proof (induction P)
-  case (Cons w P)
-  then have "cost_of_path\<^sub>c (u#w#P) \<le> c {u,v} + c {v,w} + cost_of_path\<^sub>c (w#P)"
-    using tri_ineq by (auto simp: add_right_mono)
-  also have "... = cost_of_path\<^sub>c (u#v#w#P)"
-    by (auto simp: add.assoc)
-  finally show ?case .
-qed (auto simp: costs_ge_0)
+lemma hp_append:
+  assumes "is_hp E\<^sub>1 u P\<^sub>1 v" "is_hp E\<^sub>2 w P\<^sub>2 x" "Vs E\<^sub>1 \<inter> Vs E\<^sub>2 = {}"
+  shows "is_hp (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) u (P\<^sub>1 @ P\<^sub>2) x"
+proof (intro is_hpI)
+  have walk1: "walk_betw E\<^sub>1 u P\<^sub>1 v" and vs1: "set P\<^sub>1 = Vs E\<^sub>1"
+    using assms(1) by (elim is_hpE)+
+  moreover hence "last P\<^sub>1 = v" "P\<^sub>1 \<noteq> []"
+    by (auto elim: walk_between_nonempty_path)
+  ultimately have "v \<in> Vs E\<^sub>1"
+    using walk_in_Vs by auto
 
-lemma cost_of_path_app_tri_ineq:
-  assumes "set P\<^sub>1 \<union> set P\<^sub>2 \<union> {w} \<subseteq> Vs E" 
-  shows "cost_of_path\<^sub>c (P\<^sub>1 @ P\<^sub>2) \<le> cost_of_path\<^sub>c (P\<^sub>1 @ w#P\<^sub>2)"
-  using assms cost_of_path_cons_tri_ineq 
-  by (induction P\<^sub>1 rule: list012.induct) (auto simp: add_left_mono cost_of_path_cons_leq)
+  have walk2: "walk_betw E\<^sub>2 w P\<^sub>2 x" and vs2: "set P\<^sub>2 = Vs E\<^sub>2"
+    using assms(2) by (elim is_hpE)+
+  moreover hence "hd P\<^sub>2 = w" "P\<^sub>2 \<noteq> []"
+    by (auto elim: walk_between_nonempty_path)
+  ultimately have [simp]: "w#tl P\<^sub>2 = P\<^sub>2" and "w \<in> Vs E\<^sub>2"
+    using walk_in_Vs by auto
 
-lemma cost_of_path_short_cut_tri_ineq: 
-  assumes "set P \<subseteq> Vs E" 
-  shows "cost_of_path\<^sub>c (short_cut E\<^sub>V P) \<le> cost_of_path\<^sub>c P"
-  using assms
-proof (induction P rule: short_cut.induct)
-  case (1 E)
-  then show ?case by auto
-next
-  case (2 E v)
-  then show ?case by auto
-next
-  case (3 E u v P)
-  thus ?case 
-  proof cases
-    assume "{u,v} \<notin> E"
-    show ?case
-      apply (rule order_trans[of _ "cost_of_path\<^sub>c (u#P)"])
-      using \<open>{u,v} \<notin> E\<close> 3 apply auto[1]
-      using "3.prems" apply (intro cost_of_path_cons_tri_ineq; auto) 
-      done (* TODO: clean up *)
-  qed (auto simp: cost_of_path_short_cut add_left_mono)
+  have "Vs (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) = Vs (E\<^sub>1 \<union> E\<^sub>2)"
+    using \<open>v \<in> Vs E\<^sub>1\<close> \<open>w \<in> Vs E\<^sub>2\<close> by (auto simp: Vs_def)
+  show "set (P\<^sub>1 @ P\<^sub>2) = Vs (insert {v,w} E\<^sub>1 \<union> E\<^sub>2)"
+    apply (subst \<open>Vs (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) = Vs (E\<^sub>1 \<union> E\<^sub>2)\<close>)
+    apply (subst Vs_union)
+    using vs1 vs2 apply auto
+    done
+
+  have "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) u P\<^sub>1 v"
+    apply (rule walk_subset[of E\<^sub>1])
+    using walk1 apply auto
+    done
+  moreover have "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) v [v,w] w"
+    by (intro nonempty_path_walk_between) (auto intro: path.intros)
+  ultimately have "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) u (P\<^sub>1 @ tl [v,w]) w"
+    by (rule walk_transitive)
+  moreover have "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) w P\<^sub>2 x"
+    apply (rule walk_subset[of E\<^sub>2])
+    using walk2 apply auto
+    done
+  ultimately have "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) u ((P\<^sub>1 @ tl [v,w]) @ tl P\<^sub>2) x"
+    by (rule walk_transitive)
+  thus "walk_betw (insert {v,w} E\<^sub>1 \<union> E\<^sub>2) u ((P\<^sub>1 @ P\<^sub>2)) x"
+    by auto
+
+  have "set P\<^sub>1 \<inter> set P\<^sub>2 = {}"
+    using vs1 vs2 assms(3) by auto
+  moreover have "distinct P\<^sub>1" "distinct P\<^sub>2"
+    using assms(1,2) by (auto elim: is_hpE)
+  ultimately show "distinct (P\<^sub>1 @ P\<^sub>2)"
+    by auto
+qed (* TODO: clean up! *)
+
+lemma hc_of_hp:
+  assumes "is_hp E u P v" "{u,v} \<in> E"
+  shows "is_hc E (v#P)" (is "is_hc E ?P'")
+proof (intro is_hcI)
+  have "walk_betw E u P v"
+    using assms by (elim is_hpE)  
+  moreover have "walk_betw E v [v,u] u"
+    using assms by (intro nonempty_path_walk_between) (auto simp: insert_commute)
+  ultimately have "walk_betw E v (butlast [v,u] @ P) v"
+    by (intro walk_transitive2)
+  thus "?P' \<noteq> [] \<Longrightarrow> \<exists>w. walk_betw E w ?P' w"
+    by auto
+
+  have "set P = Vs E" "distinct P"
+    using assms by (elim is_hpE)+
+  thus "Vs E = set (tl ?P')" "distinct (tl ?P')"
+    by auto
 qed
 
-section \<open>Metric Traveling-Salesman (\textsc{mTSP})\<close>
-
-text \<open>Metric Traveling-Salesman is the Traveling-Salesman Problem on complete and metric graphs.\<close>
-abbreviation "is_mtsp P \<equiv> is_tsp E c P"
-
 end
 
-end

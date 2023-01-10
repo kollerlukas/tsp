@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory CompleteGraph
-  imports Main "../misc/Misc" "../berge/Berge"
+  imports Main tsp.Misc tsp.Berge
 begin
 
 definition "is_complete E \<equiv> (\<forall>u v. u \<in> Vs E \<and> v \<in> Vs E \<and> u \<noteq> v \<longrightarrow> {u,v} \<in> E)"
@@ -10,6 +10,111 @@ lemma is_completeI: "(\<And>u v. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<L
 
 lemma is_completeE: "is_complete E \<Longrightarrow> u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> u \<noteq> v \<Longrightarrow> {u,v} \<in> E"
   unfolding is_complete_def by auto
+
+definition "complete_graph V \<equiv> {{u,v} | u v. u \<in> V \<and> v \<in> V \<and> u \<noteq> v}"
+
+text \<open>With @{const complete_graph} we construct a complete graph for a given set of vertices.\<close>
+
+lemma complete_graph_Vs_subset: "Vs (complete_graph V) \<subseteq> V" (is "Vs ?E\<^sub>V \<subseteq> V")
+proof
+  fix v
+  assume "v \<in> Vs ?E\<^sub>V"
+  then obtain e where "v \<in> e" "e \<in> ?E\<^sub>V"
+    by (elim vs_member_elim)
+  thus "v \<in> V"
+    by (auto simp: complete_graph_def)
+qed
+
+lemma complete_graph_memberI:
+  assumes "u \<in> V" "v \<in> V" "u \<noteq> v"
+  shows "{u,v} \<in> complete_graph V"
+  unfolding complete_graph_def using assms by auto
+
+lemma complete_graph_memberE:
+  assumes "e \<in> complete_graph V"
+  obtains u v where "e = {u,v}" "u \<in> V" "v \<in> V" "u \<noteq> v"
+  using assms[unfolded complete_graph_def] by auto
+
+lemma complete_graph_union: "complete_graph V\<^sub>1 \<union> complete_graph V\<^sub>2 \<subseteq> complete_graph (V\<^sub>1 \<union> V\<^sub>2)"
+proof 
+  fix e
+  assume "e \<in> complete_graph V\<^sub>1 \<union> complete_graph V\<^sub>2"
+  then consider "e \<in> complete_graph V\<^sub>1" | "e \<in> complete_graph V\<^sub>2"
+    by auto
+  thus "e \<in> complete_graph (V\<^sub>1 \<union> V\<^sub>2)"
+    by cases (auto elim: complete_graph_memberE simp: complete_graph_def)
+qed
+
+context graph_abs
+begin
+
+lemma subset_complete_graph:
+  assumes "Vs E \<subseteq> V" 
+  shows "E \<subseteq> complete_graph V"
+proof
+  fix e
+  assume "e \<in> E"
+  then obtain u v where "e = {u,v}" and "u \<noteq> v"
+    using graph by auto
+  moreover hence "u \<in> Vs E" "v \<in> Vs E"
+    using \<open>e \<in> E\<close> by (auto intro: vs_member_intro)
+  moreover hence "u \<in> V" "v \<in> V"
+    using assms by auto
+  ultimately show "e \<in> complete_graph V"
+    unfolding complete_graph_def by auto
+qed
+
+lemma Vs_complete_graph_eq_V:
+  assumes "card V \<noteq> 1"
+  shows "Vs (complete_graph V) = V"
+proof
+  show "V \<subseteq> Vs (complete_graph V)"
+  proof
+    fix v
+    assume "v \<in> V"
+    moreover then obtain u where "u \<in> V" "u \<noteq> v"
+      using assms by (elim card_neq_1_obtain_mem) auto
+    ultimately have "{v,u} \<in> complete_graph V"
+      unfolding complete_graph_def by auto
+    thus "v \<in> Vs (complete_graph V)"
+      by (intro edges_are_Vs)
+  qed
+qed (rule complete_graph_Vs_subset)
+  
+
+end
+
+lemma complete_graph_is_complete: "is_complete (complete_graph V)" (is "is_complete ?E\<^sub>V")
+proof (rule is_completeI)
+  fix u v
+  assume "u \<in> Vs ?E\<^sub>V" "v \<in> Vs ?E\<^sub>V" "u \<noteq> v"
+  moreover hence "u \<in> V" "v \<in> V"
+    using complete_graph_Vs_subset by fastforce+
+  ultimately show "{u,v} \<in> ?E\<^sub>V"
+    by (auto simp: complete_graph_def)
+qed
+
+lemma complete_graph_empty: "complete_graph {} = {}"
+  unfolding complete_graph_def by auto
+
+lemma complete_graph_insert: 
+  "complete_graph (insert v V) = complete_graph V \<union> {{u,v} | u. u \<in> V \<and> u \<noteq> v}"
+  unfolding complete_graph_def by auto
+
+lemma finite_complete_graph: 
+  assumes "finite V"
+  shows "finite (complete_graph V)"
+  using assms by (induction V) (auto simp: complete_graph_insert complete_graph_empty)
+
+lemma graph_complete_graph: 
+  assumes "finite V"
+  shows "graph_invar (complete_graph V)"
+proof (rule graph_invarI2)
+  show "finite (complete_graph V)"
+    using assms by (rule finite_complete_graph)
+  show "\<forall>e\<in>complete_graph V. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+    by (auto simp: complete_graph_def)
+qed
 
 locale compl_graph_abs = 
   graph_abs E for E +
@@ -276,7 +381,7 @@ lemma restr_graph_Vs: "V \<subseteq> Vs E \<Longrightarrow> card V \<noteq> 1 \<
 
 end
 
-section \<open>Computing Complete Graphs\<close>
+(* section \<open>Computing Complete Graphs\<close>
 
 text \<open>Compute a complete graph for a list of vertices.\<close>
 fun compl_graph :: "'a list \<Rightarrow> 'a set list" where
@@ -333,6 +438,6 @@ proof (intro is_completeI)
     ultimately show ?thesis
       using compl_graph_append_subset by blast
   qed
-qed
+qed *)
 
 end

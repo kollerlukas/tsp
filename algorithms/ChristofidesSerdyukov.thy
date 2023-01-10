@@ -1,7 +1,7 @@
 (* Author: Lukas Koller *)
 theory ChristofidesSerdyukov
-  imports Main "../problems/MST" "../problems/TSP" "../problems/Eulerian" 
-    "../problems/MinWeightMatching" "../algorithms/DoubleTree"
+  imports Main tsp.MinSpanningTree tsp.TravelingSalesman tsp.EulerianTour tsp.MinWeightMatching 
+    tsp.DoubleTree
 begin
 
 section \<open>\textsc{Christofides-Serdyukov} Approximation Algorithm for \textsc{mTSP}\<close>

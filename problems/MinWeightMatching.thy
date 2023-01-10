@@ -1,6 +1,6 @@
 (* Author: Lukas Koller *)
 theory MinWeightMatching
-  imports Main "../misc/Misc" "../graphs/WeightedGraph" "../graphs/CompleteGraph"
+  imports Main tsp.Misc tsp.WeightedGraph tsp.CompleteGraph
 begin
 
 definition "is_perf_match E M \<equiv> M \<subseteq> E \<and> matching M \<and> Vs M = Vs E"

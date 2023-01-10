@@ -1,8 +1,10 @@
 (* Author: Lukas Koller *)
 theory BergePrimAdaptor
-  imports Main "../misc/Misc" "Prim_Dijkstra_Simple.Undirected_Graph" "../problems/MST"
+  imports Main tsp.Misc "Prim_Dijkstra_Simple.Undirected_Graph" tsp.MinSpanningTree 
     (* "Prim_Dijkstra_Simple.Prim_Impl" *)
 begin
+
+section \<open>From Berge to Prim\<close>
 
 text \<open>Translate graph from \<open>Berge\<close> to graph from \<open>Prim_Dijkstra_Simple.Undirected_Graph\<close>.\<close>
 definition "prim_of_berge E \<equiv> Undirected_Graph.graph (Vs E) {(u,v)| u v. {u,v} \<in> E}"
@@ -382,6 +384,8 @@ lemma st_equiv2:
   by (intro graph_abs2.st_equiv2) unfold_locales
 
 end
+
+section \<open>From Prim to Berge\<close>
 
 text \<open>Translate graph from \<open>Prim_Dijkstra_Simple.Undirected_Graph\<close> to graph from \<open>Berge\<close>.\<close>
 definition "berge_of_prim G \<equiv> uedge ` edges G"
@@ -896,7 +900,7 @@ lemma spanning_tree_V_subset:
   obtains "V \<subseteq> fst ` E\<^sub>T \<union> snd ` E\<^sub>T"
   using nodes_finite assms[unfolded is_spanning_tree_def] card_nodes_G
 proof (induction "nodes (graph V E\<^sub>T)" rule: finite2_induct)
-  case (insert x)
+  case (singleton x)
   hence "card {x} \<ge> 2"
     by auto
   thus ?case 
@@ -950,9 +954,12 @@ lemma st_equiv2:
   shows "is_st (berge_of_prim G) (berge_of_prim (graph V E\<^sub>T))" 
   using assms unfolding G_def by (intro prim_subgraph_abs.st_equiv2) unfold_locales
 
+lemma prim_of_berge_of_prim: "prim_of_berge (berge_of_prim G) = G"
+  unfolding prim_of_berge_def by (metis berge_nodes edges_eq graph_eq)
+
 end
 
-text \<open>Minimum Spanning-Tree equivalence\<close>
+section \<open>Minimum Spanning-Tree Equivalence\<close>
 
 locale nat_w_graph_abs = (* nat weights *)
   pos_w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> nat"
@@ -988,10 +995,14 @@ proof
   next
     fix T'
     assume "is_spanning_tree (prim_of_berge E) T'" and "card (Vs T) \<ge> 2" "graph_invar T"
-    hence "weight c (prim_of_berge T) = cost_of_st\<^sub>c T"
-      by (auto simp: cost_of_st_eq1)
-    also have "... \<le> cost_of_st\<^sub>c (berge_of_prim T')"
-      sorry
+    hence "is_st E (berge_of_prim T')"
+      sorry (* TODO: need a lemma *)
+    moreover have "\<And>T'. is_st E T' \<Longrightarrow> cost_of_st\<^sub>c T \<le> cost_of_st\<^sub>c T'"
+      using assms by (elim is_mstE)
+    ultimately have "cost_of_st\<^sub>c T \<le> cost_of_st\<^sub>c (berge_of_prim T')"
+      by auto
+    hence "weight c (prim_of_berge T) \<le> cost_of_st\<^sub>c (berge_of_prim T')"
+      using \<open>card (Vs T) \<ge> 2\<close> \<open>graph_invar T\<close> by (auto simp: cost_of_st_eq1)
     also have "... \<le> weight c T'"
       by (auto simp: cost_of_st_eq2)
     finally show "weight c (prim_of_berge T) \<le> weight c T'"
@@ -1026,8 +1037,8 @@ end
 
 (* TODO: use Prim_Dijkstra_Simple implementation *)
 
-fun prim_impl' where
-  "prim_impl' c E = undefined" (* translate params to prim_impl, or prim_list_impl_int *)
+fun prim_impl where
+  "prim_impl c E = undefined" (* translate params to prim_impl, or prim_list_impl_int *)
 
 (* interpretation mst E c prim_impl'
   sorry *)
