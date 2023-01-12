@@ -2,6 +2,8 @@ theory VC4_to_mTSP_Poly_old
   imports Main tsp.Misc tsp.Berge tsp.CompleteGraph tsp.TravelingSalesman tsp.VertexCover
 begin
 
+(* OLD, NOT NEEDED; TODO: remove *)
+
 text \<open>This theory formalizes a L-Reduction from Minimum-Vertex-Cover (VC4), with max. degree 4, 
 to metric-Traveling-Salesman (mTSP).\<close>
 

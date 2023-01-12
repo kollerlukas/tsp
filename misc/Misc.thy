@@ -164,6 +164,12 @@ lemma append_tl_butlast_eq:
   shows "xs @ tl ys = butlast xs @ ys"
   using assms by (induction xs rule: list012.induct) auto
 
+lemma map_map: "map (f o g) xs = map f (map g xs)"
+  by (induction xs) auto
+
+lemma fold_map: "fold (f o g) xs a = fold f (map g xs) a"
+  by (induction xs arbitrary: a) auto
+
 subsection \<open>Repeated Elements in Lists\<close>
 
 lemma distinct_distinct_adj: "distinct xs \<Longrightarrow> distinct_adj xs"

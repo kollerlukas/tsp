@@ -4,6 +4,8 @@ theory VC4_to_mTSP_abs_old
   tsp.CompleteGraph tsp.TravelingSalesman tsp.VertexCover
 begin
 
+(* OLD, NOT NEEDED; TODO: remove *)
+
 (* ----- TODO ----- *)
 
 text \<open>
