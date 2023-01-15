@@ -152,6 +152,12 @@ lemma invar_set_of_list: "invar (set_of_list xs)"
 lemma set_of_list: "set (set_of_list xs) = List.set xs"
   using set_insert_all by (auto simp: set_specs)
 
+lemma isin_set_of_list: "isin (set_of_list xs) x \<longleftrightarrow> x \<in> List.set xs"
+  using invar_set_of_list set_of_list by (auto simp: set_specs)
+
+(* lemma set_of_list_comm: "isin (set_of_list (xs @ ys)) x \<longleftrightarrow> isin (set_of_list (ys @ xs)) x"
+  by (auto simp: isin_set_of_list simp del: set_of_list.simps) *)
+
 end
 
 section \<open>Abstract Adjacency Map\<close>
@@ -358,8 +364,8 @@ lemma ugraph_adj_map_invarI:
   using assms by auto
 
 lemma adj_vertices_neq:
-  assumes "ugraph_adj_map_invar G"
-  shows "isin (\<N> G u) v \<and> u \<noteq> v \<longleftrightarrow> isin (\<N> G u) v"
+  assumes "ugraph_adj_map_invar G" "isin (\<N> G u) v"
+  shows "u \<noteq> v"
   using assms by auto
 
 lemma vertices_def2: 
@@ -435,6 +441,41 @@ qed
 
 lemma vs_uedges: "Vs (set_of_uedge ` (uedges G)) = vertices G" 
   using vs_uedges_subset_vertices vertices_subset_vs_uedges by auto
+
+lemma rep_idem: "rep (rep e) = rep e"
+proof -
+  obtain u v where [simp]: "e = uEdge u v"
+    by (cases e)
+  then consider "rep e = uEdge u v" | "rep e = uEdge v u"
+    using is_rep by auto
+  thus ?thesis
+    using is_rep by cases auto
+qed
+
+lemma rep_simps:
+  assumes "rep e = uEdge u v"
+  shows "rep e = rep (uEdge u v)" "rep e = rep (uEdge v u)" 
+    "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
+proof -
+  show "rep e = rep (uEdge u v)" 
+    apply (subst assms[symmetric])
+    apply (rule rep_idem[symmetric])
+    done
+  thus "rep e = rep (uEdge v u)" 
+    by (auto simp add: is_rep) 
+  thus "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
+    using assms by (auto simp add: is_rep) 
+qed 
+
+lemma repE:
+  assumes "rep e = uEdge u v"
+  obtains "e = uEdge u v" | "e = uEdge v u"
+  using assms is_rep by (cases e) (metis uedge.inject)
+
+lemma rep_cases:
+  assumes "rep e = rep (uEdge u v)"
+  obtains "rep e = uEdge u v" | "rep e = uEdge v u"
+  using assms is_rep by auto
 
 end
 
@@ -540,7 +581,7 @@ qed *)
 
 end
 
-locale complete_graph_for_ugraph_adj_map =
+locale graph_of_vertices_for_ugraph_adj_map =
   ugraph_adj_map_fold_vset map_empty update map_delete lookup map_invar set_empty insert set_delete 
   isin set set_invar union inter diff rep fold_vset
   for map_empty :: "'map" and update :: "'v \<Rightarrow> 'vset \<Rightarrow> 'map \<Rightarrow> 'map" and map_delete lookup 
@@ -582,7 +623,7 @@ lemma non_empty_neighborhood_isin_X:
   assumes "set_invar X" 
       and "\<And>x. isin X x \<Longrightarrow> set_invar (n x)" \<comment> \<open>Every neighborhood satisfies the invariants.\<close>
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
       and "isin (\<N> (graph_of_vertices n X) u) v"
   shows "isin X u"
   using assms set_specs graph_of_vertices_neighborhood by (cases "isin X u") auto
@@ -591,7 +632,7 @@ lemma isin_neighborhood_isin_X:
  assumes "set_invar X" 
       and "\<And>x. isin X x \<Longrightarrow> set_invar (n x)" \<comment> \<open>Every neighborhood satisfies the invariants.\<close>
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
       and "isin (\<N> (graph_of_vertices n X) u) v"
   shows "isin X v"
 proof -
@@ -605,7 +646,7 @@ lemma vertices_graph_of_vertices:
   assumes "set_invar X" 
       and "\<And>x. isin X x \<Longrightarrow> set_invar (n x)" \<comment> \<open>Every neighborhood satisfies the invariants.\<close>
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
   shows "vertices (graph_of_vertices n X) = set X" (is "vertices ?G\<^sub>X = set X")
 proof (rule equalityI[OF subsetI subsetI])
   fix v
@@ -631,7 +672,7 @@ lemma finite_graph_of_vertices:
   assumes "set_invar X" 
       and "\<And>x. isin X x \<Longrightarrow> set_invar (n x)" \<comment> \<open>Every neighborhood satisfies the invariants.\<close>
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
   shows "finite (uedges (graph_of_vertices n X))"
   using assms finite_sets uedges_finite vertices_graph_of_vertices by auto
 
@@ -639,10 +680,10 @@ lemma invar_graph_of_vertices:
   assumes "set_invar X" 
       and "\<And>x. isin X x \<Longrightarrow> set_invar (n x)" \<comment> \<open>Every neighborhood satisfies the invariants.\<close>
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
       \<comment> \<open>The following assumptions are needed to obtain a valid undirected graph.\<close>
-      and "\<And>x. \<not> isin (n x) x" \<comment> \<open>The neighborhood function is irreflexive.\<close>
-      and "\<And>x y. isin (n x) y \<Longrightarrow> isin (n y) x" \<comment> \<open>The neighborhood function is symmetric.\<close>
+      and "\<And>x. isin X x \<Longrightarrow> \<not> isin (n x) x" \<comment> \<open>The neighborhood function is irreflexive.\<close>
+      and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin (n y) x" \<comment> \<open>The neighborhood function is symmetric.\<close>
   shows "ugraph_adj_map_invar (graph_of_vertices n X)" (is "ugraph_adj_map_invar ?G\<^sub>X")
 proof (intro ugraph_adj_map_invarI)
   show "map_invar ?G\<^sub>X"
@@ -652,83 +693,19 @@ proof (intro ugraph_adj_map_invarI)
   show "finite (uedges ?G\<^sub>X)"
     using assms by (intro finite_graph_of_vertices)
   show "\<And>v. \<not> isin (\<N> ?G\<^sub>X v) v"
-    using assms(1,5) graph_of_vertices_neighborhood set_specs by (auto split: if_splits)
+    using assms(1,5) graph_of_vertices_neighborhood set_specs 
+      by (auto simp del: graph_of_vertices.simps split: if_splits) 
   show "\<And>u v. isin (\<N> ?G\<^sub>X u) v \<longrightarrow> isin (\<N> ?G\<^sub>X v) u"
   proof
     fix u v
     assume "isin (\<N> ?G\<^sub>X u) v"
-    hence "isin (n u) v"
+    hence "isin X u" and "isin (n u) v"
       using assms(1) graph_of_vertices_neighborhood set_specs by (auto split: if_splits)
+    hence "isin X v" and "isin (n v) u"
+      using assms(4,6) by blast+
     thus "isin (\<N> ?G\<^sub>X v) u"
-      using assms(1,4,6) graph_of_vertices_neighborhood by auto
+      using assms(1) graph_of_vertices_neighborhood by auto
   qed
-qed
-
-(* fun complete_graph :: "'vset \<Rightarrow> 'map" where
-  "complete_graph X = fold_vset (\<lambda>v. update v (set_delete v X)) X map_empty" *)
-
-fun neighborhood_compl :: "'vset \<Rightarrow> 'v \<Rightarrow> 'vset" ("\<N>\<^sub>C") where
-  "neighborhood_compl X v = (if isin X v then set_delete v X else set_empty)"
-
-lemma neighborhood_compl_sym: 
-  assumes "set_invar X" "isin (\<N>\<^sub>C X x) y"
-  shows "isin (\<N>\<^sub>C X y) x"
-proof -
-  have "isin X x"
-    using assms set_specs by fastforce
-  thus ?thesis
-    using assms set_specs by auto
-qed
-
-fun complete_graph :: "'vset \<Rightarrow> 'map" where
-  "complete_graph X = graph_of_vertices (\<N>\<^sub>C X) X"
-
-lemma map_invar_complete_graph: "set_invar X \<Longrightarrow> map_invar (complete_graph X)"
-  using map_invar_graph_of_vertices by auto
-
-lemma complete_graph_neighborhood: "set_invar X \<Longrightarrow> \<N> (complete_graph X) = \<N>\<^sub>C X"
-  using graph_of_vertices_neighborhood by auto
-
-lemma vertices_complete_graph: 
-  assumes "set_invar X"
-      and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (set_delete x X) y" \<comment> \<open>The set \<open>X\<close> contains at least two vertices.\<close>
-  shows "vertices (complete_graph X) = set X" (is "vertices ?G\<^sub>X = set X")
-  using assms vertices_graph_of_vertices set_specs by fastforce
-
-lemma invar_complete_graph:
-  assumes "set_invar X"
-    and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (set_delete x X) y" \<comment> \<open>The set \<open>X\<close> contains at least two vertices.\<close>
-  shows "ugraph_adj_map_invar (complete_graph X)"
-  using assms set_specs
-proof (simp del: graph_of_vertices.simps; intro invar_graph_of_vertices)
-  show "\<And>x y. isin (\<N>\<^sub>C X x) y \<Longrightarrow> isin X y"
-    using assms set_specs
-  proof -
-    fix x y
-    assume "isin (\<N>\<^sub>C X x) y"
-    moreover hence "\<N>\<^sub>C X x = set_delete x X"
-      using assms set_specs by auto
-    ultimately show "isin X y"
-      using assms set_specs by auto
-  qed
-  show "\<And>x y. isin (\<N>\<^sub>C X x) y \<Longrightarrow> isin (\<N>\<^sub>C X y) x"
-    using assms neighborhood_compl_sym by auto
-qed auto
-
-lemma complete_graph_is_complete: 
-  assumes "set_invar X"
-    and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (set_delete x X) y" \<comment> \<open>The set \<open>X\<close> contains at least two vertices.\<close>
-  shows "is_complete (set_of_uedge ` uedges (complete_graph X))" (is "is_complete ?E")
-proof (intro is_completeI)
-  let ?f="\<lambda>v. set_delete v X"
-  fix u v
-  assume "u \<in> Vs ?E" "v \<in> Vs ?E" "u \<noteq> v"
-  hence "isin X u" and "isin (?f u) v"
-    using assms set_specs by (auto simp: vs_uedges vertices_complete_graph[OF assms,symmetric])
-  hence "isin (\<N> (complete_graph X) u) v"
-    using assms complete_graph_neighborhood by (auto simp: neighborhood_def)
-  thus "{u,v} \<in> ?E"
-    by (intro isin_neighborhood_set_edge)
 qed
 
 end
