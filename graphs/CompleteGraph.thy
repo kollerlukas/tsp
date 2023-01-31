@@ -112,7 +112,7 @@ lemma graph_complete_graph:
 proof (rule graph_invarI2)
   show "finite (complete_graph V)"
     using assms by (rule finite_complete_graph)
-  show "\<forall>e\<in>complete_graph V. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+  show "\<And>e. e\<in>complete_graph V \<Longrightarrow> \<exists>u v. e = {u,v} \<and> u \<noteq> v"
     by (auto simp: complete_graph_def)
 qed
 

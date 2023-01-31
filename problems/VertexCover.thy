@@ -70,7 +70,7 @@ proof (rule finite_subset)
     using graph by auto
 qed
 
-lemma vc_card_E_leq_max_degree:
+lemma card_E_leq_max_degree_card_vc:
   assumes "\<And>v. v \<in> Vs E \<Longrightarrow> degree E v \<le> enat k" "is_vc E X"
   shows "card E \<le> k * card X"
 proof -

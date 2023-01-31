@@ -1,6 +1,6 @@
 theory GraphAdjMap
   imports Main tsp.Misc tsp.Berge "HOL-Data_Structures.Map_Specs" "HOL-Data_Structures.Set_Specs"
-    tsp.WeightedGraph
+    tsp.WeightedGraph tsp.HamiltonianCycle tsp.TravelingSalesman tsp.VertexCover
 begin
 
 fun the_default where 
@@ -146,7 +146,7 @@ lemma set_insert_all: "invar X \<Longrightarrow> set (insert_all xs X) = set X \
 fun set_of_list where
   "set_of_list xs = insert_all xs empty"
 
-lemma invar_set_of_list: "invar (set_of_list xs)"
+lemma invar_set_of_list: "invar (set_of_list xs)" 
   using invar_insert_all by (auto simp: set_specs)
 
 lemma set_of_list: "set (set_of_list xs) = List.set xs"
@@ -160,6 +160,61 @@ lemma isin_set_of_list: "isin (set_of_list xs) x \<longleftrightarrow> x \<in> L
 
 end
 
+locale fold_set2 =
+  Set2 empty delete isin set invar insert union inter diff
+  for empty :: "'set" and delete isin set invar and insert :: "'a \<Rightarrow> 'set \<Rightarrow> 'set" and union inter diff +
+  fixes fold_set :: "('a \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'set \<Rightarrow> 'b \<Rightarrow> 'b"
+  assumes finite_sets: "\<And>X. finite (set X)"
+  assumes fold_set: "\<And>X f a. invar X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set X \<and> fold_set f X a = fold f xs a"
+begin
+
+lemma fold_setE:
+  assumes "invar X"    
+  obtains xs where "distinct xs" "List.set xs = set X" "fold_set f X a = fold f xs a"
+  using assms fold_set by blast
+
+end
+
+locale filter_set2 =
+  fold_set2 empty delete isin set invar insert union inter diff fold_set
+  for empty :: "'set" and delete isin set invar and insert :: "'a \<Rightarrow> 'set \<Rightarrow> 'set" and union inter 
+    diff and fold_set :: "('a \<Rightarrow> 'set \<Rightarrow> 'set) \<Rightarrow> 'set \<Rightarrow> 'set \<Rightarrow> 'set"
+begin
+
+fun filter_set where
+  "filter_set f X = fold_set (\<lambda>x. if f x then insert x else id) X empty"
+
+lemma invar_filter_set: 
+  assumes "invar X"
+  shows "invar (filter_set f X)"
+proof -
+  let ?f="\<lambda>x. if f x then insert x else id"
+  obtain xs where "distinct xs" "List.set xs = set X" "fold_set ?f X empty = fold ?f xs empty"
+    using assms by (elim fold_setE)
+  moreover have "\<And>X. invar X \<Longrightarrow> invar (fold ?f xs X)"
+    by (induction xs) (auto simp add: set_specs)
+  ultimately show ?thesis
+    using set_specs by auto
+qed
+
+lemma filter_set_elim:
+  assumes "invar X"
+  obtains xs where "distinct xs" "List.set xs = set X" "set (filter_set f X) = List.set (filter f xs)"
+proof -
+  let ?f="\<lambda>x. if f x then insert x else id"
+  obtain xs where distinct_set: "distinct xs" "List.set xs = set X" 
+    and "fold_set ?f X empty = fold ?f xs empty"
+    using assms by (elim fold_setE)
+  hence "set (filter_set f X) = set (set_of_list (filter f xs))"
+    by (auto simp add: fold_filter set_of_list)
+  also have "... = List.set (filter f xs)"
+    by (auto simp add: set_of_list simp del: set_of_list.simps)
+  finally show ?thesis
+    using that distinct_set by auto
+qed
+
+end
+
 section \<open>Abstract Adjacency Map\<close>
 
 locale graph_adj_map = 
@@ -170,33 +225,42 @@ locale graph_adj_map =
     set_invar union inter diff
 begin
 
+end
+
+subsection \<open>Definitions\<close>
+
+text \<open>We redefine most definitions on graphs for adjacency maps.\<close>
+
+context graph_adj_map
+begin
+
 definition neighborhood ("\<N>") where
   "neighborhood M v \<equiv> the_default (lookup M v) set_empty" 
-  \<comment> \<open>Neighbourhood of a vertex \<open>v\<close> in the adjacency map \<open>M\<close>.\<close>
+  \<comment> \<open>Neighbourhood of a vertex \<open>x\<close> in the adjacency map \<open>M\<close>.\<close>
 
 lemma neighborhood_empty: "\<N> map_empty v = set_empty"
   unfolding neighborhood_def by (auto simp: map_specs)
 
-lemma neighborhood_update: "map_invar M \<Longrightarrow> \<N> (update x N\<^sub>x M) = (\<N> M)(x := N\<^sub>x)"
+lemma neighborhood_update: "map_invar M \<Longrightarrow> \<N> (update v N\<^sub>v M) = (\<N> M)(v := N\<^sub>v)"
   unfolding neighborhood_def by (auto simp: map_specs)
 
-lemma neighborhood_map_delete: "map_invar M \<Longrightarrow> \<N> (map_delete x M) = (\<N> M)(x := set_empty)"
+lemma neighborhood_map_delete: "map_invar M \<Longrightarrow> \<N> (map_delete v M) = (\<N> M)(v := set_empty)"
   unfolding neighborhood_def by (auto simp: map_specs)
 
 abbreviation "adj_map_invar M \<equiv> map_invar M \<and> (\<forall>v. set_invar (\<N> M v))"
 
 lemma map_delete_set_invar:
-  assumes "adj_map_invar M" "\<And>v. set_invar (\<N> M v)" 
-  shows "set_invar (\<N> (map_delete x M) v)"
+  assumes "adj_map_invar M"
+  shows "set_invar (\<N> (map_delete u M) v)"
 proof cases
-  assume "x = v"
-  hence "\<N> (map_delete x M) v = set_empty"
+  assume "u = v"
+  hence "\<N> (map_delete u M) v = set_empty"
     using assms by (auto simp: neighborhood_map_delete) 
   thus ?thesis
     by (auto simp: set_specs)
 next
-  assume "x \<noteq> v"
-  hence "\<N> (map_delete x M) v = \<N> M v"
+  assume "u \<noteq> v"
+  hence "\<N> (map_delete u M) v = \<N> M v"
     using assms by (auto simp: neighborhood_map_delete)
   thus ?thesis
     using assms by auto
@@ -205,7 +269,7 @@ qed
 lemma map_delete_adj_map_invar: "adj_map_invar M \<Longrightarrow> adj_map_invar (map_delete x M)"
   using map_specs by (auto simp: map_delete_set_invar)
 
-lemma update_adj_map_invar: "adj_map_invar M \<Longrightarrow> set_invar N\<^sub>x \<Longrightarrow> adj_map_invar (update x N\<^sub>x M)"
+lemma update_adj_map_invar: "adj_map_invar M \<Longrightarrow> set_invar N\<^sub>v \<Longrightarrow> adj_map_invar (update v N\<^sub>v M)"
   using map_specs by (auto simp: neighborhood_update)
 
 definition "edges M \<equiv> {(u,v) | u v. isin (\<N> M u) v}" 
@@ -228,6 +292,14 @@ lemma vertices_memberI1: "isin (\<N> M u) v \<Longrightarrow> u \<in> vertices M
 lemma vertices_memberI2: "isin (\<N> M u) v \<Longrightarrow> v \<in> vertices M"
   unfolding vertices_def by auto
 
+lemma vertices_subgraph:
+  assumes "v \<in> vertices M\<^sub>1" "\<And>u v. isin (\<N> M\<^sub>1 u) v \<Longrightarrow> isin (\<N> M\<^sub>2 u) v"
+  shows "v \<in> vertices M\<^sub>2"
+  using assms(1) apply (rule vertices_memberE)
+  using assms(2) apply (auto intro!: vertices_memberI1)[1]
+  using assms(2) apply (auto intro!: vertices_memberI2)[1]
+  done
+
 lemma edges_are_pair_of_vertices: "edges G \<subseteq> vertices G \<times> vertices G"
   unfolding edges_def vertices_def by auto
 
@@ -245,6 +317,9 @@ inductive path_betw :: "'map \<Rightarrow> 'v \<Rightarrow> 'v list \<Rightarrow
   \<comment> \<open>Define predicate for paths on graphs that are represented by adjacency maps.\<close>
   (* TODO: connect with definition for set-set graph representation *)
 
+lemma path_non_empty: "path_betw M u P v \<Longrightarrow> P \<noteq> []"
+  by (rule path_betw.cases) auto
+
 lemma singleton_pathI: "v \<in> vertices M \<Longrightarrow> path_betw M v [v] v"
   by (auto intro: path_betw.intros elim: vertices_memberE)
 
@@ -254,70 +329,108 @@ lemma singleton_pathI1: "isin (\<N> M u) v \<Longrightarrow> path_betw M u [u] u
 lemma singleton_pathI2: "isin (\<N> M u) v \<Longrightarrow> path_betw M v [v] v"
   by (auto intro: vertices_memberI2 path_betw.intros)
 
-lemma append_path: 
+lemma hd_path_betw: "path_betw M u P v \<Longrightarrow> hd P = u"
+  by (induction M u P v rule: path_betw.induct) auto
+
+lemma last_path_betw: 
+  assumes "path_betw M u P v"
+  shows "last P = v"
+  using assms path_non_empty by (induction M u P v rule: path_betw.induct) auto
+
+lemma append_path_betw: 
   assumes "path_betw M u P v" "isin (\<N> M v) w" and "invar M"
   shows "path_betw M u (P @ [w]) w"
   using assms by (induction M u P v rule: path_betw.induct) 
     (auto intro: path_betw.intros vertices_memberI2)
 
-definition "path_dist M u v \<equiv> Min ({enat (length P) | P. path_betw M u P v} \<union> {\<infinity>})" 
+lemma path_subgraph:
+  assumes "path_betw M\<^sub>1 u P v" "\<And>u v. isin (\<N> M\<^sub>1 u) v \<Longrightarrow> isin (\<N> M\<^sub>2 u) v"
+  shows "path_betw M\<^sub>2 u P v"
+  using assms vertices_subgraph by (induction M\<^sub>1 u P v rule: path_betw.induct) 
+    (auto intro!: path_betw.intros)
+
+lemma path_vertices:
+  assumes "path_betw M u P v"
+  shows "List.set P \<subseteq> vertices M"
+  using assms by (induction M u P v rule: path_betw.induct) (auto intro: vertices_memberI1)
+
+definition "path_dist M u v \<equiv> Min ({enat (length P) | P. path_betw M u P v \<and> distinct P} \<union> {\<infinity>})" 
   \<comment> \<open>The distance between two nodes in a graph represented by an adjacency map.\<close>
 
-definition 
-  "is_hc_adj G T \<equiv> (\<exists>u. path_betw G u T u) \<and> distinct (tl T) \<and> vertices G = List.set (tl T)"
+definition "degree_Adj M v \<equiv> (let \<N>\<^sub>v = set (\<N> M v) in if \<N>\<^sub>v = {} then \<infinity> else card \<N>\<^sub>v)"
+
+definition "is_complete_Adj G \<equiv> (\<forall>u v. u \<in> vertices G \<and> v \<in> vertices G \<and> u \<noteq> v \<longrightarrow> isin (\<N> G u) v)"
+
+lemma is_complete_AdjI: 
+  "(\<And>u v. u \<in> vertices G \<Longrightarrow> v \<in> vertices G \<Longrightarrow> u \<noteq> v \<Longrightarrow> isin (\<N> G u) v) \<Longrightarrow> is_complete_Adj G"
+  unfolding is_complete_Adj_def by auto
+
+lemma is_complete_AdjE: 
+  "is_complete_Adj G \<Longrightarrow> u \<in> vertices G \<Longrightarrow> v \<in> vertices G \<Longrightarrow> u \<noteq> v \<Longrightarrow> isin (\<N> G u) v"
+  unfolding is_complete_Adj_def by auto
+
+lemma path_betw_in_complete_graph:
+  assumes "is_complete_Adj G" "P \<noteq> []" "distinct_adj P" "List.set P \<subseteq> vertices G" "x = hd P" "y = last P"
+  shows "path_betw G x P y"
+  using assms
+proof (induction P arbitrary: x y rule: list012.induct)
+  case (3 u v P)
+  moreover hence "path_betw G v (v#P) (last (v#P))" "isin (\<N> G u) v"
+    by (auto elim!: is_complete_AdjE) 
+  ultimately have "path_betw G u (u#v#P) (last (v#P))"
+    by (intro path_betw.intros) auto
+  thus ?case 
+    using 3 by auto
+qed (auto intro: path_betw.intros)
+
+definition "is_hc_Adj G T \<equiv> (\<exists>u. path_betw G u T u) \<and> distinct (tl T) \<and> vertices G = List.set (tl T)"
   \<comment> \<open>Definition of a Hamiltonian Cycle for Adjacency Maps.\<close> 
-  (* TODO: connect with definition for set-set graph representation *)
 
-lemma is_hcI: 
-  "(\<exists>u. path_betw G u T u) \<Longrightarrow> distinct (tl T) \<Longrightarrow> vertices G = List.set (tl T) \<Longrightarrow> is_hc_adj G T"
-  by (auto simp: is_hc_adj_def)
+lemma is_hc_AdjI: "(\<exists>u. path_betw G u T u) \<Longrightarrow> distinct (tl T) \<Longrightarrow> vertices G = List.set (tl T) \<Longrightarrow> is_hc_Adj G T"
+  by (auto simp: is_hc_Adj_def)
 
-lemma is_hcE: 
-  assumes "is_hc_adj G T "
+lemma is_hc_AdjE: 
+  assumes "is_hc_Adj G T"
   shows "\<exists>u. path_betw G u T u" "distinct (tl T)" "vertices G = List.set (tl T)"
-  using assms[unfolded is_hc_adj_def] by auto
+  using assms[unfolded is_hc_Adj_def] by auto
 
-definition "is_tsp_adj G c T \<equiv> is_hc_adj G T 
-  \<and> (\<forall>T'. is_hc_adj G T' \<longrightarrow> cost_of_path c T \<le> cost_of_path c T')"
-  (* TODO: connect with definition for set-set graph representation *)
+definition "is_tsp_Adj G c T \<equiv> is_hc_Adj G T 
+  \<and> (\<forall>T'. is_hc_Adj G T' \<longrightarrow> cost_of_path c T \<le> cost_of_path c T')"
 
-lemma is_tspI: "is_hc_adj G T \<Longrightarrow> (\<And>T'. is_hc_adj G T' \<Longrightarrow> cost_of_path c T \<le> cost_of_path c T') 
-  \<Longrightarrow> is_tsp_adj G c T"
-  by (auto simp: is_tsp_adj_def)
+lemma is_tsp_AdjI: "is_hc_Adj G T \<Longrightarrow> (\<And>T'. is_hc_Adj G T' \<Longrightarrow> cost_of_path c T \<le> cost_of_path c T') \<Longrightarrow> is_tsp_Adj G c T"
+  by (auto simp: is_tsp_Adj_def)
 
-lemma is_tspE: 
-  assumes "is_tsp_adj G c T"
-  shows "is_hc_adj G T" "\<And>T'. is_hc_adj G T' \<Longrightarrow> cost_of_path c T \<le> cost_of_path c T'"
-  using assms[unfolded is_tsp_adj_def] by auto
+lemma is_tsp_AdjE: 
+  assumes "is_tsp_Adj G c T"
+  shows "is_hc_Adj G T" "\<And>T'. is_hc_Adj G T' \<Longrightarrow> cost_of_path c T \<le> cost_of_path c T'"
+  using assms[unfolded is_tsp_Adj_def] by auto
 
-definition "is_vc_adj G X \<equiv> 
+definition "is_vc_Adj G X \<equiv> 
   (\<forall>u v. isin (\<N> G u) v \<longrightarrow> isin X u \<or> isin X v) \<and> (\<forall>v. isin X v \<longrightarrow> v \<in> vertices G)"
   \<comment> \<open>Definition of a Vertex Cover for Adjacency Maps.\<close> 
-  (* TODO: connect with definition for set-set graph representation *)
 
-lemma is_vcI: "(\<And>u v. isin (\<N> G u) v \<Longrightarrow> isin X u \<or> isin X v) 
-  \<Longrightarrow> (\<And>v. isin X v \<Longrightarrow> v \<in> vertices G) \<Longrightarrow> is_vc_adj G X"
-  by (auto simp: is_vc_adj_def)
+lemma is_vc_AdjI: "(\<And>u v. isin (\<N> G u) v \<Longrightarrow> isin X u \<or> isin X v) \<Longrightarrow> (\<And>v. isin X v \<Longrightarrow> v \<in> vertices G) \<Longrightarrow> is_vc_Adj G X"
+  by (auto simp: is_vc_Adj_def)
 
-lemma is_vcE: 
-  assumes "is_vc_adj G X"
+lemma is_vc_AdjE: 
+  assumes "is_vc_Adj G X"
   shows "\<And>u v. isin (\<N> G u) v \<Longrightarrow> isin X u \<or> isin X v" "\<And>v. isin X v \<Longrightarrow> v \<in> vertices G"
-  using assms[unfolded is_vc_adj_def] by auto
+  using assms[unfolded is_vc_Adj_def] by auto
 
-definition "is_min_vc_adj G X \<equiv> is_vc_adj G X 
-  \<and> (\<forall>X'. is_vc_adj G X' \<longrightarrow> card (set X) \<le> card (set X'))"
-  (* TODO: connect with definition for set-set graph representation *)
+definition "is_min_vc_Adj G X \<equiv> is_vc_Adj G X \<and> (\<forall>X'. is_vc_Adj G X' \<longrightarrow> card (set X) \<le> card (set X'))"
 
-lemma is_min_vcI: 
-  "is_vc_adj G X \<Longrightarrow> (\<And>X'. is_vc_adj G X' \<Longrightarrow> card (set X) \<le> card (set X')) \<Longrightarrow> is_min_vc_adj G X"
-  by (auto simp: is_min_vc_adj_def)
+lemma is_min_vc_AdjI: 
+  "is_vc_Adj G X \<Longrightarrow> (\<And>X'. is_vc_Adj G X' \<Longrightarrow> card (set X) \<le> card (set X')) \<Longrightarrow> is_min_vc_Adj G X"
+  by (auto simp: is_min_vc_Adj_def)
 
-lemma is_min_vcE: 
-  assumes "is_min_vc_adj G X"
-  shows "is_vc_adj G X" "\<And>X'. is_vc_adj G X' \<Longrightarrow> card (set X) \<le> card (set X')"
-  using assms[unfolded is_min_vc_adj_def] by auto
+lemma is_min_vc_AdjE: 
+  assumes "is_min_vc_Adj G X"
+  shows "is_vc_Adj G X" "\<And>X'. is_vc_Adj G X' \<Longrightarrow> card (set X) \<le> card (set X')"
+  using assms[unfolded is_min_vc_Adj_def] by auto
 
 end
+
+section \<open>Undirected Adjacency Map\<close>
 
 datatype 'v uedge = uEdge 'v 'v
 
@@ -329,7 +442,7 @@ locale ugraph_adj_map =
   for map_empty :: "'map" and update :: "'v \<Rightarrow> 'vset \<Rightarrow> 'map \<Rightarrow> 'map" and map_delete lookup 
     map_invar and set_empty :: "'vset" and insert :: "'v \<Rightarrow> 'vset \<Rightarrow> 'vset" and set_delete isin set 
     set_invar union inter diff +
-  fixes rep :: "'v uedge \<Rightarrow> 'v uedge"
+  fixes rep :: "'v uedge \<Rightarrow> 'v uedge" \<comment> \<open>Representative-function to identify tuples as an undirected edge.\<close>
   assumes is_rep: "\<And>u v. rep (uEdge u v) = rep (uEdge v u)" 
     "\<And>u v. rep (uEdge u v) = uEdge u v \<or> rep (uEdge u v) = uEdge v u"
 begin
@@ -339,6 +452,9 @@ definition "uedges G \<equiv> (\<lambda>(u,v). rep (uEdge u v)) ` edges G"
 
 lemma uedges_def2: "uedges G = {rep (uEdge u v) | u v. isin (\<N> G u) v}"
   unfolding uedges_def set_of_pair_def edges_def by auto
+
+lemma isin_uedges: "isin (\<N> G u) v \<Longrightarrow> rep (uEdge u v) = e \<Longrightarrow> e \<in> uedges G"
+  unfolding uedges_def2 by auto
 
 lemma uedges_empty: "uedges map_empty = {}"
   unfolding uedges_def by (auto simp: edges_empty)
@@ -355,7 +471,7 @@ abbreviation "ugraph_adj_map_invar G \<equiv>
   finite (uedges G) \<and> \<comment> \<open>We assume the set of edges to be finite.\<close>
   (\<forall>v. \<not> isin (\<N> G v) v) \<and> \<comment> \<open>The set of edges is irreflexive.\<close>
   (\<forall>u v. isin (\<N> G u) v \<longrightarrow> isin (\<N> G v) u)" 
-    \<comment> \<open>The graph is undirected, thus the directed-edges have to be symmetric.\<close>
+    \<comment> \<open>The graph is undirected, thus the directed-edges are symmetric.\<close>
 
 lemma ugraph_adj_map_invarI:
   assumes "map_invar G" "\<And>v. set_invar (\<N> G v)" "finite (uedges G)" "\<And>v. \<not> isin (\<N> G v) v" 
@@ -372,6 +488,108 @@ lemma vertices_def2:
   assumes "ugraph_adj_map_invar G"
   shows "vertices G = {u | u v. isin (\<N> G u) v}"
   using assms unfolding vertices_def by blast
+
+lemma rev_path:
+  assumes "path_betw G u P v" "ugraph_adj_map_invar G"
+  shows "path_betw G v (rev P) u"
+  using assms by (induction G u P v rule: path_betw.induct) 
+    (auto intro!: path_betw.intros append_path_betw)
+
+lemma path_dist_less_inf:
+  assumes "ugraph_adj_map_invar G" "path_betw G u P v"
+  shows "path_dist G u v < \<infinity>"
+  sorry
+
+lemma rep_idem: "rep (rep e) = rep e"
+proof -
+  obtain u v where [simp]: "e = uEdge u v"
+    by (cases e)
+  then consider "rep e = uEdge u v" | "rep e = uEdge v u"
+    using is_rep by auto
+  thus ?thesis
+    using is_rep by cases auto
+qed
+
+lemma rep_simps:
+  assumes "rep e = uEdge u v"
+  shows "rep e = rep (uEdge u v)" "rep e = rep (uEdge v u)" 
+    "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
+proof -
+  show "rep e = rep (uEdge u v)" 
+    apply (subst assms[symmetric])
+    apply (rule rep_idem[symmetric])
+    done
+  thus "rep e = rep (uEdge v u)" 
+    by (auto simp add: is_rep) 
+  thus "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
+    using assms by (auto simp add: is_rep) 
+qed 
+
+lemma rep_elim:
+  assumes "rep e = rep (uEdge u v)"
+  obtains "e = uEdge u v" | "e = uEdge v u"
+  using assms is_rep by (cases e) (metis uedge.inject)
+
+lemma rep_cases:
+  assumes "rep e = rep (uEdge u v)"
+  obtains "rep e = uEdge u v" | "rep e = uEdge v u"
+  using assms is_rep by auto
+
+lemma rep_isin_uedges_elim:
+  assumes "ugraph_adj_map_invar G" "rep e \<in> uedges G"
+  obtains u v where "e = uEdge u v" "isin (\<N> G u) v"
+proof -
+  obtain u v where "rep e = rep (uEdge u v)" and v_isin_Nu: "isin (\<N> G u) v"
+    using assms[unfolded uedges_def2] by auto
+  then consider "e = uEdge u v" | "e = uEdge v u"
+    by (elim rep_elim)
+  thus ?thesis
+    using that assms v_isin_Nu by cases auto
+qed
+
+lemma rep_of_edge: "e \<in> uedges G \<Longrightarrow> rep e = e"
+  unfolding uedges_def2 by (auto simp add: rep_idem)
+
+lemma isin_uedges_elim:
+  assumes "ugraph_adj_map_invar G" "e \<in> uedges G"
+  obtains u v where "e = uEdge u v" "isin (\<N> G u) v"
+proof -
+  have "rep e \<in> uedges G"
+    using assms by (auto simp add: rep_of_edge)
+  thus ?thesis
+    using assms that by (elim rep_isin_uedges_elim)
+qed
+
+lemma uedge_not_refl:
+  assumes "ugraph_adj_map_invar G" "e \<in> uedges G"
+  obtains u v where "rep e = uEdge u v" "u \<noteq> v"
+proof -
+  obtain u v where "rep e = uEdge u v" "isin (\<N> G u) v" 
+    using assms by (elim isin_uedges_elim) (auto simp: rep_of_edge)
+  moreover hence "u \<noteq> v"
+    using assms by (auto intro: adj_vertices_neq)
+  ultimately show ?thesis
+    using that by auto
+qed
+
+lemma rep_eq: "rep (uEdge u\<^sub>1 v\<^sub>1) = rep (uEdge u\<^sub>2 v\<^sub>2) \<longleftrightarrow> (u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2) \<or> (u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
+proof
+  consider "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge u\<^sub>1 v\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge u\<^sub>2 v\<^sub>2"
+    | "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge u\<^sub>1 v\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge v\<^sub>2 u\<^sub>2"
+    | "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge v\<^sub>1 u\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge u\<^sub>2 v\<^sub>2"
+    | "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge v\<^sub>1 u\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge v\<^sub>2 u\<^sub>2"
+    using is_rep by auto
+  moreover assume "rep (uEdge u\<^sub>1 v\<^sub>1) = rep (uEdge u\<^sub>2 v\<^sub>2)"
+  ultimately consider "uEdge u\<^sub>1 v\<^sub>1 = uEdge u\<^sub>2 v\<^sub>2" | "uEdge u\<^sub>1 v\<^sub>1 = uEdge v\<^sub>2 u\<^sub>2"
+    | "uEdge v\<^sub>1 u\<^sub>1 = uEdge u\<^sub>2 v\<^sub>2" | "uEdge v\<^sub>1 u\<^sub>1 = uEdge v\<^sub>2 u\<^sub>2"
+    by cases fastforce+
+  thus "(u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2) \<or> (u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
+    by cases auto
+next
+  assume "(u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2) \<or> (u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
+  thus "rep (uEdge u\<^sub>1 v\<^sub>1) = rep (uEdge u\<^sub>2 v\<^sub>2)"
+    using is_rep by auto
+qed
 
 lemma isin_neighborhood_set_edge: 
   assumes "isin (\<N> G u) v"
@@ -439,43 +657,8 @@ proof -
     by cases auto
 qed
 
-lemma vs_uedges: "Vs (set_of_uedge ` (uedges G)) = vertices G" 
+lemma vs_uedges: "Vs (set_of_uedge ` uedges G) = vertices G" 
   using vs_uedges_subset_vertices vertices_subset_vs_uedges by auto
-
-lemma rep_idem: "rep (rep e) = rep e"
-proof -
-  obtain u v where [simp]: "e = uEdge u v"
-    by (cases e)
-  then consider "rep e = uEdge u v" | "rep e = uEdge v u"
-    using is_rep by auto
-  thus ?thesis
-    using is_rep by cases auto
-qed
-
-lemma rep_simps:
-  assumes "rep e = uEdge u v"
-  shows "rep e = rep (uEdge u v)" "rep e = rep (uEdge v u)" 
-    "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
-proof -
-  show "rep e = rep (uEdge u v)" 
-    apply (subst assms[symmetric])
-    apply (rule rep_idem[symmetric])
-    done
-  thus "rep e = rep (uEdge v u)" 
-    by (auto simp add: is_rep) 
-  thus "rep (uEdge u v) = uEdge u v" "rep (uEdge v u) = uEdge u v"
-    using assms by (auto simp add: is_rep) 
-qed 
-
-lemma repE:
-  assumes "rep e = uEdge u v"
-  obtains "e = uEdge u v" | "e = uEdge v u"
-  using assms is_rep by (cases e) (metis uedge.inject)
-
-lemma rep_cases:
-  assumes "rep e = rep (uEdge u v)"
-  obtains "rep e = uEdge u v" | "rep e = uEdge v u"
-  using assms is_rep by auto
 
 end
 
@@ -497,6 +680,84 @@ sublocale ugraph_adj_map map_empty update map_delete lookup map_invar
 
 end
 
+section \<open>Equivalence of Graph-Definitions\<close>
+  
+(* TODO: connect with definitions for set-set graph representation *)
+
+context graph_adj_map
+begin
+
+end
+
+context ugraph_adj_map
+begin
+
+lemma graph_invar:
+  assumes "ugraph_adj_map_invar G" 
+  shows "graph_invar (set_of_uedge ` uedges G)" (is "graph_invar ?E")
+proof (intro graph_invarI2)
+  show "finite ?E"
+    sorry
+  show "\<And>e. e \<in> set_of_uedge ` uedges G \<Longrightarrow> \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+    sorry
+qed
+
+lemma path_equiv: 
+  assumes "ugraph_adj_map_invar G" "path_betw G u P v"
+  shows "walk_betw (set_of_uedge ` uedges G) u P v"
+  sorry (* TODO *)
+
+lemma degree_equiv:
+  assumes "ugraph_adj_map_invar G"
+  shows "degree_Adj G v = degree (set_of_uedge ` uedges G) v"
+  sorry (* TODO *)
+
+lemma is_complete_equiv: 
+  assumes "is_complete_Adj G"
+  shows "is_complete (set_of_uedge ` uedges G)"
+  using assms by (auto intro!: is_completeI isin_neighborhood_set_edge 
+      elim!: is_complete_AdjE simp add: vs_uedges)
+
+lemma is_hc_equiv: 
+  assumes "ugraph_adj_map_invar G" "is_hc_Adj G T"
+  shows "is_hc (set_of_uedge ` uedges G) T"
+  sorry (* TODO *)
+
+lemma is_tsp_equiv: 
+  assumes "ugraph_adj_map_invar G" "is_tsp_Adj G c T"
+  shows "is_tsp (set_of_uedge ` uedges G) c T"
+  sorry (* TODO *)
+
+lemma is_vc_equiv: 
+  assumes "ugraph_adj_map_invar G" "is_vc_Adj G X" "set_invar X"
+  shows "is_vc (set_of_uedge ` uedges G) (set X)"
+  sorry (* TODO *)
+
+lemma uedges_leq_max_degree_card_vc:
+  assumes "ugraph_adj_map_invar G" "set_invar X"
+    and max_degree: "\<And>v. v \<in> vertices G \<Longrightarrow> degree_Adj G v \<le> enat k" 
+    and vc_X: "is_vc_Adj G X"
+  shows "card (set_of_uedge ` uedges G) \<le> k * card (set X)" (is "card ?E \<le> _")
+proof (intro graph_abs.card_E_leq_max_degree_card_vc)
+  show "graph_abs ?E"
+    using assms graph_invar by unfold_locales
+  show "\<And>v. v \<in> Vs ?E \<Longrightarrow> degree ?E v \<le> enat k"
+    using assms by (auto simp: vs_uedges degree_equiv)
+  show "is_vc ?E (set X)"
+    using assms by (auto simp: is_vc_equiv)
+qed
+
+lemma is_min_vc_equiv: 
+  assumes "ugraph_adj_map_invar G" "set_invar X"
+  shows "is_min_vc_Adj G X \<longleftrightarrow> is_min_vc (set_of_uedge ` uedges G) (set X)"
+  sorry (* TODO *)
+
+end
+
+section \<open>Folding Functions for Adjacency Maps\<close>
+
+subsection \<open>Folding Edges of Adjacency Maps\<close>
+
 locale ugraph_adj_map_fold_uedges =
   ugraph_adj_map map_empty update map_delete lookup map_invar set_empty insert set_delete isin set 
   set_invar union inter diff rep
@@ -505,38 +766,30 @@ locale ugraph_adj_map_fold_uedges =
     set_invar union inter diff rep +
   fixes fold_uedges :: "('v uedge \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'map \<Rightarrow> 'b \<Rightarrow> 'b" 
     \<comment> \<open>Function that folds the undirected edges of a graph represented by an adjacency map.\<close>
-  assumes fold_uedges: "\<And>G f a\<^sub>0. ugraph_adj_map_invar G \<Longrightarrow>
-    \<exists>es. distinct es \<and> map rep es = es \<and> List.set es = uedges G \<and> fold_uedges f G a\<^sub>0 = fold f es a\<^sub>0"
+  assumes fold_uedges: "\<And>G f a. ugraph_adj_map_invar G \<Longrightarrow>
+    \<exists>es. distinct es \<and> map rep es = es \<and> List.set es = uedges G \<and> fold_uedges f G a = fold f es a"
 begin
 
 lemma fold_uedgesE:
   assumes "ugraph_adj_map_invar G"    
   obtains es where "distinct es" "map rep es = es" "List.set es = uedges G" 
-    "fold_uedges f G a\<^sub>0 = fold f es a\<^sub>0"
+    "fold_uedges f G a = fold f es a"
   using assms fold_uedges by blast
 
-(* lemma fold_neq_obtain_edge:
-  assumes "ugraph_adj_map_invar G" "fold_uedges f G a\<^sub>0 \<noteq> a\<^sub>0"
-  obtains u v where "uEdge u v \<in> uedges G"
+lemma fold_neq_obtain_edge:
+  assumes "ugraph_adj_map_invar G" "fold_uedges f G a \<noteq> a"
+  obtains e where "e \<in> uedges G" "f e a \<noteq> a"
 proof -
   obtain es where "distinct es" "map rep es = es" and set_es: "List.set es = uedges G" and
-    "fold_uedges f G a\<^sub>0 = fold f es a\<^sub>0"
+    "fold_uedges f G a = fold f es a"
     using assms by (elim fold_uedgesE)
-  hence "fold f es a\<^sub>0 \<noteq> a\<^sub>0"
-    using assms by auto
-  hence "es \<noteq> []"
-    by auto
-  moreover then obtain e where "hd es = e"
-    by auto
-  moreover then obtain u v where [simp]: "uEdge u v = e"
-    by (cases e) auto
-  ultimately have "uEdge u v \<in> uedges G"
-    using set_es by fastforce
   thus ?thesis
-    using that by blast
-qed *)
+    using that assms by (auto elim!: fold_neq_find)
+qed
 
 end
+
+subsection \<open>Folding Vertices of Adjacency Maps\<close>
 
 locale ugraph_adj_map_fold_vset =
   ugraph_adj_map map_empty update map_delete lookup map_invar set_empty insert set_delete isin set 
@@ -547,13 +800,13 @@ locale ugraph_adj_map_fold_vset =
   fixes fold_vset :: "('v \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'vset \<Rightarrow> 'b \<Rightarrow> 'b"
   \<comment> \<open>Function that folds the vertices of a graph represented by an adjacency map.\<close>
   assumes finite_sets: "\<And>X. finite (set X)"
-  assumes fold_vset: "\<And>X f a\<^sub>0. set_invar X \<Longrightarrow>
-    \<exists>xs. distinct xs \<and> List.set xs = set X \<and> fold_vset f X a\<^sub>0 = fold f xs a\<^sub>0"
+  assumes fold_vset: "\<And>X f a. set_invar X \<Longrightarrow>
+    \<exists>xs. distinct xs \<and> List.set xs = set X \<and> fold_vset f X a = fold f xs a"
 begin
 
 lemma fold_vsetE:
   assumes "set_invar X"
-  obtains xs where "distinct xs" "List.set xs = set X" "fold_vset f X a\<^sub>0 = fold f xs a\<^sub>0"
+  obtains xs where "distinct xs" "List.set xs = set X" "fold_vset f X a = fold f xs a"
   using assms fold_vset by blast
 
 (* lemma fold_vset_empty: "fold_vset f set_empty M = fold f [] M"
@@ -580,6 +833,8 @@ proof -
 qed *)
 
 end
+
+subsection \<open>Compute Adjacency Maps from Set of Vertices\<close>
 
 locale graph_of_vertices_for_ugraph_adj_map =
   ugraph_adj_map_fold_vset map_empty update map_delete lookup map_invar set_empty insert set_delete 
@@ -712,7 +967,7 @@ end
 
 (* TODO: move below to other thy *)
 
-section \<open>List Implementation for Sets\<close>
+(* section \<open>List Implementation for Sets\<close>
 
 type_synonym 'a lset = "'a list"
 
@@ -928,16 +1183,16 @@ next
 qed
 
 fun fold_uedges :: "(('a \<times> 'a) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'a graph_adj_list \<Rightarrow> 'b \<Rightarrow> 'b" where
-  "fold_uedges f G a\<^sub>0 = fold f (comp_uedges G) a\<^sub>0"
+  "fold_uedges f G a = fold f (comp_uedges G) a"
 
 lemma fold_edges_specs:
   assumes "adj_list_invar G" 
   obtains es where "distinct (map uedge es)" "uedge ` set es = uedges_of_adj_list G" 
-    "fold_uedges f G a\<^sub>0 = fold f es a\<^sub>0" 
+    "fold_uedges f G a = fold f es a" 
   using assms distinct_comp_uedges comp_uedges_of_adj_list by fastforce
 
-lemma fold_edges_specs': "\<And>G f a\<^sub>0. adj_list_invar G \<Longrightarrow> ugraph_adj_list_invar G \<Longrightarrow>
-    \<exists>es. distinct (map uedge es) \<and> uedge ` set es = uedges_of_adj_list G \<and> fold_uedges f G a\<^sub>0 = fold f es a\<^sub>0" 
+lemma fold_edges_specs': "\<And>G f a. adj_list_invar G \<Longrightarrow> ugraph_adj_list_invar G \<Longrightarrow>
+    \<exists>es. distinct (map uedge es) \<and> uedge ` set es = uedges_of_adj_list G \<and> fold_uedges f G a = fold f es a" 
   using fold_edges_specs by metis
 
 global_interpretation ugraph_adj_list_fold: ugraph_adj_map_fold 
@@ -958,6 +1213,6 @@ locale ugraph_adj_list = \<comment> \<open>Undirected graph represented by an ad
       and graph_invar: "ugraph_adj_list_invar G"
 begin
 
-end
+end *)
 
 end

@@ -167,8 +167,86 @@ lemma append_tl_butlast_eq:
 lemma map_map: "map (f o g) xs = map f (map g xs)"
   by (induction xs) auto
 
-lemma fold_map: "fold (f o g) xs a = fold f (map g xs) a"
+lemma fold_neq_find:
+  assumes "fold f xs a \<noteq> a"
+  obtains x where "x \<in> List.set xs" "f x a \<noteq> a"
+  using assms 
+proof (induction xs arbitrary: a)
+  case (Cons x xs)
+  then show ?case 
+    by (cases "f x a = a") auto
+qed auto
+
+lemma fold_enat_min:
+  assumes "(a::enat) < \<infinity>"
+  shows "fold (\<lambda>x a. min (g x) a) xs a < \<infinity>" (is "fold ?f xs a < \<infinity>")
+  using assms
+proof (induction xs arbitrary: a)
+  case (Cons x xs)
+  thus ?case 
+    by (cases "g x") auto
+qed auto
+
+lemma fold_concat_map: "fold (\<lambda>x a. a @ f x) xs a = a @ concat (map f xs)"
   by (induction xs arbitrary: a) auto
+
+lemma concat_map_disjoint:
+  assumes "x \<notin> set xs" "\<And>y. y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> set (f x) \<inter> set (f y) = {}"
+  shows "set (f x) \<inter> set (concat (map f xs)) = {}"
+  using assms by (induction xs) auto
+
+lemma distinct_concat_map:
+  assumes "distinct xs" "\<And>x. x \<in> set xs \<Longrightarrow> distinct (f x)" 
+    "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> set (f x) \<inter> set (f y) = {}"
+  shows "distinct (concat (map f xs))"
+  using assms by (induction xs) (auto intro!: concat_map_disjoint) 
+
+lemma hd_concat_map:
+  assumes "xs \<noteq> []" "\<exists>x \<in> set xs. f x \<noteq> []"
+  obtains y where "y \<in> set xs" "hd (concat (map f xs)) = hd (f y)"
+  using assms
+proof (induction xs arbitrary: thesis)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x xs)
+  consider "f x = []" | "f x \<noteq> []"
+    by auto
+  then show ?case
+  proof cases 
+    assume "f x = []"
+    hence "\<exists>x \<in> set xs. f x \<noteq> []"
+      using Cons by auto
+    moreover hence "xs \<noteq> []"
+      by auto
+    ultimately obtain y where "y \<in> set xs" "hd (concat (map f xs)) = hd (f y)"
+      using Cons.IH by auto
+    thus ?thesis
+      using Cons \<open>f x = []\<close> by auto
+  next
+    assume "f x \<noteq> []"
+    thus ?thesis
+      using Cons by auto
+  qed
+qed
+
+lemma last_concat_map:
+  assumes "xs \<noteq> []" "\<exists>x \<in> set xs. f x \<noteq> []"
+  obtains y where "y \<in> set xs" "last (concat (map f xs)) = last (f y)"
+  using assms
+proof -
+  have "rev xs \<noteq> []"
+    using assms by auto
+  moreover have "\<exists>x \<in> set (rev xs). (rev o f) x \<noteq> []"
+    using assms by auto
+  ultimately obtain y where "y \<in> set (rev xs)" 
+    "hd (concat (map (rev o f) (rev xs))) = hd ((rev o f) y)"
+    by (elim hd_concat_map)
+  moreover hence "last (concat (map f xs)) = last (f y)"
+    by (simp add: hd_rev[symmetric] rev_concat rev_map)
+  ultimately show ?thesis
+    using that by auto
+qed
 
 subsection \<open>Repeated Elements in Lists\<close>
 
@@ -182,7 +260,7 @@ fun even_elems :: "'a list \<Rightarrow> 'a list" where
 | "even_elems [x] = [x]" 
 | "even_elems (x#y#xs) = x#even_elems xs"
 
-value "even_elem [0::nat,1,2,3,4,5,6,7,8,9,10]"
+value "even_elems [0::nat,1,2,3,4,5,6,7,8,9,10]"
 
 lemma even_elems_tl: "even_elems (x#xs) = x#even_elems (tl xs)"
   by (induction xs rule: even_elems.induct) auto
@@ -589,6 +667,9 @@ qed auto
   TODO: clean up lemmas \<open>thm finite_sum_add1 finite_sum_add2\<close>. Find more abstract versions.
 *)
 
+lemma sum_list_const: "(\<And>x. x \<in> set xs \<Longrightarrow> f x = k) \<Longrightarrow> (\<Sum>x\<leftarrow>xs. f x) = length xs * k"
+  by (induction xs) auto
+
 section \<open>Graph Lemmas (Berge)\<close>
 
 lemma graph_subset:
@@ -671,7 +752,7 @@ lemma finite_VsI:
   unfolding Vs_def using assms by auto
 
 lemma graph_invarI2: 
-  assumes "finite E" "\<forall>e\<in>E. \<exists>u v. e = {u,v} \<and> u \<noteq> v" 
+  assumes "finite E" "\<And>e. e \<in> E \<Longrightarrow> \<exists>u v. e = {u,v} \<and> u \<noteq> v" 
   shows "graph_invar E"
   using assms by (auto intro: finite_VsI)
 
@@ -1512,5 +1593,58 @@ sublocale E\<^sub>P: graph_subgraph_abs E E\<^sub>P
 lemmas graph_E\<^sub>P = E\<^sub>P.E\<^sub>2.graph
 
 end
+
+subsection \<open>Rotating Cycles\<close>
+
+(* TODO: connect with cycles defined in problems.MinSpanningTree *)
+
+fun rotate_tour_acc :: "'a list \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "rotate_tour_acc acc f (x#y#xs) = 
+    (if \<not> f x \<and> f y then x#y#xs @ acc else rotate_tour_acc (acc @ [y]) f (y#xs))"
+| "rotate_tour_acc acc f xs = xs @ acc"
+
+lemma edges_of_path_append_singleton: (* move lemma to graph stuff *)
+  "xs \<noteq> [] \<Longrightarrow> edges_of_path (xs @ [x]) = edges_of_path xs @ [{last xs,x}]"
+  by (induction xs rule: list012.induct) auto
+
+lemma set_rotate_tour_acc: 
+  assumes "hd (xs @ acc) = last (xs @ acc)"
+  shows "set xs \<union> set acc = set (rotate_tour_acc acc f xs)"
+  using assms
+proof (induction xs arbitrary: acc rule: list012.induct)
+  case (3 x y xs)
+  hence x_isin: "x \<in> set (y#xs @ acc)"
+    using last_in_set[of "y#xs @ acc"] by auto
+  thus ?case 
+    using "3.IH"[of "acc @ [y]"] by (auto split: if_splits)
+qed auto
+
+lemma edges_of_path_rotate_tour_acc:
+  assumes "hd (xs @ acc) = last (xs @ acc)"
+  shows "set (edges_of_path (rotate_tour_acc acc f xs)) = set (edges_of_path (xs @ acc))"
+  using assms
+proof (induction xs arbitrary: acc rule: list012.induct)
+  case (3 x y xs)
+  thus ?case 
+    using edges_of_path_append_singleton[of "y#xs @ acc" y] by (auto split: if_splits)
+qed auto
+
+lemma rotate_tour_acc_hd_eq_last:
+  "hd (xs @ acc) = last (xs @ acc) \<Longrightarrow> 
+    hd (rotate_tour_acc acc f xs) = last (rotate_tour_acc acc f xs)"
+  by (induction xs arbitrary: acc rule: list012.induct) auto
+
+fun rotate_tour :: "('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+  "rotate_tour f xs = rotate_tour_acc [] f xs"
+
+lemma edges_of_path_rotate_tour: 
+  "hd xs = last xs \<Longrightarrow> set (edges_of_path xs) = set (edges_of_path (rotate_tour f xs))"
+  by (auto simp: edges_of_path_rotate_tour_acc)
+
+lemma rotate_tour_hd_eq_last: "hd xs = last xs \<Longrightarrow> hd (rotate_tour f xs) = last (rotate_tour f xs)"
+  by (auto simp: rotate_tour_acc_hd_eq_last)
+
+lemma set_rotate_tour: "hd xs = last xs \<Longrightarrow> set xs = set (rotate_tour f xs)"
+  using set_rotate_tour_acc[of xs "[]"] by auto
 
 end
