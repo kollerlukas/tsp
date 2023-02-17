@@ -202,51 +202,39 @@ lemma distinct_concat_map:
   using assms by (induction xs) (auto intro!: concat_map_disjoint) 
 
 lemma hd_concat_map:
-  assumes "xs \<noteq> []" "\<exists>x \<in> set xs. f x \<noteq> []"
-  obtains y where "y \<in> set xs" "hd (concat (map f xs)) = hd (f y)"
+  assumes "\<exists>x \<in> set xs. f x \<noteq> []"
+  obtains y where "y \<in> set xs" "f y \<noteq> []" "hd (concat (map f xs)) = hd (f y)"
   using assms
 proof (induction xs arbitrary: thesis)
-  case Nil
-  then show ?case by auto
-next
   case (Cons x xs)
   consider "f x = []" | "f x \<noteq> []"
     by auto
   then show ?case
-  proof cases 
-    assume "f x = []"
-    hence "\<exists>x \<in> set xs. f x \<noteq> []"
-      using Cons by auto
-    moreover hence "xs \<noteq> []"
-      by auto
-    ultimately obtain y where "y \<in> set xs" "hd (concat (map f xs)) = hd (f y)"
-      using Cons.IH by auto
-    thus ?thesis
-      using Cons \<open>f x = []\<close> by auto
-  next
-    assume "f x \<noteq> []"
-    thus ?thesis
-      using Cons by auto
-  qed
-qed
+    using Cons by cases auto
+qed auto
 
 lemma last_concat_map:
-  assumes "xs \<noteq> []" "\<exists>x \<in> set xs. f x \<noteq> []"
-  obtains y where "y \<in> set xs" "last (concat (map f xs)) = last (f y)"
-  using assms
-proof -
-  have "rev xs \<noteq> []"
+  assumes "\<exists>x \<in> set xs. f x \<noteq> []"
+  obtains y where "y \<in> set xs" "f y \<noteq> []" "last (concat (map f xs)) = last (f y)"
+proof (rule hd_concat_map)
+  show "\<exists>x \<in> set (rev xs). (rev o f) x \<noteq> []"
     using assms by auto
-  moreover have "\<exists>x \<in> set (rev xs). (rev o f) x \<noteq> []"
-    using assms by auto
-  ultimately obtain y where "y \<in> set (rev xs)" 
-    "hd (concat (map (rev o f) (rev xs))) = hd ((rev o f) y)"
-    by (elim hd_concat_map)
+  fix y
+  assume "y \<in> set (rev xs)" "(rev o f) y \<noteq> []" 
+    "hd (concat (map (rev \<circ> f) (rev xs))) = hd ((rev \<circ> f) y)"
   moreover hence "last (concat (map f xs)) = last (f y)"
     by (simp add: hd_rev[symmetric] rev_concat rev_map)
   ultimately show ?thesis
     using that by auto
 qed
+
+lemma concat_filter_empty: "concat (filter (\<lambda>x. x \<noteq> []) xs) = concat xs"
+  by (induction xs) auto
+
+lemma concat_map_filter_empty: 
+  assumes "\<And>x. \<not> P x \<Longrightarrow> f x = []"
+  shows "concat (map f (filter P xs)) = concat (map f xs) "
+  using assms by (induction xs) auto
 
 subsection \<open>Repeated Elements in Lists\<close>
 
@@ -667,8 +655,86 @@ qed auto
   TODO: clean up lemmas \<open>thm finite_sum_add1 finite_sum_add2\<close>. Find more abstract versions.
 *)
 
-lemma sum_list_const: "(\<And>x. x \<in> set xs \<Longrightarrow> f x = k) \<Longrightarrow> (\<Sum>x\<leftarrow>xs. f x) = length xs * k"
-  by (induction xs) auto
+lemma sum_list_const: 
+  fixes f :: "'a \<Rightarrow> int"
+  shows "(\<And>x. x \<in> set xs \<Longrightarrow> f x = k) \<Longrightarrow> (\<Sum>x\<leftarrow>xs. f x) = length xs * k"
+  by (induction xs) (auto simp add: int_distrib mult.commute)
+
+lemma sum_const: 
+  fixes f :: "'a \<Rightarrow> int"
+  assumes "finite X" "\<And>x. x \<in> X \<Longrightarrow> f x = k"
+  shows "(\<Sum>x \<in> X. f x) = card X * k"
+  using assms by (induction X rule: finite_induct) (auto simp add: int_distrib mult.commute)
+
+(* lemma sum_list_const: 
+  fixes f :: "'a \<Rightarrow> int"
+  shows "(\<And>x. x \<in> set xs \<Longrightarrow> f x = k) \<Longrightarrow> (\<Sum>x\<leftarrow>xs. f x) = length xs * k"
+  by (induction xs) (auto simp add: int_distrib mult.commute)
+
+lemma sum_list_subf:
+  assumes "\<And>x. x \<in> set xs \<Longrightarrow> g x \<le> f x"
+  shows "(\<Sum>x\<leftarrow>xs. (f::'a \<Rightarrow> nat) x - g x) \<le> (\<Sum>x\<leftarrow>xs. f x) - (\<Sum>x\<leftarrow>xs. g x)"
+  using assms
+proof (induction xs)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x xs)
+  hence "(\<Sum>x\<leftarrow>x#xs. f x - g x) \<le> (\<Sum>x\<leftarrow>xs. f x) - (\<Sum>x\<leftarrow>xs. g x) + f x - g x"
+    using Cons by auto
+  also have "... \<le> (\<Sum>x\<leftarrow>x#xs. f x) - (\<Sum>x\<leftarrow>x#xs. g x)"
+    using Cons by (auto simp add: sum_list_mono)
+  finally show ?case
+    by auto
+qed *)
+
+(* lemma
+  assumes "\<And>x. x \<in> set xs \<Longrightarrow> g x \<le> f x"
+  shows "(\<Sum>x\<leftarrow>xs. (f::'a \<Rightarrow> nat) x - g x) + (\<Sum>x\<leftarrow>xs. g x) \<le> (\<Sum>x\<leftarrow>xs. f x)"
+  using assms
+proof (induction xs)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x xs)
+  have "(\<Sum>x\<leftarrow>x#xs. f x - g x) + (\<Sum>x\<leftarrow>x#xs. g x) \<le> (\<Sum>x\<leftarrow>xs. f x - g x) + (f x - g x) + (\<Sum>x\<leftarrow>xs. g x) + g x"
+    by auto
+  also have "... \<le> (\<Sum>x\<leftarrow>xs. f x - g x) + (\<Sum>x\<leftarrow>xs. g x) + g x + (f x - g x)"
+    by auto
+  also have "... \<le> (\<Sum>x\<leftarrow>xs. f x) + g x + (f x - g x)"
+    using Cons by auto
+  also have "... \<le> (\<Sum>x\<leftarrow>xs. f x) + f x"
+    by auto
+  also have "... \<le> (\<Sum>x\<leftarrow>x#xs. f x)"
+    by auto
+  finally show ?case
+    by auto
+qed *)
+
+lemma finite_sum_card:
+  assumes "finite X" "\<And>x. x \<in> X \<Longrightarrow> finite (f x)"
+      and "\<And>x y. x \<in> X \<Longrightarrow> y \<in> X \<Longrightarrow> x \<noteq> y \<Longrightarrow> f x \<inter> f y = {}"
+  shows "(\<Sum>x \<in> X. card (f x)) = card (\<Union> (f ` X))"
+  using assms
+proof (induction X rule: finite_induct)
+  case empty
+  then show ?case by auto
+next
+  case (insert x X)
+  hence "f x \<inter> \<Union> (f ` X) = {}"
+  proof (induction X rule: finite_induct)
+    case (insert y X)
+    hence "f x \<inter> \<Union> (f ` (insert y X)) = f x \<inter> \<Union> (insert (f y)  (f ` X))"
+      by auto
+    also have "... = (f x \<inter> f y) \<union> (f x \<inter> \<Union> (f ` X))"
+      by auto
+    also have "... = {}"
+      using insert by auto
+    finally show ?case .
+  qed auto
+  thus ?case 
+    using insert by (auto simp add: card_Un_disjoint)
+qed
 
 section \<open>Graph Lemmas (Berge)\<close>
 

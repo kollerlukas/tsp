@@ -560,19 +560,30 @@ proof -
     using assms that by (elim rep_isin_uedges_elim)
 qed
 
-lemma uedge_not_refl:
+lemma uedge_not_refl_elim:
   assumes "ugraph_adj_map_invar G" "e \<in> uedges G"
   obtains u v where "rep e = uEdge u v" "u \<noteq> v"
-proof -
-  obtain u v where "rep e = uEdge u v" "isin (\<N> G u) v" 
-    using assms by (elim isin_uedges_elim) (auto simp: rep_of_edge)
+  using assms
+proof (rule isin_uedges_elim)
+  fix u v
+  assume "e = uEdge u v" "isin (\<N> G u) v"
   moreover hence "u \<noteq> v"
     using assms by (auto intro: adj_vertices_neq)
   ultimately show ?thesis
-    using that by auto
+    using assms that by (auto simp: rep_of_edge)
 qed
 
-lemma rep_eq: "rep (uEdge u\<^sub>1 v\<^sub>1) = rep (uEdge u\<^sub>2 v\<^sub>2) \<longleftrightarrow> (u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2) \<or> (u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
+lemma uedge_not_refl:
+  assumes "ugraph_adj_map_invar G" "rep (uEdge u v) \<in> uedges G"
+  shows "u \<noteq> v"
+proof -
+  have "isin (\<N> G u) v" 
+    using assms rep_isin_uedges_elim by blast
+  thus "u \<noteq> v"
+    using assms by (auto intro: adj_vertices_neq)
+qed
+
+lemma rep_eq_iff: "rep (uEdge u\<^sub>1 v\<^sub>1) = rep (uEdge u\<^sub>2 v\<^sub>2) \<longleftrightarrow> (u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2) \<or> (u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
 proof
   consider "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge u\<^sub>1 v\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge u\<^sub>2 v\<^sub>2"
     | "rep (uEdge u\<^sub>1 v\<^sub>1) = uEdge u\<^sub>1 v\<^sub>1" "rep (uEdge u\<^sub>2 v\<^sub>2) = uEdge v\<^sub>2 u\<^sub>2"
@@ -626,6 +637,29 @@ proof -
   thus "isin (\<N> G u) v"
     using xy_isin by cases auto
 qed
+
+lemma inj_set_of_uedge:
+  assumes "ugraph_adj_map_invar G"
+  shows "inj_on set_of_uedge (uedges G)"
+proof
+  fix e\<^sub>1 e\<^sub>2
+  assume "e\<^sub>1 \<in> uedges G"
+  then obtain u\<^sub>1 v\<^sub>1 where [simp]: "e\<^sub>1 = uEdge u\<^sub>1 v\<^sub>1" and "isin (\<N> G u\<^sub>1) v\<^sub>1"
+    using assms by (elim isin_uedges_elim)
+  assume "e\<^sub>2 \<in> uedges G"
+  then obtain u\<^sub>2 v\<^sub>2 where [simp]: "e\<^sub>2 = uEdge u\<^sub>2 v\<^sub>2" and "isin (\<N> G u\<^sub>2) v\<^sub>2"
+    using assms by (elim isin_uedges_elim)
+  assume "set_of_uedge e\<^sub>1 = set_of_uedge e\<^sub>2"
+  hence "rep e\<^sub>1 = rep e\<^sub>2"
+    unfolding set_of_uedge_def by (auto simp add: rep_eq_iff doubleton_eq_iff)
+  thus "e\<^sub>1 = e\<^sub>2"
+    using \<open>e\<^sub>1 \<in> uedges G\<close> \<open>e\<^sub>2 \<in> uedges G\<close> by (auto simp add: rep_of_edge)
+qed
+
+lemma card_uedges:
+  assumes "ugraph_adj_map_invar G"
+  shows "card (set_of_uedge ` uedges G) = card (uedges G)"
+  using assms inj_set_of_uedge by (intro card_image)
 
 lemma vs_uedges_subset_vertices:
   assumes "u \<in> Vs (set_of_uedge ` uedges G)"
@@ -737,8 +771,10 @@ lemma uedges_leq_max_degree_card_vc:
   assumes "ugraph_adj_map_invar G" "set_invar X"
     and max_degree: "\<And>v. v \<in> vertices G \<Longrightarrow> degree_Adj G v \<le> enat k" 
     and vc_X: "is_vc_Adj G X"
-  shows "card (set_of_uedge ` uedges G) \<le> k * card (set X)" (is "card ?E \<le> _")
-proof (intro graph_abs.card_E_leq_max_degree_card_vc)
+  shows "card (uedges G) \<le> k * card (set X)"
+  using assms(1)
+proof (subst card_uedges[symmetric]; simp; intro graph_abs.card_E_leq_max_degree_card_vc)
+  let ?E="set_of_uedge ` uedges G"
   show "graph_abs ?E"
     using assms graph_invar by unfold_locales
   show "\<And>v. v \<in> Vs ?E \<Longrightarrow> degree ?E v \<le> enat k"

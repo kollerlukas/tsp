@@ -85,10 +85,10 @@ proof (induction xs)
 qed auto
 
 lemma cost_concat_map:
+  fixes c :: "'a \<Rightarrow> 'a \<Rightarrow> int"
   assumes "distinct xs"
-      and "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> f x \<noteq> [] \<Longrightarrow> f y \<noteq> [] 
-      \<Longrightarrow> c (last (f x)) (hd (f y)) \<le> k"
-  shows "cost_of_path c (concat (map f xs)) \<le> (\<Sum>x\<leftarrow>xs. cost_of_path c (f x)) + (length xs - 1) * k"
+      and "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> f x \<noteq> [] \<Longrightarrow> f y \<noteq> [] \<Longrightarrow> c (last (f x)) (hd (f y)) \<le> k"
+  shows "cost_of_path c (concat (map f xs)) \<le> (\<Sum>x\<leftarrow>xs. cost_of_path c (f x)) + (length (tl xs)) * k"
   using assms
 proof (induction xs rule: list012.induct)
   case 1
@@ -112,8 +112,10 @@ next
       by auto
     also have "... = cost_of_path c (f x)"
       by (subst \<open>?fyxs = []\<close>) auto
-    also have "... \<le> (\<Sum>x\<leftarrow>(x#y#xs). cost_of_path c (f x)) + (length (x#y#xs) - 1) * k"
-      by auto
+    also have "... = cost_of_path c (f x) + cost_of_path c ?fyxs"
+      by (subst \<open>?fyxs = []\<close>) auto
+    also have "... \<le> (\<Sum>x\<leftarrow>(x#y#xs). cost_of_path c (f x)) + (length (tl (x#y#xs))) * k"
+      using 3 by auto
     finally show ?thesis .
   next
     assume "f x \<noteq> []" and "?fyxs \<noteq> []"
@@ -122,7 +124,7 @@ next
       by (auto simp add: cost_of_path_append)
     also have "... \<le> cost_of_path c (f x) + k + cost_of_path c ?fyxs"
       using 3 \<open>f x \<noteq> []\<close> \<open>?fyxs \<noteq> []\<close> cost_hd_concat_map[of "y#xs" f c "last (f x)" k] by auto
-    also have "... \<le> (\<Sum>x\<leftarrow>(x#y#xs). cost_of_path c (f x)) + (length (x#y#xs) - 1) * k"
+    also have "... \<le> (\<Sum>x\<leftarrow>(x#y#xs). cost_of_path c (f x)) + (length (tl (x#y#xs))) * k"
       using 3 by auto
     finally show ?thesis .
   qed
