@@ -1,5 +1,5 @@
-theory VertexCover4ToMetricTravelingSalesman
-  imports Main tsp.GraphAdjMap WeightedGraph
+theory VertexCover4ToMetricTravelingSalesman_Specs
+  imports Main tsp.GraphAdjMap_Specs WeightedGraph
 begin
 
 locale VC4_To_mTSP = 
@@ -21,20 +21,20 @@ locale VC4_To_mTSP =
   functions because we cannot quantify over types)\<close>
   fixes fold_g1_uedges1 :: "('v1 uedge \<Rightarrow> 'v2set \<Rightarrow> 'v2set) \<Rightarrow> 'g1 \<Rightarrow> 'v2set \<Rightarrow> 'v2set"
     \<comment> \<open>Function that folds the undirected edges of a graph represented by an adjacency map.\<close>
-  assumes fold_g1_uedges1: "\<And>M f a. ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges1: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges1 f M a = fold f es a"
   fixes fold_g1_uedges2 :: "('v1 uedge \<Rightarrow> bool \<Rightarrow> bool) \<Rightarrow> 'g1 \<Rightarrow> bool \<Rightarrow> bool"
-  assumes fold_g1_uedges2: "\<And>M f a. ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges2: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges2 f M a = fold f es a"
   fixes fold_g1_uedges3 :: "('v1 uedge \<Rightarrow> enat \<Rightarrow> enat) \<Rightarrow> 'g1 \<Rightarrow> enat \<Rightarrow> enat"
-  assumes fold_g1_uedges3: "\<And>M f a. ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges3: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges3 f M a = fold f es a"
   fixes fold_g1_uedges4 :: "('v1 uedge \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list) 
     \<Rightarrow> 'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list"
-  assumes fold_g1_uedges4: "\<And>M f a. ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges4: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges4 f M a = fold f es a"
   fixes fold_g1_uedges5 :: "('v1 uedge \<Rightarrow> 'v1set \<Rightarrow> 'v1set) \<Rightarrow> 'g1 \<Rightarrow> 'v1set \<Rightarrow> 'v1set"
-  assumes fold_g1_uedges5: "\<And>M f a. ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges5: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges5 f M a = fold f es a"
 
   fixes fold_v1set1 :: "('v1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list) 
@@ -49,11 +49,11 @@ locale VC4_To_mTSP =
   assumes fold_v1set2: "\<And>X f a. set_invar1 X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set1 X 
       \<and> fold_v1set2 f X a = fold f xs a"
 
-  fixes fold_g2_vset1 :: "(('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 'g2 \<Rightarrow> 'g2) \<Rightarrow> 'v2set \<Rightarrow> 'g2 \<Rightarrow> 'g2"
+  fixes fold_v2set1 :: "(('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 'g2 \<Rightarrow> 'g2) \<Rightarrow> 'v2set \<Rightarrow> 'g2 \<Rightarrow> 'g2"
     \<comment> \<open>Function that folds the vertices of a graph represented by an adjacency map.\<close>
   assumes finite_sets2: "\<And>X. finite (set2 X)"
-  assumes fold_g2_vset1: "\<And>X f a. set_invar2 X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set2 X 
-      \<and> fold_g2_vset1 f X a = fold f xs a" \<comment> \<open>For locale \<open>graph_of_vertices_for_ugraph_adj_map\<close>.\<close>
+  assumes fold_v2set1: "\<And>X f a. set_invar2 X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set2 X 
+      \<and> fold_v2set1 f X a = fold f xs a" \<comment> \<open>For locale \<open>graph_of_vertices_for_ugraph_adj_map\<close>.\<close>
 begin
 
 \<comment> \<open>Import lemmas by instantiating a sublocale for each fold-function.\<close>
@@ -79,8 +79,8 @@ sublocale fold5: ugraph_adj_map_fold_uedges map_empty1 update1 map_delete1 looku
   using fold_g1_uedges5 by unfold_locales
 
 sublocale graph_of_vertices_for_ugraph_adj_map map_empty2 update2 map_delete2 lookup2 map_invar2 
-  set_empty2 insert2 set_delete2 isin2 set2 set_invar2 union2 inter2 diff2 rep2 fold_g2_vset1
-  using fold_g2_vset1 finite_sets2 by unfold_locales
+  set_empty2 insert2 set_delete2 isin2 set2 set_invar2 union2 inter2 diff2 rep2 fold_v2set1
+  using fold_v2set1 finite_sets2 by unfold_locales
 
 sublocale fold6: fold_set2 set_empty1 set_delete1 isin1 set1 set_invar1 insert1 union1 inter1 diff1 
   fold_v1set1
@@ -140,10 +140,6 @@ fun neighborhood_in_He :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> '
     else if w = v \<and> i = 5 then g2.set_of_list [(rep1 e,v,1),(rep1 e,u,2)]
     else if w = v \<and> i = 6 then g2.set_of_list [(rep1 e,v,3),(rep1 e,u,4)]
     else g2.set_of_list [])"
-
-(* fun H\<^sub>e :: "'v1 uedge \<Rightarrow> 'g2" where
-  "H\<^sub>e e = (case rep1 e of uEdge u v \<Rightarrow> let e = uEdge u v in
-    fold_g2_vset (\<lambda>x. update2 x (neighborhood_in_He x)) (vertices_of_He e) map_empty2)" *)
 
 fun He :: "'v1 uedge \<Rightarrow> 'g2" ("H\<^sub>e") where
   "H\<^sub>e e = graph_of_vertices \<N>\<^sub>H\<^sub>e (V\<^sub>H\<^sub>e e)"
@@ -706,30 +702,36 @@ lemma vertices_in_He_path_dist:
   apply simp
   sorry (* TODO: How to prove? *)
 
-lemma are_vertices_in_He_min_dist: 
-  assumes "g1.ugraph_adj_map_invar G" "are_vertices_in_He G x y"
-  shows "min_dist_in_He G x y < \<infinity>"
+lemma min_dist_in_He_leq_path_dist:
+  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
+  shows "min_dist_in_He G x y \<le> g2.path_dist (H\<^sub>e e) x y"
   using assms(1)
 proof (rule fold3.fold_uedgesE)
-  obtain e where e_isin_G: "e \<in> g1.uedges G" and "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
-    using assms by (elim are_vertices_in_He_elim)
-  hence d\<^sub>x\<^sub>y_le_inf: "g2.path_dist (H\<^sub>e e) x y < \<infinity>" (is "?d\<^sub>x\<^sub>y < \<infinity>")
-    using assms vertices_in_He_path_dist by auto
-
   let ?f="\<lambda>e d. min (g2.path_dist (H\<^sub>e e) x y) d"
   fix es
   assume "distinct es" "map rep1 es = es" and set_es: "List.set es = g1.uedges G" and
     [simp]: "fold_g1_uedges3 ?f G \<infinity> = fold ?f es \<infinity>"
-  hence "e \<in> List.set es"
-    using e_isin_G by auto
-  then obtain es\<^sub>1 es\<^sub>2 where [simp]: "es = es\<^sub>1 @ e#es\<^sub>2"
-    by (meson split_list)
-  have "fold ?f es \<infinity> = fold ?f es\<^sub>2 (min ?d\<^sub>x\<^sub>y (fold ?f es\<^sub>1 \<infinity>))"
+  moreover hence "e \<in> set es"
+    using assms by auto
+  moreover hence "\<And>d. fold ?f es d \<le> ?f e d"
+    by (intro fold_enat_min_leq_member)
+  ultimately show ?thesis
     by auto
-  also have "... < \<infinity>"
-    using d\<^sub>x\<^sub>y_le_inf by (intro fold_enat_min; intro linorder_class.min.strict_coboundedI1)
-  finally show "min_dist_in_He G x y < \<infinity>"
-    by (auto simp del: He.simps)
+qed
+
+lemma are_vertices_in_He_min_dist: 
+  assumes "g1.ugraph_adj_map_invar G" "are_vertices_in_He G x y"
+  shows "min_dist_in_He G x y < \<infinity>"
+  using assms
+proof (rule are_vertices_in_He_elim)
+  fix e 
+  assume e_isin_G: "e \<in> g1.uedges G" and "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
+  hence d\<^sub>x\<^sub>y_le_inf: "g2.path_dist (H\<^sub>e e) x y < \<infinity>" (is "?d\<^sub>x\<^sub>y < \<infinity>")
+    using assms vertices_in_He_path_dist by auto
+  moreover have "min_dist_in_He G x y \<le> g2.path_dist (H\<^sub>e e) x y"
+    using assms e_isin_G by (intro min_dist_in_He_leq_path_dist)
+  ultimately show ?thesis
+    using order_le_less_trans by blast
 qed
 
 lemma min_dist_in_He_sym:
@@ -795,21 +797,30 @@ proof -
     using assms by (intro is_edge_in_He_intro)
 qed
 
+lemma vertices_in_He_of_edge_in_He:
+  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
+  shows "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
+  using assms
+proof -
+  have y_isin_Nx: "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
+    using assms g2.rep_isin_uedges_elim[of "H\<^sub>e e", OF invar_He] by blast
+  moreover thus "x \<in> g2.vertices (H\<^sub>e e)"
+    by (auto intro!: g2.vertices_memberI1)
+  ultimately show "y \<in> g2.vertices (H\<^sub>e e)"
+    by (auto intro!: g2.vertices_memberI2)
+qed
+
 lemma edge_in_He_are_vertices:
   assumes "g1.ugraph_adj_map_invar G" "is_edge_in_He G (uEdge x y)"
   shows "are_vertices_in_He G x y"
-  using assms
-proof (rule is_edge_in_He_elim)
-  fix e
-  assume e_is_edge: "e \<in> g1.uedges G" and "rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
-  hence y_isin_Nx: "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
-    using g2.rep_isin_uedges_elim[of "H\<^sub>e e", OF invar_He] by blast
-  moreover hence "x \<in> g2.vertices (H\<^sub>e e)"
-    by (auto intro!: g2.vertices_memberI1)
-  moreover have "y \<in> g2.vertices (H\<^sub>e e)"
-    using y_isin_Nx by (auto intro!: g2.vertices_memberI2)
+  using assms 
+proof -
+  obtain e where "e \<in> g1.uedges G" "rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
+    using assms is_edge_in_He by blast
+  moreover hence "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
+    using assms vertices_in_He_of_edge_in_He by blast+
   ultimately show ?thesis
-    using assms e_is_edge by (intro are_vertices_in_He_intro)
+    using assms by (intro are_vertices_in_He_intro)
 qed
 
 lemma invar_vertices_of_H:
@@ -1161,9 +1172,7 @@ lemma vertices_hp_v2:
 lemma distinct_hp:
   assumes "g1.ugraph_adj_map_invar G" "rep1 e \<in> g1.uedges G"
   shows "distinct (hp_u1 e)" "distinct (hp_u2 e)"
-    (* "distinct (hp_v1 e)" "distinct (hp_v2 e)" *)
-  using assms 
-  sorry (* by (rule g1.uedge_not_refl; simp)+ *)
+  using assms g1.uedge_not_refl by (auto split: uedge.splits)
 
 (*fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "hp_starting_at (e,x,i) = (case rep1 e of uEdge u v \<Rightarrow>
@@ -1230,42 +1239,63 @@ proof cases
   assume "are_vertices_in_He G ?x ?y"
   then obtain e where "e \<in> g1.uedges G" "?x \<in> g2.vertices (H\<^sub>e e)" "?y \<in> g2.vertices (H\<^sub>e e)"
     using assms by (elim are_vertices_in_He_elim)
-  hence "isin2 (V\<^sub>H\<^sub>e e) ?x" "isin2 (V\<^sub>H\<^sub>e e) ?y"
+  hence "isin2 (V\<^sub>H\<^sub>e e) ?x" and "isin2 (V\<^sub>H\<^sub>e e) ?y"
     using invar_vertices_of_He by (auto simp add: vertices_of_He[symmetric] g2.set_specs 
         simp del: vertices_of_He.simps)
-  hence "rep1 e = e\<^sub>1" "rep1 e = e\<^sub>2"
+  hence "rep1 e = e\<^sub>1" and "rep1 e = e\<^sub>2"
     by (auto intro!: isin_vertices_of_He_edge)
   hence "e\<^sub>1 = e\<^sub>2"
     by auto
 
   have "\<And>e. e \<in> g1.uedges G \<Longrightarrow> rep2 (uEdge ?x ?y) \<notin> g2.uedges (H\<^sub>e e)"
-    sorry
-  have "\<not> is_edge_in_He G (uEdge ?x ?y)"
-    using assms is_edge_in_He_elim
-    thm is_edge_in_He_elim
-    sorry
+  proof
+    fix e
+    assume "e \<in> g1.uedges G" and xy_is_edge: "rep2 (uEdge ?x ?y) \<in> g2.uedges (H\<^sub>e e)"
+    hence "?x \<in> g2.vertices (H\<^sub>e e)"
+      using assms vertices_in_He_of_edge_in_He by auto
+    moreover hence "isin2 (V\<^sub>H\<^sub>e e) ?x"
+      using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+    moreover hence "rep1 e = e\<^sub>1"
+      by (auto intro!: isin_vertices_of_He_edge)
+    moreover hence "isin2 (\<N>\<^sub>2 (H\<^sub>e e) ?x) ?y"
+      using invar_He xy_is_edge by (intro g2.rep_isin_uedges_elim2)
+    ultimately have "isin2 (\<N>\<^sub>H\<^sub>e (rep1 e,u\<^sub>1,1)) ?y"
+      using neighborhood_He by auto
+    moreover have "isin2 (V\<^sub>H\<^sub>e e) (rep1 e,u\<^sub>1,1)"
+      using \<open>isin2 (V\<^sub>H\<^sub>e e) ?x\<close> by (simp add: \<open>rep1 e = e\<^sub>1\<close>)
+    moreover hence "\<not> isin2 (\<N>\<^sub>H\<^sub>e (rep1 e,u\<^sub>1,1)) ?y"
+      apply (rule isin_vertices_of_He_neighborhood_elim)
+      apply (simp add: g2.isin_set_of_list del: g2.set_of_list.simps)+
+      done
+    ultimately show "False"
+      by auto
+  qed
+  hence "\<not> is_edge_in_He G (uEdge ?x ?y)"
+    using is_edge_in_He_elim[OF assms, of "uEdge ?x ?y"] by auto
 
   (* e\<^sub>1 = e\<^sub>2. e\<^sub>1 = uEdge u v \<Longrightarrow> different cases. 
     (i) u\<^sub>1 = u\<^sub>2. \<Longrightarrow> path (uEdge u v,u,1),(uEdge u v,u,3),(uEdge u v,u,4),(uEdge u v,u,2) 
     (ii) u\<^sub>1 \<noteq> u\<^sub>2. \<Longrightarrow> path (uEdge u v,u,1),(uEdge u v,u,5),(uEdge u v,v,2)
   *)
-  hence "g2.path_dist (H\<^sub>e e) ?x ?y \<le> 4"
+  hence "g2.path_dist (H\<^sub>e e) ?x ?y \<le> enat 4"
   proof cases
     assume "u\<^sub>1 = u\<^sub>2"
     hence "g2.path_betw (H\<^sub>e e) ?x [?x,(e\<^sub>1,u\<^sub>1,3),(e\<^sub>1,u\<^sub>1,4),?y] ?y"
       sorry
-    have "g2.path_dist (H\<^sub>e e) ?x ?y \<le> 4"
-      sorry
-    thus ?thesis
-      sorry
+    hence "g2.path_dist (H\<^sub>e e) ?x ?y \<le> length [?x,(e\<^sub>1,u\<^sub>1,3),(e\<^sub>1,u\<^sub>1,4),?y]"
+      using invar_He g2.path_dist_less by blast
+    also have "... = enat 4"
+      using enat_ord_code by auto
+    finally show ?thesis .
   next
     assume "u\<^sub>1 \<noteq> u\<^sub>2"
     hence "g2.path_betw (H\<^sub>e e) ?x [?x,(e\<^sub>1,u\<^sub>1,5),?y] ?y"
       sorry
-    hence "g2.path_dist (H\<^sub>e e) ?x ?y \<le> 3"
-      sorry
-    thus ?thesis
-      sorry
+    hence "g2.path_dist (H\<^sub>e e) ?x ?y \<le> length [?x,(e\<^sub>1,u\<^sub>1,5),?y]"
+      using invar_He g2.path_dist_less by blast
+    also have "... \<le> enat 4"
+      using enat_ord_code by auto
+    finally show ?thesis .
   qed
   hence "the_enat (min_dist_in_He G ?x ?y) \<le> 5"
     sorry
@@ -1380,7 +1410,7 @@ proof (cases e)
     using that by auto
 qed *)
 
-lemma map_edge_to_hp_start_vertex_is_vertex:
+(* lemma map_edge_to_hp_start_vertex_is_vertex:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" and "e \<in> g1.uedges G"
   shows "map_edge_to_hp_start_vertex G T e \<in> List.set T"
 proof -
@@ -1390,15 +1420,36 @@ proof -
     by (intro set_rotate_tour)
   show ?thesis
     sorry
-qed
+qed *)
 
 lemma map_edge_to_hp_start_vertex_cases:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" 
       and "e \<in> g1.uedges G" "rep1 e = rep1 (uEdge u v)"
   shows "map_edge_to_hp_start_vertex G T e \<in> {(rep1 e,u,1),(rep1 e,u,2),(rep1 e,v,1),(rep1 e,v,2)}"
 proof -
-  show ?thesis
+  let ?f="isin2 (V\<^sub>H\<^sub>e e)"
+
+  thm length_rotate_tour
+  have "length T \<ge> 2"
     sorry
+  obtain x y xs where [simp]: "rotate_tour (isin2 (V\<^sub>H\<^sub>e e)) T = x#y#xs"
+    sorry
+  have "?f y"
+    apply (rule not_hd_snd_rotate_tour(2)[of ?f T])
+    subgoal
+      (* follows from T being a Hamiltonian cycle *)
+      sorry
+    by (auto simp del: rotate_tour.simps vertices_of_He.simps)
+  moreover obtain e' w i where [simp]: "y = (e',w,i)"
+    by (cases y)
+  ultimately have "rep1 e = e'"
+    by (auto elim: isin_vertices_of_He_elim simp del: vertices_of_He.simps)
+  hence [simp]: "rep1 e = rep1 e'"
+    by (auto simp add: g1.rep_idem)
+  then consider "rep1 e' = uEdge u v" | "rep1 e' = uEdge v u"
+    using assms g1.is_rep by auto
+  thus ?thesis
+    by cases (auto simp del: rotate_tour.simps vertices_of_He.simps)
 qed
 
 lemma map_edge_to_covering_vertex_cases:

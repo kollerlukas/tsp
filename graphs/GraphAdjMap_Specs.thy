@@ -1,4 +1,4 @@
-theory GraphAdjMap
+theory GraphAdjMap_Specs
   imports Main tsp.Misc tsp.Berge "HOL-Data_Structures.Map_Specs" "HOL-Data_Structures.Set_Specs"
     tsp.WeightedGraph tsp.HamiltonianCycle tsp.TravelingSalesman tsp.VertexCover
 begin
@@ -240,6 +240,9 @@ definition neighborhood ("\<N>") where
 
 lemma neighborhood_empty: "\<N> map_empty v = set_empty"
   unfolding neighborhood_def by (auto simp: map_specs)
+
+lemma lookup_non_empty_neighborhood: "isin (\<N> M u) v \<Longrightarrow> lookup M u = Some (\<N> M u)"
+  unfolding neighborhood_def by (metis invar_empty set_empty mem_not_empty set_isin the_default.elims)
 
 lemma neighborhood_update: "map_invar M \<Longrightarrow> \<N> (update v N\<^sub>v M) = (\<N> M)(v := N\<^sub>v)"
   unfolding neighborhood_def by (auto simp: map_specs)
@@ -495,10 +498,34 @@ lemma rev_path:
   using assms by (induction G u P v rule: path_betw.induct) 
     (auto intro!: path_betw.intros append_path_betw)
 
+lemma finite_paths: 
+  assumes "ugraph_adj_map_invar G"
+  shows "finite {P | P. path_betw G u P v \<and> distinct P}"
+  sorry (* TODO: how to prove *)
+
+lemma path_dist_less:
+  assumes "ugraph_adj_map_invar G" "path_betw G u P v"
+  shows "path_dist G u v \<le> length P"
+proof -
+  obtain P' where "path_betw G u P' v" "distinct P'" "length P' \<le> length P"
+    sorry (* TODO: compute distinct subpath of P *)
+  moreover hence "path_dist G u v \<le> length P'"
+    unfolding path_dist_def using assms finite_paths by (auto intro!: Min_le)
+  ultimately show ?thesis
+    by (simp add: order_subst1)
+qed
+
 lemma path_dist_less_inf:
   assumes "ugraph_adj_map_invar G" "path_betw G u P v"
   shows "path_dist G u v < \<infinity>"
-  sorry
+proof -
+  have "path_dist G u v \<le> length P"
+    using assms by (intro path_dist_less)
+  also have "... < \<infinity>"
+    by auto
+  finally show ?thesis
+    by auto
+qed
 
 lemma rep_idem: "rep (rep e) = rep e"
 proof -
@@ -545,7 +572,12 @@ proof -
     by (elim rep_elim)
   thus ?thesis
     using that assms v_isin_Nu by cases auto
-qed
+qed                       
+
+lemma rep_isin_uedges_elim2:
+  assumes "ugraph_adj_map_invar G" "rep (uEdge u v) \<in> uedges G"
+  shows "isin (\<N> G u) v"
+  using assms rep_isin_uedges_elim by blast
 
 lemma rep_of_edge: "e \<in> uedges G \<Longrightarrow> rep e = e"
   unfolding uedges_def2 by (auto simp add: rep_idem)

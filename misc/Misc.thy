@@ -177,7 +177,50 @@ proof (induction xs arbitrary: a)
     by (cases "f x a = a") auto
 qed auto
 
-lemma fold_enat_min:
+lemma fold_enat_min_leq_acc: "fold (\<lambda>x a. min (g x) a) xs (a::enat) \<le> a" (* TODO: less restrictive type *)
+proof (induction xs arbitrary: a)
+  case (Cons x xs)
+  have "fold (\<lambda>x a. min (g x) a) (x#xs) a = fold (\<lambda>x a. min (g x) a) xs (min (g x) a)"
+    by auto
+  also have "... \<le> min (g x) a"
+    using Cons by fastforce
+  thus ?case 
+    by auto
+qed auto
+
+lemma fold_enat_min_leq_member: 
+  assumes "x \<in> set xs"
+  shows "fold (\<lambda>x a. min (g x) a) xs (a::enat) \<le> min (g x) a"
+  using assms
+proof (induction xs arbitrary: a rule: list012.induct)
+  case 1
+  then show ?case by auto
+next
+  case (2 y)
+  then show ?case by auto
+next
+  case (3 y z xs)
+  show ?case
+  proof cases
+    assume "x = y"
+    hence "fold (\<lambda>x a. min (g x) a) (y#z#xs) a = fold (\<lambda>x a. min (g x) a) (z#xs) (min (g x) a)"
+      by auto
+    also have "... \<le> min (g x) a"
+      by (intro fold_enat_min_leq_acc)
+    finally show ?thesis .
+  next
+    assume "x \<noteq> y"
+    have "fold (\<lambda>x a. min (g x) a) (y#z#xs) a = fold (\<lambda>x a. min (g x) a) (z#xs) (min (g y) a)"
+      by auto
+    also have "... \<le> min (g x) (min (g y) a)"
+      using \<open>x \<noteq> y\<close> 3 by (intro "3.IH") auto  
+    also have "... \<le> min (g x) a"
+      using min.cobounded2 min.mono by blast
+    finally show ?thesis .
+  qed
+qed
+
+(* lemma fold_enat_min:
   assumes "(a::enat) < \<infinity>"
   shows "fold (\<lambda>x a. min (g x) a) xs a < \<infinity>" (is "fold ?f xs a < \<infinity>")
   using assms
@@ -185,7 +228,7 @@ proof (induction xs arbitrary: a)
   case (Cons x xs)
   thus ?case 
     by (cases "g x") auto
-qed auto
+qed auto *)
 
 lemma fold_concat_map: "fold (\<lambda>x a. a @ f x) xs a = a @ concat (map f xs)"
   by (induction xs arbitrary: a) auto
@@ -1673,6 +1716,9 @@ lemma edges_of_path_append_singleton: (* move lemma to graph stuff *)
   "xs \<noteq> [] \<Longrightarrow> edges_of_path (xs @ [x]) = edges_of_path xs @ [{last xs,x}]"
   by (induction xs rule: list012.induct) auto
 
+lemma length_rotate_tour_acc: "length (rotate_tour_acc acc f xs) = length acc + length xs"
+  by (induction xs arbitrary: acc rule: list012.induct) auto
+
 lemma set_rotate_tour_acc: 
   assumes "hd (xs @ acc) = last (xs @ acc)"
   shows "set xs \<union> set acc = set (rotate_tour_acc acc f xs)"
@@ -1702,6 +1748,9 @@ lemma rotate_tour_acc_hd_eq_last:
 
 fun rotate_tour :: "('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "rotate_tour f xs = rotate_tour_acc [] f xs"
+
+lemma length_rotate_tour: "length (rotate_tour f T) = length T"
+  by (auto simp add: length_rotate_tour_acc)
 
 lemma edges_of_path_rotate_tour: 
   "hd xs = last xs \<Longrightarrow> set (edges_of_path xs) = set (edges_of_path (rotate_tour f xs))"
