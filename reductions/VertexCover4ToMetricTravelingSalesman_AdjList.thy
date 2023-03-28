@@ -255,6 +255,17 @@ thm lreduction.f.simps
 thm lreduction.c.simps
 thm lreduction.g.simps
 
+fun f_adjlist where
+  "f_adjlist G = (
+    let V = fold_uedges (lset_union o lreduction.vertices_of_He) G lset_empty;
+        n = \<lambda>x. (if lset_isin V x then lset_delete x V else lset_empty) in 
+    fold_vset (\<lambda>v. lmap_update v (n v)) V lmap_empty)"
+
+lemma "f_adjlist = lreduction.f"
+  unfolding f_adjlist.simps Let_def lreduction.f.simps lreduction.complete_graph.simps 
+    lreduction.graph_of_vertices.simps lreduction.vertices_of_H.simps 
+    lreduction.neighborhood_compl.simps by simp
+
 \<comment> \<open>Feasibility\<close>
 thm lreduction.f_is_complete
 thm lreduction.c_tri_inequality

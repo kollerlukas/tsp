@@ -13,12 +13,16 @@ fun list012 where
 | "list012 [v] = undefined"
 | "list012 (u#v#P) = list012 (v#P)"
 
+lemmas list012_induct = list012.induct [case_names Nil Singleton CCons]
+
 (* function just for the induction schema *)
 fun list0123 where
   "list0123 [] = undefined"
 | "list0123 [v] = undefined"
 | "list0123 [u,v] = undefined"
 | "list0123 (u#v#w#P) = list0123 (v#w#P)"
+
+lemmas list0123_induct = list0123.induct [case_names Nil Singleton Doubleton CCCons]
 
 (* function just for the induction schema *)
 fun list01234 where
@@ -112,6 +116,11 @@ lemma list_eq_even_len_gr1:
 lemma set_tl_eq_set:
   assumes "length xs > 1" "distinct (tl xs)" "hd xs = last xs"
   shows "set (tl xs) = set xs"
+  using assms by (induction xs rule: list012.induct) auto
+
+lemma list_len_geq2_elim:
+  assumes "length xs \<ge> 2"
+  obtains x y ys where "xs = x#y#ys"
   using assms by (induction xs rule: list012.induct) auto
 
 lemma list_split_for_2elems:
@@ -244,7 +253,7 @@ lemma distinct_concat_map:
   shows "distinct (concat (map f xs))"
   using assms by (induction xs) (auto intro!: concat_map_disjoint) 
 
-lemma hd_concat_map:
+lemma hd_concat_map_elim:
   assumes "\<exists>x \<in> set xs. f x \<noteq> []"
   obtains y where "y \<in> set xs" "f y \<noteq> []" "hd (concat (map f xs)) = hd (f y)"
   using assms
@@ -256,10 +265,10 @@ proof (induction xs arbitrary: thesis)
     using Cons by cases auto
 qed auto
 
-lemma last_concat_map:
+lemma last_concat_map_elim:
   assumes "\<exists>x \<in> set xs. f x \<noteq> []"
   obtains y where "y \<in> set xs" "f y \<noteq> []" "last (concat (map f xs)) = last (f y)"
-proof (rule hd_concat_map)
+proof (rule hd_concat_map_elim)
   show "\<exists>x \<in> set (rev xs). (rev o f) x \<noteq> []"
     using assms by auto
   fix y
@@ -270,6 +279,11 @@ proof (rule hd_concat_map)
   ultimately show ?thesis
     using that by auto
 qed
+
+lemma last_concat_map:
+  assumes "xs \<noteq> []" "\<And>x. x \<in> set xs \<Longrightarrow> f x \<noteq> []"
+  shows "last (concat (map f xs)) = last (f (last xs))"
+  using assms by (induction xs) auto
 
 lemma concat_filter_empty: "concat (filter (\<lambda>x. x \<noteq> []) xs) = concat xs"
   by (induction xs) auto
@@ -283,6 +297,44 @@ subsection \<open>Repeated Elements in Lists\<close>
 
 lemma distinct_distinct_adj: "distinct xs \<Longrightarrow> distinct_adj xs"
   by (simp add: distinct_adj_altdef distinct_tl remdups_adj_distinct)
+
+(* lemma card_leq_len_remdups_adj: "card (set xs) \<le> length (remdups_adj xs)"
+proof (induction xs rule: remdups_adj.induct)
+  case (3 x y xs)
+  consider "x = y" | "x \<noteq> y"
+    by auto
+  thus ?case
+  proof cases
+    assume "x = y"
+    thus ?thesis
+      using 3 by auto
+  next
+    assume "x \<noteq> y"
+    hence "set (x#y#xs) = {x} \<union> set (y#xs)"
+      by auto
+    hence "card (set (x#y#xs)) = card ({x} \<union> set (y#xs))"
+      by auto
+    also have "... \<le> card {x} + card (set (y#xs))"
+      by (intro card_Un_le)
+    also have "... \<le> length (remdups_adj ((x#y#xs)))"
+      using 3 \<open>x \<noteq> y\<close> by auto
+    finally show ?thesis
+      by auto
+  qed
+qed auto
+
+lemma len_remdups_append: "length (remdups_adj xs) \<le> length (remdups_adj (xs @ [x]))"
+  by (induction xs rule: remdups_adj.induct) auto
+
+lemma cycle_card_leq_len_remdups_adj: "card (set xs) \<le> length (remdups_adj (xs @ [hd xs]))"
+proof -
+  have "card (set xs) \<le> length (remdups_adj xs)"
+    using card_leq_len_remdups_adj by auto
+  also have "... \<le> length (remdups_adj (xs @ [hd xs]))"
+    by (intro len_remdups_append)
+  finally show ?thesis
+    by auto
+qed *)
 
 subsection \<open>Even-Indexed Elements in Lists\<close>
 
@@ -1717,26 +1769,38 @@ lemma edges_of_path_append_singleton: (* move lemma to graph stuff *)
   by (induction xs rule: list012.induct) auto
 
 lemma length_rotate_tour_acc: "length (rotate_tour_acc acc f xs) = length acc + length xs"
-  by (induction xs arbitrary: acc rule: list012.induct) auto
+  by (induction xs arbitrary: acc rule: list012_induct) auto
 
 lemma set_rotate_tour_acc: 
   assumes "hd (xs @ acc) = last (xs @ acc)"
   shows "set xs \<union> set acc = set (rotate_tour_acc acc f xs)"
   using assms
-proof (induction xs arbitrary: acc rule: list012.induct)
-  case (3 x y xs)
+proof (induction xs arbitrary: acc rule: list012_induct)
+  case (CCons x y xs)
   hence x_isin: "x \<in> set (y#xs @ acc)"
     using last_in_set[of "y#xs @ acc"] by auto
   thus ?case 
-    using "3.IH"[of "acc @ [y]"] by (auto split: if_splits)
+    using "CCons.IH"[of "acc @ [y]"] by (auto split: if_splits)
+qed auto
+
+lemma set_tl_rotate_tour_acc: 
+  assumes "hd (xs @ acc) = last (xs @ acc)"
+  shows "set (tl (xs @ acc)) = set (tl (rotate_tour_acc acc f xs))"
+  using assms
+proof (induction xs arbitrary: acc rule: list012_induct)
+  case (CCons x y xs)
+  hence x_isin: "x \<in> set (y#xs @ acc)"
+    using last_in_set[of "y#xs @ acc"] by auto
+  thus ?case 
+    using "CCons.IH"[of "acc @ [y]"] by (auto split: if_splits)
 qed auto
 
 lemma edges_of_path_rotate_tour_acc:
   assumes "hd (xs @ acc) = last (xs @ acc)"
   shows "set (edges_of_path (rotate_tour_acc acc f xs)) = set (edges_of_path (xs @ acc))"
   using assms
-proof (induction xs arbitrary: acc rule: list012.induct)
-  case (3 x y xs)
+proof (induction xs arbitrary: acc rule: list012_induct)
+  case (CCons x y xs)
   thus ?case 
     using edges_of_path_append_singleton[of "y#xs @ acc" y] by (auto split: if_splits)
 qed auto
@@ -1744,7 +1808,12 @@ qed auto
 lemma rotate_tour_acc_hd_eq_last:
   "hd (xs @ acc) = last (xs @ acc) \<Longrightarrow> 
     hd (rotate_tour_acc acc f xs) = last (rotate_tour_acc acc f xs)"
-  by (induction xs arbitrary: acc rule: list012.induct) auto
+  by (induction xs arbitrary: acc rule: list012_induct) auto
+
+lemma distinct_rotate_tour_acc: 
+  assumes "hd (xs @ acc) = last (xs @ acc)" "distinct (tl (xs @ acc))" 
+  shows "distinct (tl (rotate_tour_acc acc f xs))"
+  using assms by (induction xs arbitrary: acc rule: list012_induct) auto
 
 fun rotate_tour :: "('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "rotate_tour f xs = rotate_tour_acc [] f xs"
@@ -1752,14 +1821,23 @@ fun rotate_tour :: "('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 
 lemma length_rotate_tour: "length (rotate_tour f T) = length T"
   by (auto simp add: length_rotate_tour_acc)
 
+lemma rotate_tour_non_nil: "xs \<noteq> [] \<Longrightarrow> rotate_tour f xs \<noteq> []"
+  using length_rotate_tour length_0_conv by metis
+
 lemma edges_of_path_rotate_tour: 
-  "hd xs = last xs \<Longrightarrow> set (edges_of_path xs) = set (edges_of_path (rotate_tour f xs))"
+  "hd xs = last xs \<Longrightarrow> set (edges_of_path (rotate_tour f xs)) = set (edges_of_path xs)"
   by (auto simp: edges_of_path_rotate_tour_acc)
 
 lemma rotate_tour_hd_eq_last: "hd xs = last xs \<Longrightarrow> hd (rotate_tour f xs) = last (rotate_tour f xs)"
   by (auto simp: rotate_tour_acc_hd_eq_last)
 
-lemma set_rotate_tour: "hd xs = last xs \<Longrightarrow> set xs = set (rotate_tour f xs)"
+lemma set_rotate_tour: "hd xs = last xs \<Longrightarrow> set (rotate_tour f xs) = set xs"
   using set_rotate_tour_acc[of xs "[]"] by auto
+
+lemma set_tl_rotate_tour: "hd xs = last xs \<Longrightarrow> set (tl (rotate_tour f xs)) = set (tl xs)"
+  using set_tl_rotate_tour_acc[of xs "[]"] by auto
+
+lemma distinct_rotate_tour: "hd xs = last xs \<Longrightarrow> distinct (tl xs) \<Longrightarrow> distinct (tl (rotate_tour f xs))"
+  using distinct_rotate_tour_acc[of xs "[]"] by auto
 
 end
