@@ -1759,9 +1759,9 @@ subsection \<open>Rotating Cycles\<close>
 
 (* TODO: connect with cycles defined in problems.MinSpanningTree *)
 
-fun rotate_tour_acc :: "'a list \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+fun rotate_tour_acc :: "'a list \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "rotate_tour_acc acc f (x#y#xs) = 
-    (if \<not> f x \<and> f y then x#y#xs @ acc else rotate_tour_acc (acc @ [y]) f (y#xs))"
+    (if f x y then x#y#xs @ acc else rotate_tour_acc (acc @ [y]) f (y#xs))"
 | "rotate_tour_acc acc f xs = xs @ acc"
 
 lemma edges_of_path_append_singleton: (* move lemma to graph stuff *)
@@ -1797,7 +1797,7 @@ qed auto
 
 lemma edges_of_path_rotate_tour_acc:
   assumes "hd (xs @ acc) = last (xs @ acc)"
-  shows "set (edges_of_path (rotate_tour_acc acc f xs)) = set (edges_of_path (xs @ acc))"
+  shows "mset (edges_of_path (rotate_tour_acc acc f xs)) = mset (edges_of_path (xs @ acc))"
   using assms
 proof (induction xs arbitrary: acc rule: list012_induct)
   case (CCons x y xs)
@@ -1806,8 +1806,7 @@ proof (induction xs arbitrary: acc rule: list012_induct)
 qed auto
 
 lemma rotate_tour_acc_hd_eq_last:
-  "hd (xs @ acc) = last (xs @ acc) \<Longrightarrow> 
-    hd (rotate_tour_acc acc f xs) = last (rotate_tour_acc acc f xs)"
+  "hd (xs @ acc) = last (xs @ acc) \<Longrightarrow> hd (rotate_tour_acc acc f xs) = last (rotate_tour_acc acc f xs)"
   by (induction xs arbitrary: acc rule: list012_induct) auto
 
 lemma distinct_rotate_tour_acc: 
@@ -1815,7 +1814,23 @@ lemma distinct_rotate_tour_acc:
   shows "distinct (tl (rotate_tour_acc acc f xs))"
   using assms by (induction xs arbitrary: acc rule: list012_induct) auto
 
-fun rotate_tour :: "('a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+lemma distinct_adj_rotate_tour_acc: 
+  assumes "hd (xs @ acc) = last (xs @ acc)" "distinct_adj (xs @ acc)" 
+  shows "distinct_adj (rotate_tour_acc acc f xs)"
+  using assms 
+proof (induction xs arbitrary: acc rule: list012_induct)
+  case (CCons x y xs)
+  then show ?case 
+  proof cases
+    assume "\<not> f x y"
+    moreover have "distinct_adj (y#xs @ acc @ [y])"
+      using CCons distinct_adj_append_iff[of "y#xs @ acc" "[y]"] by auto
+    ultimately show ?thesis
+      using CCons.IH by auto
+  qed auto
+qed auto
+
+fun rotate_tour :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> 'a list" where
   "rotate_tour f xs = rotate_tour_acc [] f xs"
 
 lemma length_rotate_tour: "length (rotate_tour f T) = length T"
@@ -1825,7 +1840,7 @@ lemma rotate_tour_non_nil: "xs \<noteq> [] \<Longrightarrow> rotate_tour f xs \<
   using length_rotate_tour length_0_conv by metis
 
 lemma edges_of_path_rotate_tour: 
-  "hd xs = last xs \<Longrightarrow> set (edges_of_path (rotate_tour f xs)) = set (edges_of_path xs)"
+  "hd xs = last xs \<Longrightarrow> mset (edges_of_path (rotate_tour f xs)) = mset (edges_of_path xs)"
   by (auto simp: edges_of_path_rotate_tour_acc)
 
 lemma rotate_tour_hd_eq_last: "hd xs = last xs \<Longrightarrow> hd (rotate_tour f xs) = last (rotate_tour f xs)"
@@ -1839,5 +1854,8 @@ lemma set_tl_rotate_tour: "hd xs = last xs \<Longrightarrow> set (tl (rotate_tou
 
 lemma distinct_rotate_tour: "hd xs = last xs \<Longrightarrow> distinct (tl xs) \<Longrightarrow> distinct (tl (rotate_tour f xs))"
   using distinct_rotate_tour_acc[of xs "[]"] by auto
+
+lemma distinct_adj_rotate_tour: "hd xs = last xs \<Longrightarrow> distinct_adj xs \<Longrightarrow> distinct_adj (rotate_tour f xs)"
+  using distinct_adj_rotate_tour_acc[of xs "[]"] by auto
 
 end

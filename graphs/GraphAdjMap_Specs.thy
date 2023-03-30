@@ -908,13 +908,12 @@ locale ugraph_adj_map_fold_uedges =
     set_invar union inter diff rep +
   fixes fold_uedges :: "('v uedge \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'map \<Rightarrow> 'b \<Rightarrow> 'b" 
     \<comment> \<open>Function that folds the undirected edges of a graph represented by an adjacency map.\<close>
-  assumes fold_uedges: "\<And>G f a. ugraph_adj_map_invar G \<Longrightarrow>
-    \<exists>es. distinct es \<and> map rep es = es \<and> List.set es = uedges G \<and> fold_uedges f G a = fold f es a"
+  assumes fold_uedges: "\<And>G f a. ugraph_adj_map_invar G \<Longrightarrow> \<exists>es. distinct es \<and> List.set es = uedges G \<and> fold_uedges f G a = fold f es a"
 begin
 
 lemma fold_uedgesE:
   assumes "ugraph_adj_map_invar G"    
-  obtains es where "distinct es" "map rep es = es" "List.set es = uedges G" 
+  obtains es where "distinct es" "List.set es = uedges G" 
     "fold_uedges f G a = fold f es a"
   using assms fold_uedges by blast
 
@@ -922,7 +921,7 @@ lemma fold_neq_obtain_edge:
   assumes "ugraph_adj_map_invar G" "fold_uedges f G a \<noteq> a"
   obtains e where "e \<in> uedges G" "f e a \<noteq> a"
 proof -
-  obtain es where "distinct es" "map rep es = es" and set_es: "List.set es = uedges G" and
+  obtain es where "distinct es" and set_es: "List.set es = uedges G" and
     "fold_uedges f G a = fold f es a"
     using assms by (elim fold_uedgesE)
   thus ?thesis
@@ -942,8 +941,7 @@ locale ugraph_adj_map_fold_vset =
   fixes fold_vset :: "('v \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> 'vset \<Rightarrow> 'b \<Rightarrow> 'b"
   \<comment> \<open>Function that folds the vertices of a graph represented by an adjacency map.\<close>
   assumes finite_sets: "\<And>X. finite (set X)"
-  assumes fold_vset: "\<And>X f a. set_invar X \<Longrightarrow>
-    \<exists>xs. distinct xs \<and> List.set xs = set X \<and> fold_vset f X a = fold f xs a"
+  assumes fold_vset: "\<And>X f a. set_invar X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set X \<and> fold_vset f X a = fold f xs a"
 begin
 
 lemma fold_vsetE:

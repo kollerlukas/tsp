@@ -21,20 +21,20 @@ locale VC4_To_mTSP =
   functions because we cannot quantify over types)\<close>
   fixes fold_g1_uedges1 :: "('v1 uedge \<Rightarrow> 'v2set \<Rightarrow> 'v2set) \<Rightarrow> 'g1 \<Rightarrow> 'v2set \<Rightarrow> 'v2set"
     \<comment> \<open>Function that folds the undirected edges of a graph represented by an adjacency map.\<close>
-  assumes fold_g1_uedges1: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges1: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges1 f M a = fold f es a"
   fixes fold_g1_uedges2 :: "('v1 uedge \<Rightarrow> bool \<Rightarrow> bool) \<Rightarrow> 'g1 \<Rightarrow> bool \<Rightarrow> bool"
-  assumes fold_g1_uedges2: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges2: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges2 f M a = fold f es a"
   fixes fold_g1_uedges3 :: "('v1 uedge \<Rightarrow> enat \<Rightarrow> enat) \<Rightarrow> 'g1 \<Rightarrow> enat \<Rightarrow> enat"
-  assumes fold_g1_uedges3: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges3: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges3 f M a = fold f es a"
   fixes fold_g1_uedges4 :: "('v1 uedge \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list) 
     \<Rightarrow> 'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list"
-  assumes fold_g1_uedges4: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges4: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges4 f M a = fold f es a"
   fixes fold_g1_uedges5 :: "('v1 uedge \<Rightarrow> 'v1set \<Rightarrow> 'v1set) \<Rightarrow> 'g1 \<Rightarrow> 'v1set \<Rightarrow> 'v1set"
-  assumes fold_g1_uedges5: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es \<and> map rep1 es = es 
+  assumes fold_g1_uedges5: "\<And>M f a. g1.ugraph_adj_map_invar M \<Longrightarrow> \<exists>es. distinct es
       \<and> List.set es = g1.uedges M \<and> fold_g1_uedges5 f M a = fold f es a"
 
   fixes fold_v1set1 :: "('v1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list) 
@@ -54,6 +54,9 @@ locale VC4_To_mTSP =
   assumes finite_sets2: "\<And>X. finite (set2 X)"
   assumes fold_v2set1: "\<And>X f a. set_invar2 X \<Longrightarrow> \<exists>xs. distinct xs \<and> List.set xs = set2 X 
       \<and> fold_v2set1 f X a = fold f xs a" \<comment> \<open>For locale \<open>graph_of_vertices_for_ugraph_adj_map\<close>.\<close>
+
+  (* fixes choose_edge :: "'g1 \<Rightarrow> 'v1 uedge option"
+  assumes choose_edge: "g1.ugraph_adj_map_invar G \<Longrightarrow> g1.uedges G \<noteq> {} \<Longrightarrow> the (choose_edge G) \<in> g1.uedges G" *)
 begin
 
 \<comment> \<open>Import lemmas by instantiating a sublocale for each fold-function.\<close>
@@ -104,21 +107,6 @@ text \<open>
        |                                        |
 (uEdge u v,u,2) --- (uEdge u v,v,5) --- (uEdge u v,v,1)
 \<close>
-
-(* fun H\<^sub>e :: "'v1 uedge \<Rightarrow> 'g2" where
-  "H\<^sub>e e = (case rep1 e of uEdge u v \<Rightarrow> let e = uEdge u v in
-    update2 (e,u,1) (g2.set_of_list [(e,u,3),(e,u,5)])
-    (update2 (e,u,2) (g2.set_of_list [(e,u,4),(e,v,5)])
-    (update2 (e,u,3) (g2.set_of_list [(e,u,1),(e,u,4),(e,u,6)])
-    (update2 (e,u,4) (g2.set_of_list [(e,u,2),(e,u,3),(e,v,6)])
-    (update2 (e,u,5) (g2.set_of_list [(e,u,1),(e,v,2)])
-    (update2 (e,u,6) (g2.set_of_list [(e,u,3),(e,v,4)])
-    (update2 (e,v,1) (g2.set_of_list [(e,v,3),(e,v,5)])
-    (update2 (e,v,2) (g2.set_of_list [(e,v,4),(e,u,5)])
-    (update2 (e,v,3) (g2.set_of_list [(e,v,1),(e,v,4),(e,v,6)])
-    (update2 (e,v,4) (g2.set_of_list [(e,v,2),(e,v,3),(e,u,6)])
-    (update2 (e,v,5) (g2.set_of_list [(e,v,1),(e,u,2)])
-    (update2 (e,v,6) (g2.set_of_list [(e,v,3),(e,u,4)]) map_empty2))))))))))))" *)
 
 fun vertices_of_He :: "'v1 uedge \<Rightarrow> 'v2set" ("V\<^sub>H\<^sub>e") where 
   "vertices_of_He e = (case rep1 e of uEdge u v \<Rightarrow>
@@ -186,13 +174,12 @@ fun min_dist_in_He :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \
   \<comment> \<open>This function returns the minimum distance between \<open>x\<close> and \<open>y\<close> in \<open>H\<^sub>e e\<close> for an edge \<open>e\<close> in \<open>G\<close>.\<close>
 
 fun are_vertices_in_He :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> bool" where
-  "are_vertices_in_He G x y = 
-    fold_g1_uedges2 (\<lambda>e b. b \<or> (isin2 (V\<^sub>H\<^sub>e e) x \<and> isin2 (V\<^sub>H\<^sub>e e) y)) G False"
+  "are_vertices_in_He G x y = fold_g1_uedges2 (\<lambda>e b. b \<or> (isin2 (V\<^sub>H\<^sub>e e) x \<and> isin2 (V\<^sub>H\<^sub>e e) y)) G False"
   \<comment> \<open>Return \<open>True\<close> if the graph \<open>G\<close> contains an edge \<open>e\<close> in s.t. \<open>u\<close> and \<open>y\<close> are vertices in the 
   subgraph \<open>H\<^sub>e e\<close>; return \<open>False\<close> otherwise.\<close>
   (* alternate definition:  min_dist_in_He < \<infinity> *)
 
-fun map_edge_to_hp_start_vertex :: 
+(* fun map_edge_to_hp_start_vertex :: 
   "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1 uedge \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat)" where
   (* "map_edge_to_hp_start_vertex G T e = (case rotate_tour (isin2 (V\<^sub>H\<^sub>e e)) T of 
     x#(e',w,i)#T \<Rightarrow> (case rep1 e' of uEdge u v \<Rightarrow>
@@ -209,11 +196,11 @@ fun map_edge_to_hp_start_vertex ::
 fun map_tour_to_hp_staring_vertices :: 
   "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "map_tour_to_hp_staring_vertices G T = 
-    fold_g1_uedges4 (\<lambda>e xs. xs @ [map_edge_to_hp_start_vertex G T e]) G []"
+    fold_g1_uedges4 (\<lambda>e xs. xs @ [map_edge_to_hp_start_vertex G T e]) G []" 
 
 fun map_edge_to_covering_vertex :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1 uedge \<Rightarrow> 'v1" where
   "map_edge_to_covering_vertex G T e = (case map_edge_to_hp_start_vertex G T e of (e,w,i) \<Rightarrow> w)"
-  \<comment> \<open>Map an edge \<open>e\<close> of the VC4-graph to a vertex \<open>x\<close> that covers \<open>e\<close> in \<open>G\<close>.\<close>
+  \<comment> \<open>Map an edge \<open>e\<close> of the VC4-graph to a vertex \<open>x\<close> that covers \<open>e\<close> in \<open>G\<close>.\<close> *)
 
 fun hp_for_neighborhood :: "'v1 \<Rightarrow> 'v1set \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where 
   "hp_for_neighborhood u N\<^sub>u = fold_v1set1 
@@ -222,14 +209,48 @@ fun hp_for_neighborhood :: "'v1 \<Rightarrow> 'v1set \<Rightarrow> ('v1 uedge \<
   is induced by the neighborhood \<open>N\<^sub>u\<close> of \<open>u\<close>.\<close>
 
 fun partition_for_vertex :: "'g1 \<Rightarrow> 'v1set \<Rightarrow> 'v1 \<Rightarrow> 'v1set" ("\<P>") where 
-  "partition_for_vertex G X u = 
-    filter_v1set (\<lambda>v. \<not> isin1 X v \<or> rep1 (uEdge u v) = uEdge u v) (\<N>\<^sub>1 G u)"
+  "partition_for_vertex G X u = filter_v1set (\<lambda>v. \<not> isin1 X v \<or> rep1 (uEdge u v) = uEdge u v) (\<N>\<^sub>1 G u)"
   \<comment> \<open>Compute a partition on the set of edges of \<open>G\<close> that is induced by a vertex cover; 
   return the partition corresponding to the vertex \<open>u\<close> from a vertex cover.\<close>
 
-fun hp_from_vc :: "'g1 \<Rightarrow> 'v1set \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "hp_from_vc G X = fold_v1set1 (\<lambda>u T. T @ hp_for_neighborhood u (partition_for_vertex G X u)) X []"
-  \<comment> \<open>Compute a Hamiltonian path on \<open>f G\<close> that is induced by the vertex cover \<open>X\<close> of the graph \<open>G\<close>..\<close>
+fun hp_of_vc :: "'g1 \<Rightarrow> 'v1set \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "hp_of_vc G X = fold_v1set1 (\<lambda>u T. T @ hp_for_neighborhood u (partition_for_vertex G X u)) X []"
+  \<comment> \<open>Compute a Hamiltonian path on \<open>f G\<close> that is induced by the vertex cover \<open>X\<close> of the graph \<open>G\<close>.\<close>
+
+
+fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "hp_starting_at (e,x,i) = (case rep1 e of uEdge u v \<Rightarrow> if x = v then hp_v1 (rep1 e) else hp_u1 (rep1 e))"
+
+(* fun shorten_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "shorten_tour G T = fold_g1_uedges4 (\<lambda>e T. case rotate_tour (isin2 (V\<^sub>H\<^sub>e e)) T of x#y#T \<Rightarrow> x#hp_starting_at y @ filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T) G T" *)
+
+fun replace_hp :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "replace_hp G [] = []"
+| "replace_hp G (x#T) = hp_starting_at x @ replace_hp G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T)"
+
+fun shorten_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "shorten_tour G T = (let f = \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2; 
+    T' = replace_hp G (tl (rotate_tour f T)) in last T'#T')"
+
+fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
+  "vc_of_tour G [] = set_empty1"
+| "vc_of_tour G ((e,u,i)#T) = insert1 u (vc_of_tour G (filter (\<lambda>y. \<not> are_vertices_in_He G (e,u,i) y) T))"
+
+(* fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
+  "vc_of_tour G (x#(e,u,i)#T) = 
+    (if \<not> are_vertices_in_He G x (e,u,i) then 
+      insert1 u (vc_of_tour G ((e,u,i)#T)) 
+    else 
+      vc_of_tour G ((e,u,i)#T))"
+| "vc_of_tour G _ = set_empty1" *)
+
+(* fun hp_starting_vertices_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "hp_starting_vertices_of_tour G T = tl (fold_g1_uedges4 (\<lambda>e T. case rotate_tour (isin2 (V\<^sub>H\<^sub>e e)) T of x#y#T \<Rightarrow> x#y#filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T) G T)" 
+
+fun tour_of_hp_starting_vertices :: "('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+  "tour_of_hp_starting_vertices xs = last xs#concat (map hp_starting_at xs)"
+  \<comment> \<open>Given a list of vertices \<open>xs\<close>, where each vertex marks the start of a Hamiltonian path, we 
+  return a full tour.\<close> *)
 
 end
 
@@ -254,7 +275,9 @@ fun c :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 
     else 5)"
 
 fun g :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
-  "g G T = fold_g1_uedges5 (insert1 o (map_edge_to_covering_vertex G T)) G set_empty1"
+  (* "g G T = fold_g1_uedges5 (insert1 o (map_edge_to_covering_vertex G T)) G set_empty1" *)
+  (* "g G T = g1.set_of_list (map (\<lambda>(_,x,_). x) (hp_starting_vertices_of_tour G T))" *)
+  "g G T = vc_of_tour G (tl (shorten_tour G T))"
 
 (*
   Algorithm: given a Hamiltonian cycle T of g2.
@@ -278,22 +301,6 @@ end
 
 section \<open>Properties of Auxiliary Functions\<close>
 
-(* context VC4_To_mTSP
-begin
-
-lemma hp_for_neighborhood_intro:
-  assumes "set_invar1 P" 
-      and "\<And>vs. distinct vs \<Longrightarrow> List.set vs = set1 P \<Longrightarrow> F (fold (\<lambda>v T. T @ hp_u2 (uEdge u v)) vs [])"
-  shows "F (hp_for_neighborhood u P)" (is "F ?hp")
-proof -
-  obtain vs where "distinct vs" "List.set vs = set1 P" "?hp = fold (\<lambda>v T. T @ hp_u2 (uEdge u v)) vs []"
-    using assms by (auto elim!: fold6.fold_setE)
-  thus ?thesis
-    using assms by auto
-qed
-
-end *)
-
 context VC4_To_mTSP
 begin
 
@@ -303,17 +310,18 @@ lemma vertices_of_He_rep_idem: "V\<^sub>H\<^sub>e (rep1 e) = V\<^sub>H\<^sub>e e
 lemma invar_vertices_of_He: "set_invar2 (V\<^sub>H\<^sub>e e)"
   by (auto simp add: g2.invar_set_of_list simp del: g2.set_of_list.simps split: uedge.splits)
 
-lemma vertices_of_He_non_empty: "\<exists>x. isin2 (V\<^sub>H\<^sub>e e) x"
+(* lemma vertices_of_He_non_empty: "\<exists>x. isin2 (V\<^sub>H\<^sub>e e) x"
   using invar_vertices_of_He by (auto simp add: g2.set_specs split: uedge.splits)
+
+lemma set_vertices_of_He_non_empty: "set2 (V\<^sub>H\<^sub>e e) \<noteq> {}"
+  using invar_vertices_of_He vertices_of_He_non_empty by (auto simp add: g2.set_specs) *)
 
 lemma isin_vertices_of_He_iff: 
   assumes "rep1 e = rep1 (uEdge u v)"
-  shows "isin2 (V\<^sub>H\<^sub>e e) x \<longleftrightarrow> isin2 (g2.set_of_list ([(rep1 e,u,1::nat),(rep1 e,u,2),
+  shows "isin2 (V\<^sub>H\<^sub>e e) x \<longleftrightarrow> x \<in> set [(rep1 e,u,1::nat),(rep1 e,u,2),
     (rep1 e,u,3),(rep1 e,u,4),(rep1 e,u,5),(rep1 e,u,6),(rep1 e,v,1),(rep1 e,v,2),(rep1 e,v,3),
-    (rep1 e,v,4),(rep1 e,v,5),(rep1 e,v,6)])) x" 
-    (is "_ \<longleftrightarrow> isin2 (g2.set_of_list ?V) x")
-  using assms by (rule g1.rep_cases) 
-    (auto simp add: g2.isin_set_of_list simp del: g2.set_of_list.simps)
+    (rep1 e,v,4),(rep1 e,v,5),(rep1 e,v,6)]" 
+  using assms by (rule g1.rep_cases) (auto simp add: g2.isin_set_of_list simp del: g2.set_of_list.simps)
 
 lemma set_vertices_of_He: 
   assumes "rep1 e = rep1 (uEdge u v)" 
@@ -341,8 +349,7 @@ proof -
   hence "x \<in> List.set [(rep1 e,u,1),(rep1 e,u,2),
     (rep1 e,u,3),(rep1 e,u,4),(rep1 e,u,5),(rep1 e,u,6),(rep1 e,v,1),(rep1 e,v,2),(rep1 e,v,3),
     (rep1 e,v,4),(rep1 e,v,5),(rep1 e,v,6)]"
-    using assms isin_vertices_of_He_iff g2.isin_set_of_list 
-      by (auto simp del: vertices_of_He.simps g2.set_of_list.simps)
+    using assms isin_vertices_of_He_iff by auto
   then consider 
     "x \<in> List.set [(rep1 e,u,1),(rep1 e,u,2),(rep1 e,u,3),(rep1 e,u,4),(rep1 e,u,5),(rep1 e,u,6)]" 
     | "x \<in> List.set [(rep1 e,v,1),(rep1 e,v,2),(rep1 e,v,3),(rep1 e,v,4),(rep1 e,v,5),(rep1 e,v,6)]"
@@ -519,15 +526,18 @@ proof (simp only: He.simps; intro vertices_graph_of_vertices)
     by (rule neighborhood_in_He_subset_of_vertices_of_He)
 qed auto
 
+lemma vertices_of_He_non_empty: "\<exists>x. x \<in> g2.vertices (H\<^sub>e e)"
+  using vertices_of_He invar_vertices_of_He by (auto simp add: g2.set_specs split: uedge.splits)
+
 lemma vertices_of_He_disjoint:
   assumes "rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2" 
-  shows "set2 (V\<^sub>H\<^sub>e e\<^sub>1) \<inter> set2 (V\<^sub>H\<^sub>e e\<^sub>2) = {}"
+  shows "g2.vertices (H\<^sub>e e\<^sub>1) \<inter> g2.vertices (H\<^sub>e e\<^sub>2) = {}"
 proof (rule ccontr)
-  assume "set2 (V\<^sub>H\<^sub>e e\<^sub>1) \<inter> set2 (V\<^sub>H\<^sub>e e\<^sub>2) \<noteq> {}"
-  then obtain x where "x \<in> set2 (V\<^sub>H\<^sub>e e\<^sub>1)" "x \<in> set2 (V\<^sub>H\<^sub>e e\<^sub>2)"
-    using vertices_of_He by auto
+  assume "g2.vertices (H\<^sub>e e\<^sub>1) \<inter> g2.vertices (H\<^sub>e e\<^sub>2) \<noteq> {}"
+  then obtain x where "x \<in> g2.vertices (H\<^sub>e e\<^sub>1)" "x \<in> g2.vertices (H\<^sub>e e\<^sub>2)"
+    by auto
   hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>1) x" "isin2 (V\<^sub>H\<^sub>e e\<^sub>2) x"
-    using invar_vertices_of_He g2.set_specs by auto
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
   then obtain u\<^sub>1 v\<^sub>1 u\<^sub>2 v\<^sub>2 where "rep1 e\<^sub>1 = rep1 (uEdge u\<^sub>1 v\<^sub>1)" "rep1 e\<^sub>2 = rep1 (uEdge u\<^sub>2 v\<^sub>2)"
     and "x \<in> set [(rep1 e\<^sub>1,u\<^sub>1,1),(rep1 e\<^sub>1,u\<^sub>1,2),(rep1 e\<^sub>1,u\<^sub>1,3),(rep1 e\<^sub>1,u\<^sub>1,4),(rep1 e\<^sub>1,u\<^sub>1,5),(rep1 e\<^sub>1,u\<^sub>1,6)]"
     and "x \<in> set [(rep1 e\<^sub>2,u\<^sub>2,1),(rep1 e\<^sub>2,u\<^sub>2,2),(rep1 e\<^sub>2,u\<^sub>2,3),(rep1 e\<^sub>2,u\<^sub>2,4),(rep1 e\<^sub>2,u\<^sub>2,5),(rep1 e\<^sub>2,u\<^sub>2,6)]"
@@ -535,12 +545,6 @@ proof (rule ccontr)
   thus "False"
     using assms by auto
 qed
-
-(* lemma
-  assumes "rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2" 
-  shows "g2.vertices (H\<^sub>e e\<^sub>1) \<inter> g2.vertices (H\<^sub>e e\<^sub>2) = {}"
-  using assms vertices_of_He_disjoint 
-  by (auto simp add: vertices_of_He simp del: He.simps vertices_of_He.simps) *)
 
 lemma neighborhood_in_He_irreflexive: 
   assumes "isin2 (V\<^sub>H\<^sub>e e) x"
@@ -691,7 +695,7 @@ lemma are_vertices_in_He_intro:
 proof (rule fold2.fold_uedgesE)
   let ?f="\<lambda>e b. b \<or> (isin2 (V\<^sub>H\<^sub>e e) x \<and> isin2 (V\<^sub>H\<^sub>e e) y)"
   fix es 
-  assume "distinct es" "map rep1 es = es" and set_es: "List.set es = g1.uedges G" 
+  assume "distinct es" and set_es: "List.set es = g1.uedges G" 
     and [simp]: "fold_g1_uedges2 ?f G False = fold ?f es False"
   hence "e \<in> List.set es"
     using assms by auto
@@ -750,11 +754,24 @@ next
   thus "are_vertices_in_He G x y"
     using assms by (intro are_vertices_in_He_intro)
 qed
-  
+
 lemma are_vertices_in_He_sym:
   assumes "g1.ugraph_adj_map_invar G" "are_vertices_in_He G x y"
   shows "are_vertices_in_He G y x"
   using assms are_vertices_in_He by auto
+
+lemma are_vertices_in_He_trans:
+  assumes "g1.ugraph_adj_map_invar G" "are_vertices_in_He G x y" "are_vertices_in_He G y z"
+  shows "are_vertices_in_He G x z"
+proof (rule are_vertices_in_He_elim[OF assms(1,2)]; rule are_vertices_in_He_elim[OF assms(1,3)])
+  fix e\<^sub>1 e\<^sub>2
+  assume "e\<^sub>1 \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e\<^sub>1)" "y \<in> g2.vertices (H\<^sub>e e\<^sub>1)" 
+    "e\<^sub>2 \<in> g1.uedges G" "y \<in> g2.vertices (H\<^sub>e e\<^sub>2)" "z \<in> g2.vertices (H\<^sub>e e\<^sub>2)"
+  moreover hence "e\<^sub>1 = e\<^sub>2"
+    using assms vertices_in_He_rep_iff by (auto simp add: g1.rep_of_edge)
+  ultimately show ?thesis
+    using assms by (intro are_vertices_in_He_intro) auto
+qed
 
 (* lemma vertices_in_He_path_dist: 
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" 
@@ -765,6 +782,26 @@ lemma are_vertices_in_He_sym:
   apply simp
   sorry (* TODO: How to prove? *) *)
 
+lemma min_dist_in_He_def2:
+  assumes "g1.ugraph_adj_map_invar G"
+  shows "min_dist_in_He G x y = Min ({g2.path_dist (H\<^sub>e e) x y | e. e \<in> g1.uedges G} \<union> {\<infinity>})"
+  using assms(1)
+proof (rule fold3.fold_uedgesE)
+  let ?f="\<lambda>e d. min (g2.path_dist (H\<^sub>e e) x y) d"
+  fix es
+  assume "distinct es" and set_es: "set es = g1.uedges G" and [simp]: "fold_g1_uedges3 ?f G \<infinity> = fold ?f es \<infinity>"
+  moreover have "\<And>a. fold ?f es a = fold min (map (\<lambda>e. g2.path_dist (H\<^sub>e e) x y) es) a"
+    by (induction es) auto
+  ultimately have "min_dist_in_He G x y = fold min (map (\<lambda>e. g2.path_dist (H\<^sub>e e) x y) es) \<infinity>"
+    by auto
+  also have "... = Min (set (\<infinity>#(map (\<lambda>e. g2.path_dist (H\<^sub>e e) x y) es)))"
+    using Min.set_eq_fold[symmetric] by fastforce
+  also have "... = Min ({g2.path_dist (H\<^sub>e e) x y | e. e \<in> g1.uedges G} \<union> {\<infinity>})"
+    by (auto simp add: Setcompr_eq_image set_es)
+  finally show ?thesis  
+    by auto
+qed
+
 lemma min_dist_in_He_leq_path_dist:
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
   shows "min_dist_in_He G x y \<le> g2.path_dist (H\<^sub>e e) x y"
@@ -772,8 +809,7 @@ lemma min_dist_in_He_leq_path_dist:
 proof (rule fold3.fold_uedgesE)
   let ?f="\<lambda>e d. min (g2.path_dist (H\<^sub>e e) x y) d"
   fix es
-  assume "distinct es" "map rep1 es = es" and set_es: "List.set es = g1.uedges G" and
-    [simp]: "fold_g1_uedges3 ?f G \<infinity> = fold ?f es \<infinity>"
+  assume "distinct es" and set_es: "List.set es = g1.uedges G" and [simp]: "fold_g1_uedges3 ?f G \<infinity> = fold ?f es \<infinity>"
   moreover hence "e \<in> set es"
     using assms by auto
   moreover hence "\<And>d. fold ?f es d \<le> ?f e d"
@@ -790,7 +826,8 @@ proof (rule are_vertices_in_He_elim)
   fix e 
   assume e_isin_G: "e \<in> g1.uedges G" and "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
   hence d\<^sub>x\<^sub>y_le_inf: "g2.path_dist (H\<^sub>e e) x y < \<infinity>" (is "?d\<^sub>x\<^sub>y < \<infinity>")
-    using assms sorry (* vertices_in_He_path_dist by auto *)
+    using invar_He apply (intro g2.path_dist_less_inf)
+    sorry (* vertices_in_He_path_dist by auto *)
   moreover have "min_dist_in_He G x y \<le> g2.path_dist (H\<^sub>e e) x y"
     using assms e_isin_G by (intro min_dist_in_He_leq_path_dist)
   ultimately show ?thesis
@@ -798,9 +835,33 @@ proof (rule are_vertices_in_He_elim)
 qed
 
 lemma min_dist_in_He_geq1:
-  assumes "g1.ugraph_adj_map_invar G"
+  assumes "g1.ugraph_adj_map_invar G" "x \<noteq> y"
   shows "min_dist_in_He G x y \<ge> enat 1"
-  sorry
+proof (rule ccontr)
+  assume "\<not> min_dist_in_He G x y \<ge> enat 1"
+  hence "min_dist_in_He G x y < enat 1"
+    by auto
+  hence "Min ({g2.path_dist (H\<^sub>e e) x y |e. e \<in> g1.uedges G} \<union> {\<infinity>}) < enat 1" (is "Min ?D < _")
+    using assms min_dist_in_He_def2 by auto
+  moreover have "?D \<noteq> {}" "finite ?D"
+    using assms by auto
+  ultimately obtain e where "e \<in> g1.uedges G" "g2.path_dist (H\<^sub>e e) x y < enat 1"
+    using Min_less_iff[of ?D "enat 1"] by auto
+  moreover have "finite ({enat (length (tl P)) |P. g2.path_betw (H\<^sub>e e) x P y \<and> distinct P} \<union> {\<infinity>})" (is "finite ?P")
+    using invar_He g2.finite_paths by auto
+  ultimately obtain P where path: "g2.path_betw (H\<^sub>e e) x P y" and "distinct P" "enat (length (tl P)) < enat 1"
+    unfolding g2.path_dist_def using Min_less_iff[of ?P "enat 1"] by auto
+  moreover hence "length (tl P) = 0"
+    by auto
+  moreover hence "tl P = []"
+    by blast
+  moreover hence "P = [x]"   
+    using g2.path_non_empty[OF path] g2.hd_path_betw[OF path] by (cases P) fastforce+
+  ultimately have "x = y"
+    using g2.last_path_betw[OF path] by auto
+  thus "False"
+    using assms by auto
+qed
 
 lemma min_dist_in_He_sym:
   assumes "g1.ugraph_adj_map_invar G"
@@ -815,8 +876,8 @@ proof (rule g2.rep_isin_uedges_elim)
   fix x y
   assume [simp]: "e' = uEdge x y" and y_isin_Nx: "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
   let ?f="\<lambda>e b. b \<or> isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
-  obtain es where "distinct es" "map rep1 es = es" and set_es: "List.set es = g1.uedges G" and
-   [simp]: "fold_g1_uedges2 ?f G False = fold ?f es False"
+  obtain es where "distinct es" and set_es: "List.set es = g1.uedges G" 
+    and [simp]: "fold_g1_uedges2 ?f G False = fold ?f es False"
     using assms by (elim fold2.fold_uedgesE)
   hence "e \<in> List.set es"
     using assms by auto
@@ -913,7 +974,7 @@ lemma invar_vertices_of_H:
 proof (rule fold1.fold_uedgesE)
   let ?f="union2 \<circ> V\<^sub>H\<^sub>e"
   fix es
-  assume "distinct es" "map rep1 es = es" "List.set es = g1.uedges G" 
+  assume "distinct es" "List.set es = g1.uedges G" 
     "fold_g1_uedges1 ?f G set_empty2 = fold ?f es set_empty2"
   then show ?thesis
     using invar_vertices_of_He 
@@ -927,7 +988,7 @@ lemma set_vertices_of_H:
 proof (rule fold1.fold_uedgesE)
   let ?f="union2 \<circ> V\<^sub>H\<^sub>e"
   fix es
-  assume "distinct es" "map rep1 es = es" "List.set es = g1.uedges G" 
+  assume "distinct es" "List.set es = g1.uedges G" 
     "fold_g1_uedges1 ?f G set_empty2 = fold ?f es set_empty2"
   moreover have "set2 (fold ?f es set_empty2) = \<Union> (List.set (map (set2 o vertices_of_He) es))" 
     apply (subst fold_map[symmetric])
@@ -948,21 +1009,6 @@ proof -
     using assms invar_vertices_of_H invar_vertices_of_He g2.set_specs by auto
   thus ?thesis
     using that by auto
-qed
-
-lemma fst_of_vertex_is_edge:
-  assumes "g1.ugraph_adj_map_invar G" and "isin2 (V\<^sub>H G) (e,w,i)" (is "isin2 (V\<^sub>H G) ?x")
-  shows "isin2 (V\<^sub>H\<^sub>e e) (e,w,i) \<and> e \<in> g1.uedges G"
-  using assms
-proof (rule isin_vertices_of_H_obtain_edge)
-  fix e'
-  assume "e' \<in> g1.uedges G" "isin2 (V\<^sub>H\<^sub>e e') ?x"
-  moreover hence "e = rep1 e'"
-    by (elim isin_vertices_of_He_elim2) (auto simp add: g1.rep_idem)
-  moreover have "rep1 e' \<in> g1.uedges G"
-    using calculation by (intro g1.rep_of_edge_is_edge)
-  ultimately show "isin2 (V\<^sub>H\<^sub>e e) ?x \<and> e \<in> g1.uedges G"
-    using vertices_of_He_rep_idem by auto
 qed
 
 lemma obtain_other_vertex_of_H:
@@ -1016,7 +1062,7 @@ proof (rule obtain_other_vertex_of_H)
 qed
                                        
 lemma c_geq1:
-  assumes "g1.ugraph_adj_map_invar G"
+  assumes "g1.ugraph_adj_map_invar G" "x \<noteq> y"
   shows "c G x y \<ge> 1"
 proof -
   obtain e\<^sub>x w\<^sub>x i\<^sub>x where [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)"
@@ -1042,7 +1088,7 @@ proof -
 qed
 
 lemma cost_path_geq_len:
-  assumes "g1.ugraph_adj_map_invar G"
+  assumes "g1.ugraph_adj_map_invar G" "distinct P"
   shows "cost_of_path (c G) P \<ge> int (length P) - 1"
   using assms  
 proof (induction P rule: list012.induct)
@@ -1117,72 +1163,6 @@ proof -
         simp add: neighborhood_He g2.isin_set_of_list simp del: He.simps g2.set_of_list.simps)
 qed
 
-(* lemma cost_of_hp_u1_uedge: 
-  assumes "g1.ugraph_adj_map_invar G" 
-    and "rep1 (uEdge u v) = uEdge u v" "rep1 (uEdge u v) \<in> g1.uedges G" (is "rep1 ?e \<in> _")
-  shows "cost_of_path (c G) (hp_u1 (uEdge u v)) = 11"
-proof -
-  have neighborhoods_u: 
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,u,1)) (rep1 ?e,u,5)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,u,5)) (rep1 ?e,v,2)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,u,6)) (rep1 ?e,u,3)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,u,3)) (rep1 ?e,u,4)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,u,4)) (rep1 ?e,v,6)"
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list by (simp del: g2.set_of_list.simps)+
-  have neighborhoods_v: 
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,2)) (rep1 ?e,v,4)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,4)) (rep1 ?e,u,6)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,6)) (rep1 ?e,v,3)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,3)) (rep1 ?e,v,1)"
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,1)) (rep1 ?e,v,5)" 
-    "isin2 (\<N>\<^sub>H\<^sub>e (rep1 ?e,v,5)) (rep1 ?e,u,2)"
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)    
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)
-    apply (subst g1.is_rep(1))
-    unfolding neighborhood_in_He_def2 using g2.isin_set_of_list
-    apply (simp add: g1.is_rep(1) del: g2.set_of_list.simps)
-    done
-  have "is_edge_in_He G (uEdge (rep1 ?e,u,1) (rep1 ?e,u,5))"
-    "is_edge_in_He G (uEdge (rep1 ?e,u,5) (rep1 ?e,v,2))"
-    "is_edge_in_He G (uEdge (rep1 ?e,v,2) (rep1 ?e,v,4))"
-    "is_edge_in_He G (uEdge (rep1 ?e,v,4) (rep1 ?e,u,6))"
-    "is_edge_in_He G (uEdge (rep1 ?e,u,6) (rep1 ?e,u,3))"
-    "is_edge_in_He G (uEdge (rep1 ?e,u,3) (rep1 ?e,u,4))"
-    "is_edge_in_He G (uEdge (rep1 ?e,u,4) (rep1 ?e,v,6))"
-    "is_edge_in_He G (uEdge (rep1 ?e,v,6) (rep1 ?e,v,3))"
-    "is_edge_in_He G (uEdge (rep1 ?e,v,3) (rep1 ?e,v,1))"
-    "is_edge_in_He G (uEdge (rep1 ?e,v,1) (rep1 ?e,v,5))" 
-    "is_edge_in_He G (uEdge (rep1 ?e,v,5) (rep1 ?e,u,2))"
-    apply goal_cases                       
-    using assms neighborhoods_u apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_u apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_u apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_u apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_u apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    using assms neighborhoods_v apply (intro is_edge_in_He_intro2) apply auto[8]
-    done
-    thus ?thesis
-      by auto
-qed (* TODO: clean up! *) *)
-
 lemma cost_of_hp_u1: 
   assumes "g1.ugraph_adj_map_invar G" "rep1 e \<in> g1.uedges G"
   shows "cost_of_path (c G) (hp_u1 e) = 11"
@@ -1208,7 +1188,7 @@ proof (rule g1.uedge_not_refl_elim; simp only: g1.rep_idem)
     using assms g1.rep_simps by auto
 qed
 
-lemma vertices_hp_u1: "g2.vertices (H\<^sub>e e) = List.set (hp_u1 e)"
+lemma vertices_hp_u1: "List.set (hp_u1 e) = g2.vertices (H\<^sub>e e)"
   apply (cases e; rule g1.rep_cases)
   apply simp
 proof -
@@ -1280,7 +1260,7 @@ lemma cost_of_hp_u2:
   shows "cost_of_path (c G) (hp_u2 e) = 11"
   using assms c_sym cost_of_hp_u1 by (auto simp add: cost_of_path_rev)
 
-lemma vertices_hp_u2: "g2.vertices (H\<^sub>e e) = List.set (hp_u2 e)"
+lemma vertices_hp_u2: "List.set (hp_u2 e) = g2.vertices (H\<^sub>e e)"
   using vertices_hp_u1 by auto
 
 (* lemma hp_u2_inj: "inj hp_u2"
@@ -1382,7 +1362,7 @@ lemma vertices_hp_v2:
 lemma hp_v1_rep_idem: "hp_v1 (rep1 e) = hp_v1 e"
   using g1.rep_idem by auto
 
-lemma vertices_hp_v1: "g2.vertices (H\<^sub>e e) = List.set (hp_v1 e)"
+lemma vertices_hp_v1: "List.set (hp_v1 e) = g2.vertices (H\<^sub>e e)"
   apply (cases e; rule g1.rep_cases)
   apply simp
 proof -
@@ -1439,7 +1419,7 @@ lemma hd_hp_v2: "rep1 e = uEdge u v \<Longrightarrow> hd (hp_v2 e) = (rep1 e,v,2
 lemma hp_v2_rep_idem: "hp_v2 (rep1 e) = hp_v2 e"
   using g1.rep_idem by auto
 
-lemma vertices_hp_v2: "g2.vertices (H\<^sub>e e) = List.set (hp_v2 e)"
+lemma vertices_hp_v2: "List.set (hp_v2 e) = g2.vertices (H\<^sub>e e)"
   using vertices_hp_v1 by auto
 
 lemma distinct_hp_v2:
@@ -1758,49 +1738,62 @@ section \<open>Properties of Reduction-Functions\<close>
 context VC4_To_mTSP
 begin
 
-lemma vertices_f:
+lemma vertices_f_eq_vertices_of_H:
   assumes "g1.ugraph_adj_map_invar G"
   shows "g2.vertices (f G) = set2 (V\<^sub>H G)"
   using assms invar_vertices_of_H at_least_two_vertices_in_H
   by (simp only: f.simps; intro vertices_complete_graph)
 
+lemma vertices_f: 
+  "g1.ugraph_adj_map_invar G \<Longrightarrow> g2.vertices (f G) = \<Union> ((g2.vertices o H\<^sub>e) ` g1.uedges G)"
+  using vertices_f_eq_vertices_of_H set_vertices_of_H vertices_of_He by simp
+
 lemma vertices_f_non_empty:
-  assumes "g1.ugraph_adj_map_invar G" 
-      and "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
+  assumes "g1.ugraph_adj_map_invar G" "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
   shows "\<exists>v. v \<in> g2.vertices (f G)"
-proof -
-  obtain e v where "e \<in> g1.uedges G" "isin2 (V\<^sub>H\<^sub>e e) v"
-    using assms vertices_of_He_non_empty by blast
-  hence "v \<in> \<Union> ((set2 o V\<^sub>H\<^sub>e) ` g1.uedges G)"
-    using invar_vertices_of_He by (auto simp add: g2.set_specs)
-  thus "\<exists>v. v \<in> g2.vertices (f G)"
-    using assms(1) vertices_f set_vertices_of_H by blast
-qed
+  using assms vertices_of_He_non_empty by (fastforce simp add: vertices_f simp del: f.simps)
 
 lemma obtain_vertex_of_He:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" and "e \<in> g1.uedges G"
-  obtains x where "x \<in> List.set T" "isin2 (V\<^sub>H\<^sub>e e) x"
+  obtains x where "x \<in> List.set T" "x \<in> g2.vertices (H\<^sub>e e)"
 proof (cases e)
   case (uEdge u v)
   have "List.set (tl T) = g2.vertices (f G)"
     using assms g2.is_hc_AdjE by auto
-  also have "... = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` g1.uedges G)"
+  also have "... = \<Union> ((g2.vertices o H\<^sub>e) ` g1.uedges G)"
     using assms vertices_f set_vertices_of_H by auto
-  finally have "set2 (V\<^sub>H\<^sub>e e) \<subseteq> List.set T"
+  finally have "g2.vertices (H\<^sub>e e) \<subseteq> List.set T"
     using assms set_tl_subset by fastforce
   moreover have "isin2 (V\<^sub>H\<^sub>e e) (rep1 e,u,1)"
     using assms uEdge by (intro isin_vertices_of_He_intro) auto
-  moreover hence "(rep1 e,u,1) \<in> set2 (V\<^sub>H\<^sub>e e)"
-    using invar_vertices_of_He by (auto simp add: g2.set_specs)
-  ultimately obtain x where "x \<in> List.set T" "x \<in> set2 (V\<^sub>H\<^sub>e e)"
+  moreover hence "(rep1 e,u,1) \<in> g2.vertices (H\<^sub>e e)"
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  ultimately obtain x where "x \<in> List.set T" "x \<in> g2.vertices (H\<^sub>e e)"
     by (auto simp del: vertices_of_He.simps) 
-  moreover hence "isin2 (V\<^sub>H\<^sub>e e) x"
-    using invar_vertices_of_He by (auto simp add: g2.set_specs)
-  ultimately show ?thesis
+  thus ?thesis
     using that by auto
 qed
 
-lemma rotate_tour_all_vertices_of_He:
+lemma fst_of_vertex_is_edge:
+  assumes "g1.ugraph_adj_map_invar G" and "(e,w,i) \<in> g2.vertices (f G)" (is "?x \<in> g2.vertices (f G)")
+  shows "(e,w,i) \<in> g2.vertices (H\<^sub>e e) \<and> e \<in> g1.uedges G"
+  using assms             
+proof -
+  have "g2.vertices (f G) = \<Union> ((g2.vertices o H\<^sub>e) ` g1.uedges G)"  
+    using assms vertices_f by auto
+  then obtain e' where "e' \<in> g1.uedges G" "?x \<in> g2.vertices (H\<^sub>e e')"
+    using assms by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e') ?x"
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  moreover hence "e = rep1 e'"
+    by (elim isin_vertices_of_He_elim2) (auto simp add: g1.rep_idem)
+  moreover have "rep1 e' \<in> g1.uedges G"
+    using calculation by (intro g1.rep_of_edge_is_edge)
+  ultimately show ?thesis
+    using He_rep_idem by auto
+qed
+
+(* lemma rotate_tour_all_vertices_of_He:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" and "e \<in> g1.uedges G"
       and "cost_of_path (\<lambda>x y. if \<not> isin2 (V\<^sub>H\<^sub>e e) x \<and> isin2 (V\<^sub>H\<^sub>e e) y then (1::nat) else 0) T = 0"
       and "x \<in> set T"
@@ -1816,7 +1809,7 @@ proof -
     using assms by (elim obtain_vertex_of_He)
   ultimately show ?thesis
     using assms by blast
-qed
+qed *)
 
 (* lemma map_edge_to_hp_start_vertex_is_vertex:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" and "e \<in> g1.uedges G"
@@ -1830,7 +1823,7 @@ proof -
     sorry
 qed *)
 
-lemma map_edge_to_hp_start_vertex_cases:
+(* lemma map_edge_to_hp_start_vertex_cases:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" 
       and "e \<in> g1.uedges G" "rep1 e = rep1 (uEdge u v)"
   obtains "map_edge_to_hp_start_vertex G T e = (rep1 e,u,1)" | "map_edge_to_hp_start_vertex G T e = (rep1 e,v,1)"
@@ -1910,12 +1903,9 @@ proof (rule g1.uedge_not_refl_elim)
     using assms by (elim map_edge_to_hp_start_vertex_cases)
   thus ?thesis
     by cases auto
-qed
+qed *)
 
-lemma invar_g:
-  assumes "g1.ugraph_adj_map_invar G"
-  shows "set_invar1 (g G T)"
-  using assms
+(*  using assms
 proof (rule fold5.fold_uedgesE)
   let ?f="insert1 o (map_edge_to_covering_vertex G T)"
   fix es 
@@ -1925,9 +1915,9 @@ proof (rule fold5.fold_uedgesE)
     by (auto simp: fold_map)
   thus "set_invar1 (g G T)"
     using g1.set_specs by (auto intro!: g1.invar_insert_all simp del: g.simps g1.insert_all.simps)
-qed
+qed *)
 
-lemma set_g:
+(* lemma set_g:
   assumes "g1.ugraph_adj_map_invar G"
   shows "set1 (g G T) = {map_edge_to_covering_vertex G T e | e. e \<in> g1.uedges G}"
   using assms
@@ -1940,7 +1930,343 @@ proof (rule fold5.fold_uedgesE)
     by (auto simp: fold_map)
   thus "set1 (g G T) = {map_edge_to_covering_vertex G T e | e. e \<in> g1.uedges G}"
     using g1.set_specs g1.set_insert_all by auto
+qed *)
+
+lemma hp_starting_at_non_nil: "hp_starting_at x \<noteq> []"
+  by (cases x) (auto split: uedge.splits)
+
+lemma hp_starting_at_set:
+  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e)"
+  shows "set (hp_starting_at x) = g2.vertices (H\<^sub>e e)"
+proof -
+  have "isin2 (V\<^sub>H\<^sub>e e) x"
+    using assms invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  then obtain u v w i where "x = (uEdge u v,w,i)" and [simp]: "rep1 e = uEdge u v"
+    by (elim isin_vertices_of_He_elim2)
+  moreover hence [simp]: "x = (e,w,i)"
+    using assms g1.rep_of_edge by metis
+  ultimately have "uEdge u v \<in> g1.uedges G"
+    using assms g1.rep_of_edge_is_edge g1.rep_idem by fastforce
+  hence rep_e: "rep1 (uEdge u v) = uEdge u v" and "rep1 (uEdge u v) \<in> g1.uedges G"
+    using g1.rep_of_edge g1.rep_of_edge_is_edge by auto
+  hence "u \<noteq> v"
+    using assms by (intro g1.uedge_not_refl)
+  thus ?thesis
+  proof cases
+    assume "w = v"
+    thus ?thesis
+      apply (subst He_rep_idem[symmetric])
+      using vertices_hp_v1 by simp
+  next
+    assume "w \<noteq> v"
+    thus ?thesis
+      apply (subst He_rep_idem[symmetric])
+      using vertices_hp_u1 by simp
+  qed
 qed
+
+lemma hd_hp_starting_at: 
+  assumes "rep1 e = uEdge u v" "x \<in> {u,v}"
+  shows "hd (hp_starting_at (e,x,i)) = (rep1 e,x,1)"
+  using assms g1.rep_simps by auto
+
+lemma last_hp_starting_at: 
+  assumes "rep1 e = uEdge u v" "x \<in> {u,v}"
+  shows "last (hp_starting_at (e,x,i)) = (rep1 e,x,2)"
+  using assms g1.rep_simps by auto
+
+lemma cost_last_hp_x_hd_hp_y_leq: 
+  assumes "g1.ugraph_adj_map_invar G" and "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
+      and "\<not> are_vertices_in_He G x y"
+  shows "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) \<le> c G x y" (is "c G ?lstx ?hdy \<le> _")
+proof (cases x; cases y)
+  fix e\<^sub>x w\<^sub>x i\<^sub>x e\<^sub>y w\<^sub>y i\<^sub>y
+  assume [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)" and [simp]: "y = (e\<^sub>y,w\<^sub>y,i\<^sub>y)"
+  hence vert_x: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" "e\<^sub>x \<in> g1.uedges G" 
+    and vert_y: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" "e\<^sub>y \<in> g1.uedges G"
+    using assms fst_of_vertex_is_edge by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x" and "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) y"
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  moreover then obtain u\<^sub>x v\<^sub>x u\<^sub>y v\<^sub>y where edge_y: "rep1 e\<^sub>y = uEdge u\<^sub>y v\<^sub>y" "w\<^sub>y \<in> {u\<^sub>y,v\<^sub>y}"
+    and edge_x: "rep1 e\<^sub>x = uEdge u\<^sub>x v\<^sub>x" "w\<^sub>x \<in> {u\<^sub>x,v\<^sub>x}"
+    by (elim isin_vertices_of_He_elim2) auto
+  ultimately have rep_neq: "rep1 e\<^sub>x \<noteq> rep1 e\<^sub>y"
+    using assms invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff by (auto simp add: g2.set_specs)
+
+  have last_x: "?lstx = (rep1 e\<^sub>x,w\<^sub>x,2)"
+    using vert_x isin_vertices_of_He_edge last_hp_starting_at[OF edge_x] by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) ?lstx"
+    using edge_x by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
+  moreover have hd_y: "?hdy = (rep1 e\<^sub>y,w\<^sub>y,1)"
+    using vert_y isin_vertices_of_He_edge hd_hp_starting_at[OF edge_y] by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) ?hdy"
+    using edge_y by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
+  ultimately have x_hd_y_no_vert: "\<not> are_vertices_in_He G ?lstx ?hdy"
+    using assms rep_neq vert_x vert_y invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff 
+    by (auto simp add: g2.set_specs)
+
+  thus ?thesis
+    using assms rep_neq last_x hd_y edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
+qed
+
+lemma cost_hp_starting_at: 
+  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
+  shows "cost_of_path (c G) (hp_starting_at (e,x,i)) = 11"
+  using assms
+proof (rule g1.uedge_not_refl_elim)
+  fix u v
+  assume [simp]: "rep1 e = uEdge u v" and "u \<noteq> v"
+  hence edge_uv: "uEdge u v \<in> g1.uedges G"
+    using assms g1.rep_of_edge_is_edge by fastforce
+  thus ?thesis
+    using assms edge_uv g1.rep_of_edge_is_edge cost_of_hp_v1 cost_of_hp_u1 by auto
+qed
+
+lemma cost_hp_starting_at2: 
+  assumes "g1.ugraph_adj_map_invar G" "x \<in> g2.vertices (f G)"
+  shows "cost_of_path (c G) (hp_starting_at x) = 11"
+proof -
+  obtain e w i where "x = (e,w,i)" "e \<in> g1.uedges G"
+    using assms fst_of_vertex_is_edge by (cases x) auto
+  thus ?thesis
+    using assms cost_hp_starting_at by auto
+qed
+
+lemma replace_hp_non_nil: "T \<noteq> [] \<Longrightarrow> replace_hp G T \<noteq> []"
+  using hp_starting_at_non_nil by (cases T) auto
+
+lemma replace_hp_Cons_non_nil: "replace_hp G (x#T) \<noteq> []"
+  using hp_starting_at_non_nil by auto
+
+lemma concat_order_for_replace_hp_and_vc_of_tour:
+  assumes "g1.ugraph_adj_map_invar G" "set es \<subseteq> g1.uedges G" 
+      and "distinct es" "\<forall>e \<in> set es. rep1 e = e" "set T = \<Union> ((g2.vertices o H\<^sub>e) ` set es)"
+  obtains xs where "set xs \<subseteq> set T" "distinct xs" "set es = (\<lambda>(e,_,_). e) ` set xs" "set xs \<subseteq> g2.vertices (f G)"
+    and "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    and "replace_hp G T = concat (map hp_starting_at xs)"
+  using assms
+proof (induction G T arbitrary: es thesis rule: replace_hp.induct[case_names Nil Cons])
+  case (Nil G)
+  moreover have "\<And>e. g2.vertices (H\<^sub>e e) \<noteq> {}"
+    using vertices_of_He_non_empty by blast
+  moreover hence "es = []"
+    using Nil(6) by auto
+  ultimately show ?case 
+    by auto 
+next
+  case (Cons G x T)
+  obtain e\<^sub>x u i where [simp]: "x = (e\<^sub>x,u,i)"
+    by (cases x)
+  have ex_in_es: "e\<^sub>x \<in> set es" and "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x"
+    sorry  
+  hence ex_is_edge: "e\<^sub>x \<in> g1.uedges G" and vert_x: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" "x \<in> g2.vertices (f G)"
+    using "Cons.prems"(2,3) invar_vertices_of_He vertices_of_He vertices_f by (auto simp add: g2.set_specs)
+  hence "\<forall>y. are_vertices_in_He G x y \<longleftrightarrow> y \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
+    using "Cons.prems"(2) are_vertices_in_He_intro
+  proof (intro allI iffI)
+    fix y
+    assume "are_vertices_in_He G x y"
+    then obtain e where "e \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
+      using "Cons.prems"(2) by (elim are_vertices_in_He_elim)
+    moreover hence "e = e\<^sub>x"
+      using "Cons.prems"(2) ex_is_edge vert_x vertices_in_He_rep_iff g1.rep_of_edge by metis
+    ultimately show "y \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
+      by auto
+  qed auto
+  moreover hence "\<forall>y \<in> set (x#T). y \<in> set (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T) \<longleftrightarrow> y \<notin> g2.vertices (H\<^sub>e e\<^sub>x)" 
+    (is "\<forall>y \<in> _. y \<in> set ?fT \<longleftrightarrow> _")
+  proof (induction T)
+    case Nil
+    then show ?case 
+      using vert_x by auto
+  next
+    case (Cons y T')
+    thus ?case
+    proof cases
+      assume "are_vertices_in_He G x y"
+      moreover hence "y \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
+        using Cons by blast
+      ultimately show ?thesis
+        using Cons by auto
+    next
+      assume "\<not> are_vertices_in_He G x y"
+      thus ?thesis
+        using Cons by fastforce
+    qed
+  qed
+  hence "set ?fT = set (x#T) - g2.vertices (H\<^sub>e e\<^sub>x)"
+    using vertices_of_He by auto
+  moreover have "set (x#T) =  g2.vertices (H\<^sub>e e\<^sub>x) \<union> \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))"
+    using "Cons.prems"(6) ex_in_es by auto
+  moreover have "\<forall>e \<in> set (filter ((\<noteq>) e\<^sub>x) es). g2.vertices (H\<^sub>e e\<^sub>x) \<inter> g2.vertices (H\<^sub>e e) = {}" (is "\<forall>_ \<in> set ?es'. _")
+  proof
+    fix e
+    assume "e \<in> set ?es'"
+    hence "rep1 e\<^sub>x \<noteq> rep1 e"
+      using "Cons.prems"(5) ex_in_es by auto
+    thus "g2.vertices (H\<^sub>e e\<^sub>x) \<inter> g2.vertices (H\<^sub>e e) = {}"
+      using vertices_of_He_disjoint by auto
+  qed
+  ultimately have "set ?fT = \<Union> ((g2.vertices o H\<^sub>e) ` set ?es')"
+    by auto
+  moreover have "distinct ?es'"
+    using "Cons.prems" by auto
+  moreover have "\<forall>e \<in> set ?es'. rep1 e = e" "set ?es' \<subseteq> g1.uedges G"
+    using "Cons.prems" by auto
+  moreover have "length ?es' < length es"
+    using ex_in_es by (simp add: length_filter_less)
+  ultimately obtain xs where "set xs \<subseteq> set ?fT" "distinct xs" "set ?es' = (\<lambda>(e,_,_). e) ` set xs" "set xs \<subseteq> g2.vertices (f G)"
+    and "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    and "replace_hp G ?fT = concat (map hp_starting_at xs)"
+    using Cons by blast
+  hence "set (x#xs) \<subseteq> set (x#T)" "set (x#xs) \<subseteq> g2.vertices (f G)"
+    and "replace_hp G (x#T) = concat (map hp_starting_at (x#xs))"
+    using vert_x Cons by auto
+  moreover have "distinct (x#xs)"
+    sorry
+  moreover have "set es = (\<lambda>(e,_,_). e) ` set (x#xs)"
+    sorry
+  moreover have "\<And>y z. y \<in> set (x#xs) \<Longrightarrow> z \<in> set (x#xs) \<Longrightarrow> \<not> are_vertices_in_He G y z"
+    sorry
+  ultimately show ?case 
+    using Cons by blast
+qed
+
+lemma filter_vertices_concat_hp:
+  assumes "g1.ugraph_adj_map_invar G" and "set xs \<subseteq> g2.vertices (f G)" "\<And>y. y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+  shows "filter (\<lambda>y. \<not> are_vertices_in_He G x y) (concat (map hp_starting_at xs)) = concat (map hp_starting_at xs)"
+    (is "filter ?f _ = _")
+  using assms
+proof (induction xs)
+  case (Cons y xs)
+  hence "\<not> are_vertices_in_He G x y"
+    by auto
+  moreover obtain e where "e \<in> g1.uedges G" "y \<in> g2.vertices (H\<^sub>e e)"
+    using Cons(2,3) vertices_f by auto
+  moreover hence "\<And>z. z \<in> set (hp_starting_at y) \<Longrightarrow> are_vertices_in_He G z y"
+    using assms(1) are_vertices_in_He hp_starting_at_set by blast
+  ultimately have "\<And>z. z \<in> set (hp_starting_at y) \<Longrightarrow> \<not> are_vertices_in_He G x z"
+    using assms are_vertices_in_He_trans by blast
+  thus ?case 
+    using Cons by auto
+qed auto
+
+lemma vc_of_tour_concat_hp:
+  assumes "g1.ugraph_adj_map_invar G" 
+    and "set xs \<subseteq> g2.vertices (f G)" "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+  shows "vc_of_tour G (concat (map hp_starting_at xs)) = g1.set_of_list (map (\<lambda>(_,u,_). u) (rev xs))"
+  using assms
+proof (induction xs)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x xs)
+  then obtain e where vert_x: "x \<in> g2.vertices (H\<^sub>e e)" and edge_e: "e \<in> g1.uedges G"
+    using vertices_f by auto
+  hence "isin2 (V\<^sub>H\<^sub>e e) x"
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  then obtain u v w i where "x = (uEdge u v,w,i)" "rep1 e = uEdge u v" "w \<in> {u,v}" "i \<in> {1..6}"
+    by (elim isin_vertices_of_He_elim2)  
+  moreover hence [simp]: "x = (e,w,i)"
+    using edge_e by (auto simp add: g1.rep_of_edge)
+  ultimately have "hd (hp_starting_at x) = (e,w,1)" 
+    using hp_starting_at_non_nil hd_hp_starting_at g1.rep_simps by auto
+  then obtain hp where hpx: "hp_starting_at x = (e,w,1)#hp" (is "_ = ?hdx#_")
+    using hp_starting_at_non_nil by (cases "hp_starting_at x") auto
+
+  have "\<And>y. y \<in> set (hp_starting_at x) \<Longrightarrow> are_vertices_in_He G x y"
+    using assms(1) vert_x edge_e are_vertices_in_He hp_starting_at_set by blast
+  moreover hence vert_hdxx: "are_vertices_in_He G ?hdx x"
+    using hpx are_vertices_in_He_sym[OF Cons(2)] by (auto simp del: are_vertices_in_He.simps hp_starting_at.simps)
+  ultimately have vert_hdxy: "\<And>y. y \<in> set (hp_starting_at x) \<Longrightarrow> are_vertices_in_He G ?hdx y"
+    using Cons are_vertices_in_He_trans by blast
+
+  have "\<And>y. y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    using Cons by auto
+  hence no_vert_hdxy: "\<And>y. y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G ?hdx y"
+    using Cons(2) vert_hdxx are_vertices_in_He_sym are_vertices_in_He_trans by blast
+
+  let ?f="\<lambda>y. \<not> are_vertices_in_He G ?hdx y"
+
+  have "vc_of_tour G (concat (map hp_starting_at (x#xs))) = vc_of_tour G (?hdx#hp @ concat (map hp_starting_at xs))"
+    using hpx by auto
+  also have "... = insert1 w (vc_of_tour G (filter ?f (concat (map hp_starting_at xs))))"
+    using hpx vert_hdxy by auto
+  also have "... = insert1 w (vc_of_tour G (concat (map hp_starting_at xs)))"
+    using Cons no_vert_hdxy filter_vertices_concat_hp by auto
+  also have "... = insert1 w (g1.set_of_list (map (\<lambda>(_,u,_). u) (rev xs)))"
+    using Cons by auto
+  also have "... = g1.set_of_list (map (\<lambda>(_,u,_). u) (rev (x#xs)))"
+    by simp
+  finally show ?case 
+    by auto
+qed
+
+lemma concat_order_for_shorten_tour_and_g:
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T"
+  obtains xs where "xs \<noteq> []" "distinct xs" "g1.uedges G = (\<lambda>(e,_,_). e) ` set xs" "set xs \<subseteq> g2.vertices (f G)"
+    and "shorten_tour G T = last (hp_starting_at (last xs))#concat (map hp_starting_at xs)" 
+    and "g G T = g1.set_of_list (map (\<lambda>(_,u,_). u) (rev xs))"
+  using assms(1)
+proof (rule fold4.fold_uedgesE)
+  let ?fst3="\<lambda>(x,_,_). x"
+  let ?snd3="\<lambda>(_,x,_). x"
+  let ?f="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
+  let ?T'="tl (rotate_tour ?f T)"
+
+  have "g2.vertices (f G) = set (tl T)" and "hd T = last T"
+    using assms by (auto elim: g2.is_hc_AdjE simp add: g2.hd_path_betw g2.last_path_betw)
+  hence "g2.vertices (f G) = set ?T'"
+    using set_tl_rotate_tour by auto
+  moreover have "finite (g1.uedges G)"
+    using assms by auto
+  moreover hence "\<exists>e. e \<in> g1.uedges G"
+    using assms(2) all_not_in_conv by fastforce
+  moreover hence "\<exists>v. v \<in> g2.vertices (f G)"
+    using assms vertices_f_non_empty by auto
+  ultimately have "?T' \<noteq> []"
+    by auto
+  hence rhp_T'_non_nil: "replace_hp G ?T' \<noteq> []"
+    using replace_hp_non_nil by auto
+
+  fix es             
+  assume dist_es: "distinct es" and set_es: "set es = g1.uedges G" 
+  moreover have "set (tl T) = g2.vertices (f G)" and "hd T = last T"
+    using assms by (auto elim!: g2.is_hc_AdjE simp add: g2.last_path_betw g2.hd_path_betw)
+  moreover hence "set ?T' = g2.vertices (f G)"
+    using set_tl_rotate_tour by auto
+  moreover hence "set ?T' = \<Union> ((g2.vertices o H\<^sub>e) ` set es)"
+    using assms vertices_f set_es by auto
+  moreover have "\<forall>e \<in> set es. rep1 e = e"
+    using calculation g1.rep_of_edge by auto
+  ultimately obtain xs where dist_xs_subset: "distinct xs" "set xs \<subseteq> g2.vertices (f G)" 
+    and "set es = (\<lambda>(e,_,_). e) ` set xs" 
+    and no_vert_xy: "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    and "replace_hp G ?T' = concat (map hp_starting_at xs)"
+    using assms(1) dist_es set_es 
+    by (elim concat_order_for_replace_hp_and_vc_of_tour[where T="?T'"]) blast+
+  moreover hence xs_non_nil_edges: "xs \<noteq> []" "g1.uedges G = ?fst3 ` set xs"
+    using rhp_T'_non_nil set_es dist_es by (auto simp add: distinct_card[symmetric]) 
+  moreover hence "last (concat (map hp_starting_at xs)) = last (hp_starting_at (last xs))"
+    using hp_starting_at_non_nil by (auto simp add: last_concat_map)
+  ultimately have st_concat: "shorten_tour G T = last (hp_starting_at (last xs))#concat (map hp_starting_at xs)" 
+    by auto
+  hence "g G T = vc_of_tour G (concat (map hp_starting_at xs))"
+    by auto
+  also have "... = g1.set_of_list (map ?snd3 (rev xs))"
+    using assms(1) dist_xs_subset(2) no_vert_xy vc_of_tour_concat_hp by auto
+  finally have g_list: "g G T = g1.set_of_list (map ?snd3 (rev xs))"
+    by auto
+  
+  show ?thesis
+    using that dist_xs_subset xs_non_nil_edges st_concat g_list by auto
+qed
+
+lemma invar_vc_of_tour: "set_invar1 (vc_of_tour G T)"
+  by (induction G T rule: vc_of_tour.induct) (auto simp add: g1.set_specs)
+  
+lemma invar_g: "set_invar1 (g G T)"
+  using invar_vc_of_tour by auto
 
 lemma invar_partition_for_vertex: "g1.ugraph_adj_map_invar G \<Longrightarrow> set_invar1 (\<P> G X u)"
   using filter1.invar_filter_set by auto
@@ -1981,61 +2307,6 @@ lemma isin_partition_for_vertex_intro:
   assumes "g1.ugraph_adj_map_invar G" "isin1 (\<N>\<^sub>1 G u) v" "\<not> isin1 X v \<or> rep1 (uEdge u v) = uEdge u v"
   shows "isin1 (\<P> G X u) v"
   using assms isin_partition_for_vertex by auto
-
-(* lemma partition_for_vertex_disjoint:
-  assumes "g1.ugraph_adj_map_invar G" "isin1 X u\<^sub>1" "isin1 X u\<^sub>2" "u\<^sub>1 \<noteq> u\<^sub>2"
-  shows "{rep1 (uEdge u\<^sub>1 v) |v. isin1 (\<P> G X u\<^sub>1) v} \<inter> {rep1 (uEdge u\<^sub>2 v) |v. isin1 (\<P> G X u\<^sub>2) v} = {}" 
-    (is "?E\<^sub>1 \<inter> ?E\<^sub>2 = _")
-proof (rule ccontr)
-  let ?f\<^sub>1="\<lambda>v. \<not> isin1 X v \<or> rep1 (uEdge u\<^sub>1 v) = uEdge u\<^sub>1 v"
-  let ?f\<^sub>2="\<lambda>v. \<not> isin1 X v \<or> rep1 (uEdge u\<^sub>2 v) = uEdge u\<^sub>2 v"
-  assume "?E\<^sub>1 \<inter> ?E\<^sub>2 \<noteq> {}"
-  then obtain v\<^sub>1 v\<^sub>2 where "isin1 (\<P> G X u\<^sub>1) v\<^sub>1" "isin1 (\<P> G X u\<^sub>2) v\<^sub>2" "rep1 (uEdge u\<^sub>1 v\<^sub>1) = rep1 (uEdge u\<^sub>2 v\<^sub>2)"
-    using assms by auto
-  hence "?f\<^sub>1 u\<^sub>2" "?f\<^sub>2 u\<^sub>1" 
-    using assms isin_partition_for_vertex g1.rep_eq_iff by auto
-  thus "False"
-    using assms by (auto simp add: g1.is_rep)
-qed
-
-lemma partition_by_vertex_cover:                     
-  assumes "g1.ugraph_adj_map_invar G" "g1.is_vc_Adj G X"
-  shows "\<Union> {{rep1 (uEdge u v) |v. isin1 (\<P> G X u) v} |u. isin1 X u} = g1.uedges G" (is "?P = _")
-proof
-  show "?P \<subseteq> g1.uedges G"
-    using assms uedge_of_partition_for_vertex by auto
-next
-  show "g1.uedges G \<subseteq> ?P"
-  proof
-    fix e
-    assume "e \<in> g1.uedges G"
-    moreover then obtain u v where [simp]: "e = uEdge u v" and v_isin_Nu: "isin1 (\<N>\<^sub>1 G u) v"
-      using assms by (elim g1.isin_uedges_elim)
-    ultimately have rep_uv: "rep1 (uEdge u v) = uEdge u v"
-      by (auto simp add: g1.rep_of_edge)
-    then consider "isin1 X u" | "isin1 X v" "\<not> isin1 X u"
-      using assms v_isin_Nu g1.is_vc_AdjE by auto
-    thus "e \<in> ?P"
-    proof cases
-      assume "isin1 X u"
-      moreover hence "uEdge u v \<in> {rep1 (uEdge u v) |v. isin1 (\<P> G X u) v}"
-        using assms v_isin_Nu rep_uv 
-          by (force intro!: isin_partition_for_vertex_intro simp del: partition_for_vertex.simps)
-      ultimately show ?thesis
-        by auto
-    next
-      assume "isin1 X v" "\<not> isin1 X u"
-      moreover have "rep1 (uEdge v u) = uEdge u v"
-        using rep_uv g1.rep_simps by auto
-      moreover have "isin1 (\<N>\<^sub>1 G v) u"
-        using assms v_isin_Nu by auto
-      ultimately have "uEdge u v \<in> {rep1 (uEdge v u) |u. isin1 (\<P> G X v) u}"
-        using assms by (force intro!: isin_partition_for_vertex_intro simp del: partition_for_vertex.simps)
-      thus ?thesis
-        using \<open>isin1 X v\<close> by auto
-    qed
-  qed
-qed *)
 
 lemma partition_for_vertex_disjoint:
   assumes "g1.ugraph_adj_map_invar G" "isin1 X u\<^sub>1" "isin1 X u\<^sub>2" "u\<^sub>1 \<noteq> u\<^sub>2"
@@ -2117,7 +2388,7 @@ lemma f_is_complete:
   using assms invar_vertices_of_H at_least_two_vertices_in_H
   by (simp del: complete_graph.simps; intro complete_graph_is_complete_Adj) auto
 
-lemma c_geq_0: "c G x y \<ge> 0"
+lemma c_geq0: "c G x y \<ge> 0"
   by (cases x; cases y) simp
 
 lemma c_tri_inequality:
@@ -2128,38 +2399,50 @@ lemma c_tri_inequality:
   sorry (* TODO *)
 
 lemma g_is_vc:
-  assumes "g1.ugraph_adj_map_invar G" and "g2.is_hc_Adj (f G) T"
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T"
   shows "g1.is_vc_Adj G (g G T)"
   \<comment> \<open>The function \<open>g\<close> always computes a vertex cover of the graph \<open>G\<close> (feasible solution).\<close>
-proof (intro g1.is_vc_AdjI) 
+proof (intro g1.is_vc_AdjI)
+  let ?snd3="\<lambda>(_,x,_). x"
+  obtain xs where xs_non_nil: "xs \<noteq> []" "distinct xs" 
+    and xs_edges: "g1.uedges G = (\<lambda>(e,_,_). e) ` set xs" 
+    and xs_vert: "set xs \<subseteq> g2.vertices (f G)"
+    and g_list: "g G T = g1.set_of_list (map ?snd3 (rev xs))"
+    using assms by (elim concat_order_for_shorten_tour_and_g)
+
   show "\<And>u v. isin1 (\<N>\<^sub>1 G u) v \<Longrightarrow> isin1 (g G T) u \<or> isin1 (g G T) v"
   proof -
     fix u v
     assume "isin1 (\<N>\<^sub>1 G u) v"
-    hence rep_e_isin: "rep1 (uEdge u v) \<in> g1.uedges G"
+    hence rep_e_isin: "rep1 (uEdge u v) \<in> g1.uedges G" (is "?e \<in> _")
       unfolding g1.uedges_def2 by auto
-    moreover hence "map_edge_to_covering_vertex G T (rep1 (uEdge u v)) \<in> {u,v}" 
-      using assms g1.rep_idem map_edge_to_covering_vertex_cases
-        by (auto simp del: map_edge_to_covering_vertex.simps)
-    ultimately consider 
-      e where "e \<in> g1.uedges G" "map_edge_to_covering_vertex G T e = u" 
-      | e where "e \<in> g1.uedges G" "map_edge_to_covering_vertex G T e = v"
-      using assms set_g g1.set_specs by auto
+    then obtain w i where x_in_xs: "(?e,w,i) \<in> set xs" (is "?x \<in> _")
+      using xs_edges by auto
+    hence "?x \<in> g2.vertices (H\<^sub>e ?e)"
+      using assms(1) xs_vert fst_of_vertex_is_edge by auto
+    hence "isin2 (V\<^sub>H\<^sub>e ?e) ?x"
+      using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+    hence "w \<in> {u,v}"
+      using isin_vertices_of_He_iff by (auto simp add: g1.rep_idem)
+    then consider "u \<in> set (map ?snd3 (rev xs))" | "v \<in> set (map ?snd3 (rev xs))"
+      using x_in_xs by force
     thus "isin1 (g G T) u \<or> isin1 (g G T) v"
-      using assms invar_g set_g g1.set_specs by cases auto
+      using g_list g1.isin_set_of_list by auto
   qed
   
   show "\<And>v. isin1 (g G T) v \<Longrightarrow> v \<in> g1.vertices G"
   proof -
     fix v
     assume "isin1 (g G T) v"
-    then obtain e where e_isin_G: "e \<in> g1.uedges G" and "v = map_edge_to_covering_vertex G T e"
-      using assms invar_g set_g by (auto simp add: g1.set_specs simp del: g.simps)
-    moreover then obtain x y where "e = rep1 (uEdge x y)" and y_isin_Nx: "isin1 (\<N>\<^sub>1 G x) y"
-      unfolding g1.uedges_def2 by auto
-    moreover hence "map_edge_to_covering_vertex G T e \<in> {x,y}"
-      using assms e_isin_G map_edge_to_covering_vertex_cases by (auto simp add: g1.rep_idem)
-    ultimately consider "v = x" | "v = y"
+    then obtain e i where x_in_xs: "(e,v,i) \<in> set xs" (is "?x \<in> _")
+      using g_list xs_edges g1.isin_set_of_list by auto
+    hence e_is_edge: "e \<in> g1.uedges G" and "?x \<in> g2.vertices (H\<^sub>e e)"
+      using assms(1) xs_edges xs_vert fst_of_vertex_is_edge by blast+
+    then obtain x y where "e = rep1 (uEdge x y)" and y_isin_Nx: "isin1 (\<N>\<^sub>1 G x) y" and "isin2 (V\<^sub>H\<^sub>e e) ?x"
+      unfolding g1.uedges_def2 using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+    hence "v \<in> {x,y}"
+      using isin_vertices_of_He_iff by (auto simp add: g1.rep_idem)
+    then consider "v = x" | "v = y"
       by auto
     thus "v \<in> g1.vertices G"
     proof cases
@@ -2180,9 +2463,6 @@ section \<open>Constructing a Hamiltonian Cycle From a Vertex Cover\<close>
 
 context VC4_To_mTSP
 begin
-
-(* lemma hp_for_neighborhood_empty: "set_invar1 P \<Longrightarrow> \<nexists>v. isin1 P v \<Longrightarrow> hp_for_neighborhood u P = []"
-  by (rule fold6.fold_setE) (auto simp add: g1.set_specs) *)
 
 lemma hp_for_neighborhood_empty: "set_invar1 P \<Longrightarrow> set1 P = {} \<Longrightarrow> hp_for_neighborhood u P = []"
   by (rule fold6.fold_setE) auto
@@ -2220,8 +2500,7 @@ proof (rule fold6.fold_setE)
     moreover hence neq: "u \<noteq> x" "u \<noteq> y"
       using assms g1.uedge_not_refl by auto
     ultimately have vert_disj: "g2.vertices (H\<^sub>e (uEdge u x)) \<inter> g2.vertices (H\<^sub>e (uEdge u y)) = {}"
-      using assms by (auto intro!: vertices_of_He_disjoint 
-          simp add: vertices_of_He simp del: He.simps vertices_of_He.simps)
+      by (intro vertices_of_He_disjoint)
 
     consider "rep1 (uEdge u x) = uEdge u x" "rep1 (uEdge u y) = uEdge u y" 
       | "rep1 (uEdge u x) = uEdge x u" "rep1 (uEdge u y) = uEdge u y" 
@@ -2229,7 +2508,7 @@ proof (rule fold6.fold_setE)
       | "rep1 (uEdge u x) = uEdge x u" "rep1 (uEdge u y) = uEdge y u" 
       using g1.is_rep by auto
     thus "set (?f x) \<inter> set (?f y) = {}"
-      using assms neq vert_disj by cases (auto simp add: vertices_hp_u2 vertices_hp_v2 simp del: He.simps)
+      using assms neq vert_disj by cases (auto simp add: vertices_hp_u2[symmetric] vertices_hp_v2[symmetric] simp del: He.simps)
   qed
   ultimately have "distinct (concat (map ?f vs))"
     using assms(1) by (intro distinct_concat_map) 
@@ -2240,7 +2519,7 @@ qed
 lemma set_hp_for_neighborhood:
   assumes "g1.ugraph_adj_map_invar G" "set_invar1 P" 
       and "\<And>v. isin1 P v \<Longrightarrow> rep1 (uEdge u v) \<in> g1.uedges G" \<comment> \<open>Condition for partition of \<open>g1.uedges G\<close>.\<close>
-  shows "List.set (hp_for_neighborhood u P) = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v | v. isin1 P v})"
+  shows "List.set (hp_for_neighborhood u P) = \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v | v. isin1 P v})"
   using assms(2)
 proof (rule fold6.fold_setE)
   let ?f="\<lambda>v. if rep1 (uEdge u v) = uEdge u v then hp_u2 (uEdge u v) else hp_v2 (uEdge u v)"
@@ -2259,11 +2538,11 @@ proof (rule fold6.fold_setE)
     proof cases
       assume "rep1 (uEdge u x) = uEdge u x"
       thus ?thesis 
-        by (auto simp add: vertices_hp_u2 simp del: He.simps)
+        by (auto simp add: vertices_hp_u2[symmetric] simp del: He.simps)
     next
       assume "rep1 (uEdge u x) = uEdge x u" "u \<noteq> x"
       thus ?thesis 
-        by (auto simp add: vertices_hp_v2 simp del: He.simps)
+        by (auto simp add: vertices_hp_v2[symmetric] simp del: He.simps)
     qed
   qed
   have "List.set (concat (map ?f vs)) = \<Union> ((\<lambda>x. set (?f x)) ` (List.set vs))"
@@ -2273,8 +2552,6 @@ proof (rule fold6.fold_setE)
     done
   also have "... = \<Union> ((\<lambda>v. g2.vertices (H\<^sub>e (uEdge u v))) ` (List.set vs))"
     using hp_vert by auto
-  also have "... = \<Union> ((set2 o V\<^sub>H\<^sub>e) ` {uEdge u v | v. v \<in> set vs})"
-    by (auto simp add: vertices_of_He vertices_of_He_rep_idem simp del: He.simps vertices_of_He.simps)
   finally show ?thesis
     using assms set_vs_fold by (auto simp add: fold_concat_map g1.set_specs)
 qed
@@ -2294,9 +2571,9 @@ proof (rule fold6.fold_setE)
   hence vs_nonnil: "vs \<noteq> []" and uv_edge: "\<And>v. v \<in> List.set vs \<Longrightarrow> rep1 (uEdge u v) \<in> g1.uedges G"
     using assms by (auto simp add: g1.set_specs)
 
-  have "List.set ?hp = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v | v. isin1 P v})"
+  have "List.set ?hp = \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v | v. isin1 P v})"
     using assms(1,2,4) by (rule set_hp_for_neighborhood)
-  also have "... = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {rep1 (uEdge u v) | v. isin1 P v})"
+  also have "... = \<Union> ((g2.vertices o H\<^sub>e) ` {rep1 (uEdge u v) | v. isin1 P v})"
     by (auto simp add: set_hp_for_neighborhood vertices_of_He_rep_idem simp del: vertices_of_He.simps)
   finally have set_subset_f: "List.set ?hp \<subseteq> g2.vertices (f G)"
     using assms set_vertices_of_H vertices_f by (auto simp del: f.simps vertices_of_He.simps)
@@ -2402,11 +2679,11 @@ proof (rule fold6.fold_setE)
       proof cases
         case 1
         then show ?thesis 
-          using vertices_hp_u2 by (auto simp del: He.simps)
+          using vertices_hp_u2[symmetric] by (auto simp del: He.simps)
       next
         case 2
         then show ?thesis    
-          using vertices_hp_v2 g1.rep_simps by (auto simp del: He.simps)
+          using vertices_hp_v2[symmetric] g1.rep_simps by (auto simp del: He.simps)
       qed
     qed
     moreover have vert_y: "?y \<in> g2.vertices (H\<^sub>e (rep1 (uEdge u w)))"
@@ -2419,11 +2696,11 @@ proof (rule fold6.fold_setE)
       proof cases
         case 1
         then show ?thesis 
-          using vertices_hp_u2 by (auto simp del: He.simps)
+          using vertices_hp_u2[symmetric] by (auto simp del: He.simps)
       next
         case 2
         then show ?thesis    
-          using vertices_hp_v2 g1.rep_simps by (auto simp del: He.simps)
+          using vertices_hp_v2[symmetric] g1.rep_simps by (auto simp del: He.simps)
       qed
     qed
     moreover have "rep1 (uEdge u v) \<noteq> rep1 (uEdge u w)"
@@ -2445,11 +2722,11 @@ proof (rule fold6.fold_setE)
     using set_vs_fold by (auto simp add: fold_concat_map)
 qed
 
-lemma hd_hp_from_vc:
+lemma hd_hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" and "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
       and "g1.is_vc_Adj G X" "set_invar1 X" 
   obtains u v where "isin1 X u" "rep1 (uEdge u v) \<in> g1.uedges G" 
-    "hd (hp_from_vc G X) = (rep1 (uEdge u v),u,2)"
+    "hd (hp_of_vc G X) = (rep1 (uEdge u v),u,2)"
   using assms(4)
 proof (rule fold6.fold_setE)     
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
@@ -2459,9 +2736,9 @@ proof (rule fold6.fold_setE)
 
   have "\<exists>u v. u \<in> set1 X \<and> isin1 (\<P> G X u) v"
     using assms partition_by_vertex_cover by blast
-  hence "\<exists>u x. u \<in> set1 X \<and> x \<in> \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
-    using invar_vertices_of_He vertices_of_He_non_empty g2.set_specs by fastforce
-  hence "\<exists>u x. u \<in> set xs \<and> x \<in> \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
+  hence "\<exists>u x. u \<in> set1 X \<and> x \<in> \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
+    using vertices_of_He_non_empty by fastforce
+  hence "\<exists>u x. u \<in> set xs \<and> x \<in> \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
     using set_vs_fold by auto
   hence "\<exists>u x. u \<in> set xs \<and> x \<in> List.set (?f u)"
     using assms(1) invar_partition_for_vertex uedge_of_partition_for_vertex 
@@ -2470,7 +2747,7 @@ proof (rule fold6.fold_setE)
     by force+
   then obtain u where "u \<in> set xs" "?f u \<noteq> []" "hd (concat (map ?f xs)) = hd (?f u)"
     by (elim hd_concat_map_elim)
-  moreover hence "\<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v}) \<noteq> {}"
+  moreover hence "\<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v}) \<noteq> {}"
     apply (subst set_hp_for_neighborhood[symmetric])
     using assms(1) invar_partition_for_vertex uedge_of_partition_for_vertex by auto
   moreover hence "\<exists>v. isin1 (\<P> G X u) v"
@@ -2483,11 +2760,11 @@ proof (rule fold6.fold_setE)
     using assms that set_vs_fold by (auto simp add: g1.set_specs fold_concat_map)
 qed
 
-lemma last_hp_from_vc:
+lemma last_hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" and "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
       and "g1.is_vc_Adj G X" "set_invar1 X"
   obtains u v where "isin1 X u" "rep1 (uEdge u v) \<in> g1.uedges G" 
-    "last (hp_from_vc G X) = (rep1 (uEdge u v),u,1)"
+    "last (hp_of_vc G X) = (rep1 (uEdge u v),u,1)"
   using assms(4)
 proof (rule fold6.fold_setE)     
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
@@ -2497,9 +2774,9 @@ proof (rule fold6.fold_setE)
 
   have "\<exists>u v. u \<in> set1 X \<and> isin1 (\<P> G X u) v"
     using assms partition_by_vertex_cover by blast
-  hence "\<exists>u x. u \<in> set1 X \<and> x \<in> \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
-    using invar_vertices_of_He vertices_of_He_non_empty g2.set_specs by fastforce
-  hence "\<exists>u x. u \<in> set xs \<and> x \<in> \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
+  hence "\<exists>u x. u \<in> set1 X \<and> x \<in> \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
+    using vertices_of_He_non_empty by fastforce
+  hence "\<exists>u x. u \<in> set xs \<and> x \<in> \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v})"
     using set_vs_fold by auto
   hence "\<exists>u x. u \<in> set xs \<and> x \<in> List.set (?f u)"
     using assms(1) invar_partition_for_vertex uedge_of_partition_for_vertex 
@@ -2508,7 +2785,7 @@ proof (rule fold6.fold_setE)
     by force+ (* TODO: unify with hd_hp_from_vc *)
   then obtain u where "u \<in> set xs" "?f u \<noteq> []" "last (concat (map ?f xs)) = last (?f u)"
     by (elim last_concat_map_elim)
-  moreover hence "\<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v}) \<noteq> {}"
+  moreover hence "\<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v |v. isin1 (\<P> G X u) v}) \<noteq> {}"
     apply (subst set_hp_for_neighborhood[symmetric])
     using assms(1) invar_partition_for_vertex uedge_of_partition_for_vertex by auto
   moreover hence "\<exists>v. isin1 (\<P> G X u) v"
@@ -2528,16 +2805,15 @@ lemma hp_for_neighborhood_disjoint:
       and "{rep1 (uEdge u\<^sub>1 v) |v. isin1 P\<^sub>1 v} \<inter> {rep1 (uEdge u\<^sub>2 v) |v. isin1 P\<^sub>2 v} = {}" \<comment> \<open>Set of edges are disjoint.\<close>
   shows "List.set (hp_for_neighborhood u\<^sub>1 P\<^sub>1) \<inter> List.set (hp_for_neighborhood u\<^sub>2 P\<^sub>2) = {}"
 proof - 
-  have "\<And>v\<^sub>1 v\<^sub>2. isin1 P\<^sub>1 v\<^sub>1 \<Longrightarrow> isin1 P\<^sub>2 v\<^sub>2 \<Longrightarrow> set2 (V\<^sub>H\<^sub>e (uEdge u\<^sub>1 v\<^sub>1)) \<inter> set2 (V\<^sub>H\<^sub>e (uEdge u\<^sub>2 v\<^sub>2)) = {}"
-    using assms g1.rep_eq_iff by (auto simp add: g1.set_specs intro!: vertices_of_He_disjoint 
-        simp del: vertices_of_He.simps)
+  have "\<And>v\<^sub>1 v\<^sub>2. isin1 P\<^sub>1 v\<^sub>1 \<Longrightarrow> isin1 P\<^sub>2 v\<^sub>2 \<Longrightarrow> g2.vertices (H\<^sub>e (uEdge u\<^sub>1 v\<^sub>1)) \<inter> g2.vertices (H\<^sub>e (uEdge u\<^sub>2 v\<^sub>2)) = {}"
+    using assms g1.rep_eq_iff by (intro vertices_of_He_disjoint) blast
   thus ?thesis
     using assms by (auto simp add: set_hp_for_neighborhood simp del: vertices_of_He.simps hp_for_neighborhood.simps)
 qed
 
-lemma distinct_hp_from_vc:
+lemma distinct_hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" "g1.is_vc_Adj G X" "set_invar1 X"
-  shows "distinct (hp_from_vc G X)"
+  shows "distinct (hp_of_vc G X)"
   using assms(3)
 proof (rule fold6.fold_setE)     
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
@@ -2556,9 +2832,9 @@ proof (rule fold6.fold_setE)
     by (simp add: fold_concat_map)
 qed
 
-lemma set_hp_from_vc:
+lemma set_hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" "g1.is_vc_Adj G X" "set_invar1 X"
-  shows "List.set (hp_from_vc G X) = g2.vertices (f G)"
+  shows "List.set (hp_of_vc G X) = g2.vertices (f G)"
   using assms(3)
 proof (rule fold6.fold_setE)     
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
@@ -2566,24 +2842,19 @@ proof (rule fold6.fold_setE)
   assume distinct_xs: "distinct xs" and set_vs_fold: "List.set xs = set1 X" 
     "fold_v1set1 (\<lambda>v T. T @ ?f v) X [] = fold (\<lambda>v T. T @ ?f v) xs []"
 
-  have "\<And>u. u \<in> set1 X \<Longrightarrow> List.set (?f u) = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v | v. isin1 (\<P> G X u) v})"
+  have "\<And>u. u \<in> set1 X \<Longrightarrow> List.set (?f u) = \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v | v. isin1 (\<P> G X u) v})"
     using assms invar_partition_for_vertex uedge_of_partition_for_vertex
     by (intro set_hp_for_neighborhood) (auto simp add: g1.set_specs simp del: partition_for_vertex.simps)
-  hence "List.set (hp_from_vc G X) = \<Union> ((\<lambda>u. \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u v | v. isin1 (\<P> G X u) v})) ` (set1 X))"
+  hence "List.set (hp_of_vc G X) = \<Union> ((\<lambda>u. \<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u v | v. isin1 (\<P> G X u) v})) ` (set1 X))"
     using set_vs_fold by (auto simp add: fold_concat_map)
-  also have "... = \<Union> ((\<lambda>u. \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {rep1 (uEdge u v) | v. isin1 (\<P> G X u) v})) ` (set1 X))"
+  also have "... = \<Union> ((\<lambda>u. \<Union> ((g2.vertices o H\<^sub>e) ` {rep1 (uEdge u v) | v. isin1 (\<P> G X u) v})) ` (set1 X))"
     using vertices_of_He_rep_idem by fastforce
-  also have "... = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` ((\<Union>u\<in>set1 X. {rep1 (uEdge u v) | v. isin1 (\<P> G X u) v})))"
+  also have "... = \<Union> ((g2.vertices o H\<^sub>e) ` ((\<Union>u\<in>set1 X. {rep1 (uEdge u v) | v. isin1 (\<P> G X u) v})))"
     by auto
-  also have "... = \<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` g1.uedges G)"
-    apply (subst partition_by_vertex_cover)
-    using assms by auto
-  also have "... = set2 (V\<^sub>H G)"
-    apply (subst set_vertices_of_H)
-    using assms by auto
+  also have "... = \<Union> ((g2.vertices o H\<^sub>e) ` g1.uedges G)"
+    using assms partition_by_vertex_cover by auto
   also have "... = g2.vertices (f G)"
-    apply (subst vertices_f)
-    using assms by auto
+    using assms vertices_f by auto
   finally show ?thesis
     by (auto simp add: fold_concat_map)
 qed
@@ -2593,23 +2864,23 @@ lemma path_hp_from_vc:
       and "g1.is_vc_Adj G X" "set_invar1 X" 
   obtains u\<^sub>1 v\<^sub>1 u\<^sub>2 v\<^sub>2 where "isin1 X u\<^sub>1" "isin1 X u\<^sub>2" 
       "rep1 (uEdge u\<^sub>1 v\<^sub>1) \<in> g1.uedges G" "rep1 (uEdge u\<^sub>2 v\<^sub>2) \<in> g1.uedges G" 
-    "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_from_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)" 
+    "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_of_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)" 
 proof -   
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
   obtain u\<^sub>1 v\<^sub>1 where uv1_isin: "isin1 X u\<^sub>1" "rep1 (uEdge u\<^sub>1 v\<^sub>1) \<in> g1.uedges G" 
-    and "hd (hp_from_vc G X) = (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2)"
-    using assms by (elim hd_hp_from_vc)    
+    and "hd (hp_of_vc G X) = (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2)"
+    using assms by (elim hd_hp_of_vc)    
   moreover obtain u\<^sub>2 v\<^sub>2 where uv2_isin: "isin1 X u\<^sub>2" "rep1 (uEdge u\<^sub>2 v\<^sub>2) \<in> g1.uedges G" 
-    and "last (hp_from_vc G X) = (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)"
-    using assms by (elim last_hp_from_vc)
-  moreover have "List.set (hp_from_vc G X) = g2.vertices (f G)"
-    using assms by (intro set_hp_from_vc)
-  moreover hence "hp_from_vc G X \<noteq> []"
-    using assms vertices_f_non_empty by (fastforce simp del: hp_from_vc.simps)
-  ultimately have "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_from_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)"
-    apply (simp only: hp_from_vc.simps)
+    and "last (hp_of_vc G X) = (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)"
+    using assms by (elim last_hp_of_vc)
+  moreover have "List.set (hp_of_vc G X) = g2.vertices (f G)"
+    using assms by (intro set_hp_of_vc)
+  moreover hence "hp_of_vc G X \<noteq> []"
+    using assms vertices_f_non_empty by (fastforce simp del: hp_of_vc.simps)
+  ultimately have "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_of_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)"
+    apply (simp only: hp_of_vc.simps)
     apply (intro g2.path_betw_in_complete_graph)
-    using assms f_is_complete distinct_distinct_adj[OF distinct_hp_from_vc] by auto
+    using assms f_is_complete distinct_distinct_adj[OF distinct_hp_of_vc] by auto
   thus ?thesis
     using that uv1_isin uv2_isin by auto
 qed
@@ -2623,7 +2894,7 @@ proof (rule last_hp_for_neighborhood)
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
   show "set_invar1 (\<P> G X u\<^sub>1)" "\<And>v. isin1 (\<P> G X u\<^sub>1) v \<Longrightarrow> rep1 (uEdge u\<^sub>1 v) \<in> g1.uedges G"
     using assms invar_partition_for_vertex uedge_of_partition_for_vertex by auto
-  hence "\<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u\<^sub>1 v |v. isin1 (\<P> G X u\<^sub>1) v}) \<noteq> {}"
+  hence "\<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u\<^sub>1 v |v. isin1 (\<P> G X u\<^sub>1) v}) \<noteq> {}"
     using assms by (subst set_hp_for_neighborhood[symmetric]) auto
   thus "\<exists>v. isin1 (\<P> G X u\<^sub>1) v"
     by blast
@@ -2634,7 +2905,7 @@ proof (rule last_hp_for_neighborhood)
   proof (rule hd_hp_for_neighborhood)
     show "set_invar1 (\<P> G X u\<^sub>2)" "\<And>v. isin1 (\<P> G X u\<^sub>2) v \<Longrightarrow> rep1 (uEdge u\<^sub>2 v) \<in> g1.uedges G"
       using assms invar_partition_for_vertex uedge_of_partition_for_vertex by auto
-    hence "\<Union> ((set2 \<circ> V\<^sub>H\<^sub>e) ` {uEdge u\<^sub>2 v |v. isin1 (\<P> G X u\<^sub>2) v}) \<noteq> {}"
+    hence "\<Union> ((g2.vertices o H\<^sub>e) ` {uEdge u\<^sub>2 v |v. isin1 (\<P> G X u\<^sub>2) v}) \<noteq> {}"
       using assms by (subst set_hp_for_neighborhood[symmetric]) auto
     thus "\<exists>v. isin1 (\<P> G X u\<^sub>2) v"
       by blast
@@ -2682,10 +2953,10 @@ proof -
   finally show ?thesis .
 qed
 
-lemma cost_hp_from_vc:
+lemma cost_hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
       and "g1.is_vc_Adj G X" "set_invar1 X"
-  shows "cost_of_path (c G) (hp_from_vc G X) \<le> 15 * int (card (g1.uedges G)) + card1 X - 5"
+  shows "cost_of_path (c G) (hp_of_vc G X) \<le> 15 * int (card (g1.uedges G)) + card1 X - 5"
   using assms(4)
 proof (rule fold6.fold_setE)     
   let ?f="\<lambda>u. hp_for_neighborhood u (\<P> G X u)"
@@ -2787,101 +3058,32 @@ begin
     else if x = v \<and> i = 2 then hp_v2 (rep1 e)
     else hp_u1 (rep1 e))" *)
 
-fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
+(* fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "hp_starting_at (e,x,i) = (case rep1 e of uEdge u v \<Rightarrow>
-    if x = v then hp_v1 (rep1 e) else hp_u1 (rep1 e))"
+    if x = v then hp_v1 (rep1 e) else hp_u1 (rep1 e))" *)
 
-lemma hp_starting_at_non_nil: "hp_starting_at x \<noteq> []"
-  by (cases x) (auto split: uedge.splits)
+lemma cost_rotate_tour_eq:
+  assumes "g1.ugraph_adj_map_invar G" and "g2.is_hc_Adj (f G) T"
+  shows "cost_of_path (c G) (rotate_tour h T) = cost_of_path (c G) T"
+  using assms c_sym
+proof (intro cost_rotate_tour)
+  show "hd T = last T"
+    using assms by (elim g2.is_hc_AdjE) (auto simp add: g2.hd_path_betw g2.last_path_betw)
+qed auto
 
-lemma hd_hp_starting_at: 
-  assumes "rep1 e = uEdge u v" "x \<in> {u,v}"
-  shows "hd (hp_starting_at (e,x,i)) = (rep1 e,x,1)"
-  using assms g1.rep_simps by auto
-
-lemma last_hp_starting_at: 
-  assumes "rep1 e = uEdge u v" "x \<in> {u,v}"
-  shows "last (hp_starting_at (e,x,i)) = (rep1 e,x,2)"
-  using assms g1.rep_simps by auto
-
-lemma cost_hd_hp_starting_at_leq: 
-  assumes "g1.ugraph_adj_map_invar G" and "isin2 (V\<^sub>H G) x" "isin2 (V\<^sub>H G) y"
-      and "\<not> are_vertices_in_He G x y"
-  shows "c G x (hd (hp_starting_at y)) \<le> c G x y" (is "c G x ?hd\<^sub>y \<le> _")
-proof (cases x; cases y)
-  fix e\<^sub>x w\<^sub>x i\<^sub>x e\<^sub>y w\<^sub>y i\<^sub>y
-  assume [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)" and [simp]: "y = (e\<^sub>y,w\<^sub>y,i\<^sub>y)"
-  hence vert_x: "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x" "e\<^sub>x \<in> g1.uedges G" 
-    and vert_y: "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) y" "e\<^sub>y \<in> g1.uedges G"
-    using assms fst_of_vertex_is_edge by auto
-  moreover then obtain u\<^sub>y v\<^sub>y where edge_y: "rep1 e\<^sub>y = uEdge u\<^sub>y v\<^sub>y" "w\<^sub>y \<in> {u\<^sub>y,v\<^sub>y}"
-    by (elim isin_vertices_of_He_elim2) auto
-  ultimately have rep_neq: "rep1 e\<^sub>x \<noteq> rep1 e\<^sub>y"
-    using assms invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff by (auto simp add: g2.set_specs)
-
-  have hd_y: "?hd\<^sub>y = (rep1 e\<^sub>y,w\<^sub>y,1)"
-    using vert_y isin_vertices_of_He_edge hd_hp_starting_at[OF edge_y] by auto
-  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) ?hd\<^sub>y"
-    using edge_y by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
-  ultimately have x_hd_y_no_vert: "\<not> are_vertices_in_He G x ?hd\<^sub>y"
-    using assms rep_neq vert_x vert_y invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff 
-    by (auto simp add: g2.set_specs)
-
-  show ?thesis
-  proof cases
-    assume [simp]: "w\<^sub>x = w\<^sub>y"
-    hence "c G x y = 4"
-      using assms rep_neq edge_in_He_are_vertices by auto
-    moreover have "c G x ?hd\<^sub>y = 4"
-      using assms rep_neq hd_y x_hd_y_no_vert edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
-    ultimately show ?thesis
-      by auto
-  next
-    assume "w\<^sub>x \<noteq> w\<^sub>y"
-    hence "c G x y = 5"
-      using assms rep_neq edge_in_He_are_vertices by auto
-    moreover have "c G x ?hd\<^sub>y \<le> 5"
-      using assms rep_neq hd_y x_hd_y_no_vert edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
-    ultimately show ?thesis
-      by auto
-  qed
-qed
-
-lemma cost_hp_starting_at: 
-  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
-  shows "cost_of_path (c G) (hp_starting_at (e,x,i)) = 11"
-  using assms
-proof (rule g1.uedge_not_refl_elim)
-  fix u v
-  assume [simp]: "rep1 e = uEdge u v" and "u \<noteq> v"
-  hence edge_uv: "uEdge u v \<in> g1.uedges G"
-    using assms g1.rep_of_edge_is_edge by fastforce
-  thus ?thesis
-    using assms edge_uv g1.rep_of_edge_is_edge cost_of_hp_v1 cost_of_hp_u1 by auto
-qed
-
-lemma cost_hp_starting_at2: 
-  assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" "e \<in> g1.uedges G"
-  shows "cost_of_path (c G) (hp_starting_at (map_edge_to_hp_start_vertex G T e)) = 11"
-  using assms
+lemma rotate_tour_hc_elim:
+  defines "h \<equiv> \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
+  assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T"
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" \<comment> \<open>There has to be at least one edge with weight 5.\<close>
+  obtains x y T' where "rotate_tour h T = x#y#T'" "\<not> are_vertices_in_He G x y" "c G x y = 5"
 proof -
-  have "map_edge_to_hp_start_vertex G T e = (rep1 e,map_edge_to_covering_vertex G T e,1)"
-    using assms by (intro map_edge_to_hp_start_vertex_cases2)
-  moreover have "rep1 e \<in> g1.uedges G"
-    using assms by (simp add: g1.rep_of_edge)
-  ultimately show ?thesis
-    using assms cost_hp_starting_at by metis
+  have "length T > 2"
+    sorry
+  hence "length (rotate_tour h T) > 2"
+    using length_rotate_tour by metis
+  show ?thesis
+    sorry
 qed
-
-fun tour_of_hp_starting_vertices :: "('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "tour_of_hp_starting_vertices [] = []"
-| "tour_of_hp_starting_vertices X' = concat (map hp_starting_at X') @ [hd X']"
-  \<comment> \<open>Given a list of vertices \<open>X'\<close>, where each vertex marks the start of a Hamiltonian path, we 
-  return a full tour.\<close>
-
-lemma tour_of_hp_starting_vertices_def2:
-  "X' \<noteq> [] \<Longrightarrow> tour_of_hp_starting_vertices X' = concat (map hp_starting_at X') @ [hd X']"
-  by (induction X') auto
 
 lemma cost_concat_map_geq:
   assumes "distinct_adj es" 
@@ -2914,7 +3116,7 @@ next
     moreover hence "cost_of_path ?c (e\<^sub>1#e\<^sub>2#es) = k"
       using cost1_leq by auto
     moreover have "cost_of_path (c G) (concat (map f\<^sub>1 (e\<^sub>1#e\<^sub>2#es))) = ?sum (e\<^sub>1#e\<^sub>2#es) + (length (tl (e\<^sub>1#e\<^sub>2#es))) * 4 + k"
-      using cost cost2_geq 3 by (auto simp add: cost_of_path_append)
+      using cost cost2_geq 3 by (auto simp add: cost_of_path_append2)
     ultimately show ?thesis
       using 3 by auto
   next
@@ -2922,7 +3124,7 @@ next
     hence "cost_of_path ?c (e\<^sub>1#e\<^sub>2#es) = k + 1"
       using cost1_leq by auto
     moreover have "cost_of_path (c G) (concat (map f\<^sub>1 (e\<^sub>1#e\<^sub>2#es))) = ?sum (e\<^sub>1#e\<^sub>2#es) + (length (tl (e\<^sub>1#e\<^sub>2#es))) * 4 + (k + 1)"
-      using cost cost2_geq 3 by (auto simp add: cost_of_path_append)
+      using cost cost2_geq 3 by (auto simp add: cost_of_path_append2)
     ultimately show ?thesis
       using 3(2)[of "k+1"] by auto
   qed
@@ -2976,38 +3178,6 @@ proof -
     using that rep_e[symmetric] \<open>f\<^sub>2 e \<in> {u,v}\<close> by auto
 qed
 
-(* lemma hp_start_vertices_not_vertices_in_He:
-  fixes f\<^sub>1 f\<^sub>2 G T
-  defines "f\<^sub>1 \<equiv> hp_starting_at o (map_edge_to_hp_start_vertex G T)"
-  defines "f\<^sub>2 \<equiv> map_edge_to_covering_vertex G T"
-  assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" 
-      and "e\<^sub>1 \<in> g1.uedges G" "e\<^sub>2 \<in> g1.uedges G" "e\<^sub>1 \<noteq> e\<^sub>2"
-  shows "last (f\<^sub>1 e\<^sub>1) = (rep1 e\<^sub>1,f\<^sub>2 e\<^sub>1,2)" "hd (f\<^sub>1 e\<^sub>2) = (rep1 e\<^sub>2,f\<^sub>2 e\<^sub>2,1)" "\<not> are_vertices_in_He G (last (f\<^sub>1 e\<^sub>1)) (hd (f\<^sub>1 e\<^sub>2))" 
-proof -
-  obtain u\<^sub>1 v\<^sub>1 where rep_e1: "rep1 e\<^sub>1 = uEdge u\<^sub>1 v\<^sub>1" and "f\<^sub>2 e\<^sub>1 \<in> {u\<^sub>1,v\<^sub>1}" 
-    and [simp]: "last (f\<^sub>1 e\<^sub>1) = (rep1 e\<^sub>1,f\<^sub>2 e\<^sub>1,2)"
-    unfolding f\<^sub>1_def f\<^sub>2_def using assms by (elim last_hp_starting_at_elim)
-  hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>1) (last (f\<^sub>1 e\<^sub>1))"
-    using rep_e1 by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
-  hence last_isin_He1: "last (f\<^sub>1 e\<^sub>1) \<in> g2.vertices (H\<^sub>e e\<^sub>1)"
-    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-
-  obtain u\<^sub>2 v\<^sub>2 where rep_e2: "rep1 e\<^sub>2 = uEdge u\<^sub>2 v\<^sub>2" and "f\<^sub>2 e\<^sub>2 \<in> {u\<^sub>2,v\<^sub>2}" 
-    and [simp]: "hd (f\<^sub>1 e\<^sub>2) = (rep1 e\<^sub>2,f\<^sub>2 e\<^sub>2,1)"
-    unfolding f\<^sub>1_def f\<^sub>2_def using assms by (elim hd_hp_starting_at_elim)
-  hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>2) (hd (f\<^sub>1 e\<^sub>2))"
-    using rep_e2 by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
-  hence hd_isin_He2: "hd (f\<^sub>1 e\<^sub>2) \<in> g2.vertices (H\<^sub>e e\<^sub>2)"
-    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-  
-  have "rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
-    using assms g1.rep_of_edge by auto
-  hence "\<not> are_vertices_in_He G (last (f\<^sub>1 e\<^sub>1)) (hd (f\<^sub>1 e\<^sub>2))"
-    using assms last_isin_He1 hd_isin_He2 vertices_in_He_rep_iff by auto
-  thus "last (f\<^sub>1 e\<^sub>1) = (rep1 e\<^sub>1,f\<^sub>2 e\<^sub>1,2)" "hd (f\<^sub>1 e\<^sub>2) = (rep1 e\<^sub>2,f\<^sub>2 e\<^sub>2,1)" "\<not> are_vertices_in_He G (last (f\<^sub>1 e\<^sub>1)) (hd (f\<^sub>1 e\<^sub>2))" 
-    using \<open>last (f\<^sub>1 e\<^sub>1) = (rep1 e\<^sub>1,f\<^sub>2 e\<^sub>1,2)\<close> \<open>hd (f\<^sub>1 e\<^sub>2) = (rep1 e\<^sub>2,f\<^sub>2 e\<^sub>2,1)\<close> by blast+
-qed *)
-
 lemma cost_hp_starting_at_last_hd:
   fixes f\<^sub>1 f\<^sub>2 G T
   defines "f\<^sub>1 \<equiv> hp_starting_at o (map_edge_to_hp_start_vertex G T)"
@@ -3045,35 +3215,6 @@ proof -
     using assms edge_in_He_are_vertices by blast
   ultimately show ?thesis
     using that by (cases "f\<^sub>2 e\<^sub>1 = f\<^sub>2 e\<^sub>2") (auto simp add: g1.rep_idem)
-qed
-
-lemma vc_non_empty:
-  assumes "g1.ugraph_adj_map_invar G" "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
-      and "g1.is_vc_Adj G X" "set_invar1 X"
-  shows "card1 X \<ge> 1"
-proof -
-  obtain e where "e \<in> g1.uedges G"
-    using assms by auto
-  then obtain u v where "isin1 (\<N>\<^sub>1 G u) v"
-    unfolding g1.uedges_def2 by auto
-  hence "isin1 X u \<or> isin1 X v"
-    using assms by (auto elim!: g1.is_vc_AdjE)
-  then consider "{u} \<subseteq> set1 X" | "{v} \<subseteq> set1 X"
-    using assms by (auto simp add: g1.set_specs)
-  thus ?thesis
-  proof cases
-    assume "{u} \<subseteq> set1 X"
-    hence "card {u} \<le> card (set1 X)"
-      using finite_sets1 by (intro card_mono)
-    thus ?thesis 
-      by auto
-  next
-    assume "{v} \<subseteq> set1 X"
-    hence "card {v} \<le> card (set1 X)"
-      using finite_sets1 by (intro card_mono)
-    thus ?thesis 
-      by auto
-  qed
 qed
 
 lemma len_remdups_leq_cycle_cost_adj:
@@ -3157,327 +3298,137 @@ proof -
     using assms by (auto simp add: card_set)
 qed
 
-lemma cost_of_tour_of_hp_starting_vertices:
-  fixes G T                         
-  defines "T' \<equiv> tour_of_hp_starting_vertices (map_tour_to_hp_staring_vertices G T)" and "X \<equiv> g G T"
-  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" "card1 X > 1"
+lemma cost_shorten_tour_geq:
+  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" 
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" \<comment> \<open>There has to be at least one edge with weight 5.\<close>
       and "g2.is_hc_Adj (f G) T"
-  obtains k where "card1 X \<le> k" and "15 * int (card (g1.uedges G)) + k \<le> cost_of_path (c G) T'"
-  using assms(3)
-proof (rule fold4.fold_uedgesE)
+  obtains k where "card1 (g G T) \<le> k" and "15 * int (card (g1.uedges G)) + k \<le> cost_of_path (c G) (shorten_tour G T)"
+proof -
   let ?E="g1.uedges G"
-  let ?vs="map_tour_to_hp_staring_vertices G T"
-  let ?Vs="{map_edge_to_covering_vertex G T e | e. e \<in> g1.uedges G}"
-  let ?f="\<lambda>e xs. xs @ [map_edge_to_hp_start_vertex G T e]"
-  let ?f\<^sub>1="hp_starting_at o (map_edge_to_hp_start_vertex G T)"
-  let ?f\<^sub>2="map_edge_to_covering_vertex G T"
-  let ?c="\<lambda>x y. if ?f\<^sub>2 x \<noteq> ?f\<^sub>2 y then (1::nat) else 0"
+  let ?snd3="\<lambda>(_,x,_). x"
+  let ?c="\<lambda>x y. if ?snd3 x \<noteq> ?snd3 y then (1::nat) else 0"
   let ?neq="\<lambda>x y. if x \<noteq> y then (1::nat) else 0"
-  fix es
-  assume dist_es: "distinct es" and "map rep1 es = es" and 
-    set_es_fold: "set es = g1.uedges G" "fold_g1_uedges4 ?f G [] = fold ?f es []"
-  hence es_non_nil [simp]: "es \<noteq> []" and len_es [simp]: "length es = card ?E"
-    using assms by (auto simp add: distinct_card[symmetric]) 
-  then obtain e where [simp]: "hd es = e" and e_is_edge: "e \<in> ?E"
-    using set_es_fold by fastforce
-  moreover hence [simp]: "rep1 e = e"
-    by (intro g1.rep_of_edge)
-  moreover obtain u v where e_uv: "rep1 e = uEdge u v" "u \<noteq> v"
-    using assms calculation by (elim g1.uedge_not_refl_elim) auto
-  moreover hence "rep1 e = rep1 (uEdge u v)"
-    using calculation by (auto simp add: g1.rep_idem)
-  ultimately consider "map_edge_to_hp_start_vertex G T e = (rep1 e,u,1)" | "map_edge_to_hp_start_vertex G T e = (rep1 e,v,1)"
-    using assms by (elim map_edge_to_hp_start_vertex_cases)
-  then obtain x where [simp]: "map_edge_to_hp_start_vertex G T e = (e,x,1)" and isin_xi: "x \<in> {u,v}"
-    by cases auto
 
-  have [simp]: "?vs = map (map_edge_to_hp_start_vertex G T) es"
-    using set_es_fold by (auto simp add: fold_concat_map)
-  moreover have "hd ?vs = hd (?f\<^sub>1 e)"
-    using e_uv(2) isin_xi by (auto simp add: hd_hp_starting_at[OF e_uv(1)] hd_map 
-        simp del: hp_starting_at.simps map_tour_to_hp_staring_vertices.simps map_edge_to_hp_start_vertex.simps)
-  ultimately have "T' = concat (map ?f\<^sub>1 es) @ [hd (?f\<^sub>1 (hd es))]" (is "_ = ?T @ ?hd")
-    unfolding T'_def by (auto simp add: tour_of_hp_starting_vertices_def2)
-  hence cost_T_eq: "cost_of_path (c G) T' = cost_of_path (c G) (concat (map ?f\<^sub>1 es)) + c G (last (concat (map ?f\<^sub>1 es))) (hd (?f\<^sub>1 e))"
-    using hp_starting_at_non_nil by (auto simp add: cost_of_path_append)
+  obtain xs where xs_non_nil: "xs \<noteq> []" and dist_xs: "distinct xs" and len_xs: "length xs = card ?E" 
+    and sT_def: "shorten_tour G T = last (hp_starting_at (last xs))#concat (map hp_starting_at xs)" 
+    using assms by (elim concat_order_for_shorten_tour)
+  moreover hence "concat (map hp_starting_at xs) \<noteq> []"
+    using hp_starting_at_non_nil by (cases xs) auto
+  ultimately have cost_sT: "cost_of_path (c G) (shorten_tour G T) 
+    = c G (last (hp_starting_at (last xs))) (hd (concat (map hp_starting_at xs))) + cost_of_path (c G) (concat (map hp_starting_at xs))"
+    by (auto simp add: cost_of_path_cons)
 
-  have "?f\<^sub>2 ` set es = ?Vs"
-    using set_es_fold by auto
-  hence [simp]: "card1 X = card (?f\<^sub>2 ` set es)"
-    unfolding X_def using assms set_g by auto
-  hence "card (?f\<^sub>2 ` set es) > 1"
-    using assms by auto
-
-  have "?neq (?f\<^sub>2 (last es)) (?f\<^sub>2 (hd es)) = ?c (last es) (hd es)"
-    by auto
-  moreover have "last (map ?f\<^sub>2 es) = ?f\<^sub>2 (last es)"
-    using es_non_nil by (intro last_map)
-  moreover have "hd (map ?f\<^sub>2 es) = ?f\<^sub>2 (hd es)"
-    using es_non_nil by (intro hd_map)
-  moreover have "cost_of_path ?neq (map ?f\<^sub>2 es) = cost_of_path ?c es"
-    by (induction es rule: list012_induct) auto
-  ultimately have cost_map_eq: 
-    "cost_of_path ?neq (map ?f\<^sub>2 es) + ?neq (last (map ?f\<^sub>2 es)) (hd (map ?f\<^sub>2 es)) = cost_of_path ?c es + ?c (last es) (hd es)"
+  have "set1 (g G T) = ?snd3 ` set xs"
+    using g1.set_of_list sorry (* TODO: add to concat_order_for_shorten_tour *)
+  hence [simp]: "card1 (g G T) = card (?snd3 ` set xs)"
+    using assms set_g by auto
+  moreover have "card1 (g G T) > 1"
+    using assms (* feasibitly of g *)
+    sorry
+  ultimately have "card (?snd3 ` set xs) > 1"
     by auto
 
-  have "card (?f\<^sub>2 ` set es) = card (set (map ?f\<^sub>2 es))"
+  have "?neq (?snd3 (last xs)) (?snd3 (hd xs)) = ?c (last xs) (hd xs)"
     by auto
-  also have "... \<le> cost_of_path ?neq (map ?f\<^sub>2 es) + ?neq (last (map ?f\<^sub>2 es)) (hd (map ?f\<^sub>2 es))"
-    using \<open>card (?f\<^sub>2 ` set es) > 1\<close> by (intro card_leq_cycle_cost_adj) auto
-  also have "... = cost_of_path ?c es + ?c (last es) (hd es)"
+  moreover have "last (map ?snd3 xs) = ?snd3 (last xs)"
+    using xs_non_nil by (intro last_map)
+  moreover have "hd (map ?snd3 xs) = ?snd3 (hd xs)"
+    using xs_non_nil by (intro hd_map)
+  moreover have "cost_of_path ?neq (map ?snd3 xs) = cost_of_path ?c xs"
+    by (induction xs rule: list012_induct) auto
+  ultimately have cost_map_eq: "cost_of_path ?neq (map ?snd3 xs) + ?neq (last (map ?snd3 xs)) (hd (map ?snd3 xs)) = cost_of_path ?c xs + ?c (last xs) (hd xs)"
+    by auto
+
+  have "card (?snd3 ` set xs) = card (set (map ?snd3 xs))"
+    by auto
+  also have "... \<le> cost_of_path ?neq (map ?snd3 xs) + ?neq (last (map ?snd3 xs)) (hd (map ?snd3 xs))"
+    using \<open>card (?snd3 ` set xs) > 1\<close> by (intro card_leq_cycle_cost_adj) auto
+  also have "... = cost_of_path ?c xs + ?c (last xs) (hd xs)"
     using cost_map_eq by auto
-  finally have card_es_leq: "card (?f\<^sub>2 ` set es) \<le> cost_of_path ?c es + ?c (last es) (hd es)"
+  finally have card_es_leq: "card (?snd3 ` set xs) \<le> cost_of_path ?c xs + ?c (last xs) (hd xs)"
     by auto
 
-  have "distinct_adj es"
-    using dist_es by (intro distinct_distinct_adj)
-  moreover have "\<And>y. y \<in> set es \<Longrightarrow> ?f\<^sub>1 y \<noteq> []"
+  have "distinct_adj xs"
+    using dist_xs distinct_distinct_adj by auto
+  moreover have "\<And>y. y \<in> set xs \<Longrightarrow> hp_starting_at y \<noteq> []"
     using hp_starting_at_non_nil by auto
   moreover have cost_last_hd_eq_4:
-    "\<And>x y. x \<in> set es \<Longrightarrow> y \<in> set es \<Longrightarrow> x \<noteq> y \<Longrightarrow> ?f\<^sub>2 x = ?f\<^sub>2 y \<Longrightarrow> c G (last (?f\<^sub>1 x)) (hd (?f\<^sub>1 y)) = 4"
+    "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> ?snd3 x = ?snd3 y \<Longrightarrow> c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 4"
   proof -
     fix x y
-    assume "x \<in> set es" "y \<in> set es" "x \<noteq> y" "?f\<^sub>2 x = ?f\<^sub>2 y"
-    thus "c G (last (?f\<^sub>1 x)) (hd (?f\<^sub>1 y)) = 4"
-      using assms set_es_fold by (elim cost_hp_starting_at_last_hd[of _ _ x y]) auto
+    assume "x \<in> set xs" "y \<in> set xs" "x \<noteq> y" "?snd3 x = ?snd3 y"
+    thus "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 4"
+      using assms by (elim cost_hp_starting_at_last_hd[of _ _ x y]) auto
   qed
   moreover have cost_last_hd_eq_5: 
-    "\<And>x y. x \<in> set es \<Longrightarrow> y \<in> set es \<Longrightarrow> x \<noteq> y \<Longrightarrow> ?f\<^sub>2 x \<noteq> ?f\<^sub>2 y \<Longrightarrow> c G (last (?f\<^sub>1 x)) (hd (?f\<^sub>1 y)) = 5"
+    "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> ?snd3 x \<noteq> ?snd3 y \<Longrightarrow> c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 5"
   proof -
     fix x y
-    assume "x \<in> set es" "y \<in> set es" "x \<noteq> y" "?f\<^sub>2 x \<noteq> ?f\<^sub>2 y"
-    thus "c G (last (?f\<^sub>1 x)) (hd (?f\<^sub>1 y)) = 5"
-      using assms set_es_fold by (elim cost_hp_starting_at_last_hd[of _ _ x y]) auto
+    assume "x \<in> set xs" "y \<in> set xs" "x \<noteq> y" "?snd3 x \<noteq> ?snd3 y"
+    
+
+
+    thus "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 5"
+      using assms by (elim cost_hp_starting_at_last_hd[of _ _ x y]) auto
   qed
-  ultimately obtain k where cost_es_leq: "cost_of_path ?c es = k"
-    and "cost_of_path (c G) (concat (map ?f\<^sub>1 es)) = (\<Sum>e\<leftarrow>es. cost_of_path (c G) (?f\<^sub>1 e)) + (length (tl es)) * 4 + k"
+  ultimately obtain k where cost_es_leq: "cost_of_path ?c xs = k"
+    and "cost_of_path (c G) (concat (map hp_starting_at xs)) = (\<Sum>e\<leftarrow>xs. cost_of_path (c G) (hp_starting_at e)) + (length (tl xs)) * 4 + k"
     by (elim cost_concat_map_geq)
-  moreover have "(\<Sum>e\<leftarrow>es. cost_of_path (c G) (?f\<^sub>1 e)) = length es * 11"
+  moreover have "(\<Sum>e\<leftarrow>xs. cost_of_path (c G) (hp_starting_at e)) = length xs * 11"
     apply (intro sum_list_const)
-    apply (subst o_apply)
     apply (subst cost_hp_starting_at2)
-    using assms set_es_fold by auto
-  ultimately have "cost_of_path (c G) (concat (map ?f\<^sub>1 es)) = length es * 11 + (length (tl es) + 1) * 4 + k - (4::int)"
+    using assms apply simp sorry
+  ultimately have "cost_of_path (c G) (concat (map hp_starting_at xs)) = length xs * 11 + (length (tl xs) + 1) * 4 + k - (4::int)"
     by auto
-  also have "... = length es * 11 + (length es) * 4 + k - (4::int)"
-    by (auto simp del: len_es)
-  finally have cost_concat_geq: "cost_of_path (c G) (concat (map ?f\<^sub>1 es)) = 15 * length es + k - (4::int)"
+  also have "... = length xs * 11 + (length xs) * 4 + k - (4::int)"
+    using xs_non_nil by auto
+  finally have cost_concat_geq: "cost_of_path (c G) (concat (map hp_starting_at xs)) = 15 * length xs + k - (4::int)"
     by auto
 
-  have last_concat: "last (concat (map ?f\<^sub>1 es)) = last (?f\<^sub>1 (last es))"
-    using es_non_nil hp_starting_at_non_nil by (intro last_concat_map) auto
+  have hd_concat: "hd (concat (map hp_starting_at xs)) = hd (hp_starting_at (hd xs))"
+    using xs_non_nil hp_starting_at_non_nil by (cases xs) auto
 
-  consider "?f\<^sub>2 (last es) = ?f\<^sub>2 (hd es)" | "?f\<^sub>2 (last es) \<noteq> ?f\<^sub>2 (hd es)"
+  consider "?snd3 (last xs) = ?snd3 (hd xs)" | "?snd3 (last xs) \<noteq> ?snd3 (hd xs)"
     by auto
   thus ?thesis
   proof cases
-    assume "?f\<^sub>2 (last es) = ?f\<^sub>2 (hd es)" 
-    hence "c G (last (?f\<^sub>1 (last es))) (hd (?f\<^sub>1 (hd es))) = 4" 
+    assume "?snd3 (last xs) = ?snd3 (hd xs)" 
+    hence "c G (last (hp_starting_at (last xs))) (hd (hp_starting_at (hd xs))) = 4" 
       apply (intro cost_last_hd_eq_4)
+      using xs_non_nil last_in_set apply simp
+      using xs_non_nil hd_in_set apply simp
+      using xs_non_nil dist_xs distinct_hd_last_neq subgoal sorry
       apply simp
-      using e_is_edge set_es_fold apply simp
-      using assms(4) dist_es distinct_hd_last_neq by fastforce
-    hence "c G (last (concat (map ?f\<^sub>1 es))) (hd (?f\<^sub>1 (hd es))) = 4" 
-      using last_concat by auto
-    hence "15 * int (card ?E) + k \<le> cost_of_path (c G) T'"
-      using cost_concat_geq cost_T_eq by auto
-    moreover have "card1 X \<le> k"
-      using \<open>?f\<^sub>2 (last es) = ?f\<^sub>2 (hd es)\<close> card_es_leq cost_es_leq by auto
+      done
+    hence "c G (last (hp_starting_at (last xs))) (hd (concat (map hp_starting_at xs))) = 4" 
+      using hd_concat by auto
+    hence "15 * int (card ?E) + k \<le> cost_of_path (c G) (shorten_tour G T)"
+      using len_xs cost_concat_geq cost_sT by auto
+    moreover have "card1 (g G T) \<le> k"
+      using \<open>?snd3 (last xs) = ?snd3 (hd xs)\<close> card_es_leq cost_es_leq by (auto simp del: g.simps)
     ultimately show ?thesis
       using that by blast
   next
-    assume "?f\<^sub>2 (last es) \<noteq> ?f\<^sub>2 (hd es)"
-    hence "c G (last (?f\<^sub>1 (last es))) (hd (?f\<^sub>1 (hd es))) = 5"
+    assume "?snd3 (last xs) \<noteq> ?snd3 (hd xs)"
+    hence "c G (last (hp_starting_at (last xs))) (hd (hp_starting_at (hd xs))) = 5"
       apply (intro cost_last_hd_eq_5)
+      using xs_non_nil last_in_set apply simp
+      using xs_non_nil hd_in_set apply simp
+      using xs_non_nil dist_xs distinct_hd_last_neq subgoal sorry
       apply simp
-      using e_is_edge set_es_fold apply simp
-      using assms(4) dist_es distinct_hd_last_neq by fastforce
-    hence "c G (last (concat (map ?f\<^sub>1 es))) (hd (?f\<^sub>1 (hd es))) = 5" 
-      using last_concat by auto
-    hence "15 * int (card ?E) + k + 1 \<le> cost_of_path (c G) T'"
-      using cost_concat_geq cost_T_eq by auto
-    moreover have "card1 X \<le> k + 1"
-      using \<open>?f\<^sub>2 (last es) \<noteq> ?f\<^sub>2 (hd es)\<close> card_es_leq cost_es_leq by auto
+      done
+    hence "c G (last (hp_starting_at (last xs))) (hd (concat (map hp_starting_at xs))) = 5" 
+      using hd_concat by auto
+    hence "15 * int (card ?E) + k + 1 \<le> cost_of_path (c G) (shorten_tour G T)"
+      using len_xs cost_concat_geq cost_sT by auto
+    moreover have "card1 (g G T) \<le> k + 1"
+      using \<open>?snd3 (last xs) \<noteq> ?snd3 (hd xs)\<close> card_es_leq cost_es_leq by (auto simp del: g.simps)
     ultimately show ?thesis
       using that by auto
   qed
 qed
 
-lemma cost_rotate_tour_eq:
-  assumes "g1.ugraph_adj_map_invar G" and "g2.is_hc_Adj (f G) T" (* "\<exists>e. e \<in> g1.uedges G" *)
-  shows "cost_of_path (c G) (rotate_tour (isin2 (V\<^sub>H\<^sub>e e)) T) = cost_of_path (c G) T"
-  using assms c_sym
-proof (intro cost_rotate_tour)
-  show "hd T = last T"
-    using assms by (elim g2.is_hc_AdjE) (auto simp add: g2.hd_path_betw g2.last_path_betw)
-qed auto
-
-(* lemma cost_filter_tour_leq_aux:
-  assumes "g1.ugraph_adj_map_invar G" and "\<not> isin2 (V\<^sub>H\<^sub>e e) x" "\<And>y. y \<in> set ys \<Longrightarrow> isin2 (V\<^sub>H\<^sub>e e) y"
-  shows "cost_of_path (c G) (x#zs) + length ys - 1 \<le> cost_of_path (c G) (x#ys @ zs)"
-  using assms
-proof (induction ys)
-  case Nil
-  then show ?case by auto
-next
-  case (Cons y ys)
-  have "\<not> are_vertices_in_He G x y"
-  proof (rule ccontr; simp only: not_not)
-    assume "are_vertices_in_He G x y"
-    then obtain e' where "e' \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e')" "y \<in> g2.vertices (H\<^sub>e e')"
-      using assms by (elim are_vertices_in_He_elim)
-    hence "isin2 (V\<^sub>H\<^sub>e e') x" "isin2 (V\<^sub>H\<^sub>e e') y"
-      using assms invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-    moreover have "isin2 (V\<^sub>H\<^sub>e e) y"
-      using Cons by auto
-    ultimately have "rep1 e = rep1 e'"
-      using isin_vertices_of_He_unique by auto
-    hence "isin2 (V\<^sub>H\<^sub>e (rep1 e)) x"
-      using \<open>isin2 (V\<^sub>H\<^sub>e e') x\<close> by (simp add: vertices_of_He_rep_idem del: vertices_of_He.simps)
-    thus "False"
-      using assms by (simp add: vertices_of_He_rep_idem del: vertices_of_He.simps)
-  qed
-  hence "c G x y \<ge> 4"
-    using assms by (intro cost_x_y_geq4)
-
-  consider "zs = []" | z tlzs where "zs = z#tlzs"
-    by (cases zs)
-  thus ?case
-  proof cases
-    case 1
-    hence "cost_of_path (c G) (x#zs) + length (y#ys) - 1 = int (length (y#ys)) - 1"
-      by auto
-    also have "... \<le> cost_of_path (c G) (y#ys)"
-      using Cons cost_path_geq_len[of _ "y#ys"] by auto
-    also have "... \<le> cost_of_path (c G) (x#y#ys)"
-      using c_geq_0 cost_of_path_cons_leq[of "c G" ys x] by auto
-    also have "... \<le> cost_of_path (c G) (x#y#ys) + cost_of_path (c G) zs"
-      using c_geq_0 cost_of_path_geq_0[of "c G" zs] by auto
-    also have "... \<le> cost_of_path (c G) (x#y#ys @ zs)"
-      using c_geq_0 cost_of_path_append_geq_0[of "c G" "x#y#ys" zs] by auto
-    finally show ?thesis 
-      by auto
-  next
-    fix z tlzs
-    assume [simp]: "zs = z#tlzs"
-
-    have "c G (last (y#ys)) z \<ge> 1"
-    using assms c_geq1 by auto
-    have "c G x z \<le> 5"
-      thm cost_x_y_leq5  
-    (* idea. 
-      case (i) \<not> are_vertices_in_He ?G ?x ?y. thm cost_x_y_leq5 
-      case (ii) are_vertices_in_He ?G ?x ?y. 
-        (a) obtain e where "?x \<in> g2.vertices (H\<^sub>e e)" "?y \<in> g2.vertices (H\<^sub>e e)"
-        (b) obtain u v where "rep1 e = uEdge u v"
-        (c) Lemma. for every vertex "?z \<in> g2.vertices (H\<^sub>e e)" there are paths 
-            "path_betw (H\<^sub>e e) ?z P\<^sub>u (rep1 e,u,1)" and "path_betw (H\<^sub>e e) ?z P\<^sub>v (rep1 e,v,1)" s.t. "length P\<^sub>u + length P\<^sub>v = 5"
-        (d) obtain paths P\<^sub>ux P\<^sub>uy P\<^sub>vx P\<^sub>vy with "length P\<^sub>ux + length P\<^sub>vx = 5" and "length P\<^sub>uy + length P\<^sub>vy = 5"
-        (e) hence "path_betw (H\<^sub>e e) ?x (P\<^sub>ux @ rev P\<^sub>uy) ?y" and "path_betw (H\<^sub>e e) ?x (P\<^sub>vx @ rev P\<^sub>vy) ?y"
-        (f) "length P\<^sub>ux + length P\<^sub>vx + length P\<^sub>uy + length P\<^sub>vy = 10"
-        (g) hence "length P\<^sub>ux + P\<^sub>uy \<le> 10" or "length P\<^sub>vx + length P\<^sub>vy \<le> 5"
-        (h) by thm g2.path_dist_less. "g2.path_dist ?G ?u ?v \<le> enat 5"
-        (i) hence "min_dist_in_He G ?x ?y \<le> enat 5"
-    *)
-    sorry (* TODO: This should hold, but I don't know how to prove it. *)
-
-    have "cost_of_path (c G) (x#z#tlzs) + int (length (y#ys)) - 1 = c G x z + cost_of_path (c G) (z#tlzs) + int (length (y#ys)) - 1"
-      by auto
-    also have "... \<le> 5 + cost_of_path (c G) (z#tlzs) + int (length (y#ys)) - 1"
-      using \<open>c G x z \<le> 5\<close> by auto
-    also have "... \<le> 4 + cost_of_path (c G) (y#ys) + 1 + cost_of_path (c G) (z#tlzs)"
-      using assms cost_path_geq_len[of G "y#ys"] by auto
-    also have "... \<le> c G x y + cost_of_path (c G) (y#ys) + c G (last (y#ys)) z + cost_of_path (c G) (z#tlzs)"
-      using \<open>4 \<le> c G x y\<close> \<open>c G (last (y#ys)) z \<ge> 1\<close> by auto
-    also have "... = c G x y + cost_of_path (c G) ((y#ys) @ (z#tlzs))"
-      apply (subst cost_of_path_append)
-      apply auto
-      done
-    also have "... = cost_of_path (c G) (x#y#ys @ z#tlzs)"
-      by auto
-    finally show ?thesis 
-      by auto
-  qed
-qed
-
-lemma cost_filter_tour_leq:
-  assumes "g1.ugraph_adj_map_invar G" and "distinct T" (* "\<exists>z \<in> set T. \<not> isin2 (V\<^sub>H\<^sub>e e) z" *)
-  shows "cost_of_path (c G) (filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set T) - 1 \<le> cost_of_path (c G) T"
-  using assms
-proof (induction T rule: list012_induct)
-  case Nil
-  then show ?case by auto
-next
-  case (Singleton x)
-  then show ?case 
-    using invar_vertices_of_He by (auto simp add: g2.set_specs)
-next
-  let ?f="\<lambda>x. \<not> isin2 (V\<^sub>H\<^sub>e e) x"
-  case (CCons x y T)
-  then show ?case 
-  proof cases
-    assume "isin2 (V\<^sub>H\<^sub>e e) x"
-    moreover hence "card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) = card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T)) + 1"
-      using CCons invar_vertices_of_He by (auto simp add: g2.set_specs)
-    ultimately have "cost_of_path (c G) (filter ?f (x#y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) - 1 \<le> cost_of_path (c G) (y#T) + 1"
-      using CCons by auto
-    also have "... \<le> cost_of_path (c G) (x#y#T)"
-      using CCons c_geq1 by (auto simp add: c_geq1)
-    finally show ?thesis
-      by auto
-  next
-    assume "\<not> isin2 (V\<^sub>H\<^sub>e e) x"
-    moreover hence "card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) = card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T))"
-      using CCons invar_vertices_of_He by (auto simp add: g2.set_specs)
-    ultimately have cost_simp: "cost_of_path (c G) (filter ?f (x#y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) 
-      = cost_of_path (c G) (x#filter ?f (y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T))"
-      by auto
-    then consider "filter ?f (y#T) = []" | z zs where "filter ?f (y#T) = z#zs"
-      by (cases "filter ?f (y#T)") auto
-    thus ?thesis
-    proof cases
-      assume "filter ?f (y#T) = []"
-      moreover hence "set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T) = set (y#T)"
-        using filter_empty_conv[of ?f "y#T"] invar_vertices_of_He by (auto simp add: g2.set_specs)
-      moreover hence "card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T)) = length (y#T)"
-        using CCons by (auto simp add: distinct_card)
-      ultimately have "cost_of_path (c G) (filter ?f (x#y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) = length (y#T)"
-        using cost_simp by auto
-      also have "... \<le> cost_of_path (c G) (y#T) + 1"
-        using assms cost_path_geq_len[of G "y#T"] by auto
-      also have "... \<le> cost_of_path (c G) (x#y#T)"
-        using CCons by (auto simp add: c_geq1)
-      finally show ?thesis 
-        by auto
-    next
-      fix z zs
-      assume "filter ?f (y#T) = z#zs"
-      hence "cost_of_path (c G) (filter ?f (x#y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (x#y#T)) - 1 = c G x z + cost_of_path (c G) (filter ?f (y#T)) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T)) - 1"
-        using cost_simp by auto
-      also have "... \<le> c G x z + cost_of_path (c G) (y#T)"
-        using CCons by auto
-
-      also have "... \<le> 5 + cost_of_path (c G) (z#zs) + card (set2 (V\<^sub>H\<^sub>e e) \<inter> set (y#T)) - 1"
-        using \<open>c G x z \<le> 5\<close> by auto
-      also have "... \<le> 4 + cost_of_path (c G) (y#ys) + 1 + cost_of_path (c G) (z#tlzs)"
-        using assms cost_path_geq_len[of G "y#ys"] by auto
-      also have "... \<le> c G x y + cost_of_path (c G) (y#ys) + c G (last (y#ys)) z + cost_of_path (c G) (z#tlzs)"
-        using \<open>4 \<le> c G x y\<close> \<open>c G (last (y#ys)) z \<ge> 1\<close> by auto
-      also have "... = c G x y + cost_of_path (c G) ((y#ys) @ (z#tlzs))"
-        apply (subst cost_of_path_append)
-          apply auto
-        done
-      also have "... = cost_of_path (c G) (x#y#ys @ z#tlzs)"
-        by auto
-
-      then show ?thesis sorry
-    qed
-  qed
-qed (* TODO: continue here. replace "card (set2 (V\<^sub>H\<^sub>e e) \<inter> set T)" with hp \<Rightarrow> cost 11 *)
-
-thm cost_filter_tour_leq_aux *)
-
-lemma is_hc_rotate_tour:
+lemma rotate_tour_is_hc:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) T" 
   shows "g2.is_hc_Adj (f G) (rotate_tour h T)" (is "g2.is_hc_Adj (f G) ?T'")
 proof (intro g2.is_hc_AdjI)
@@ -3517,20 +3468,25 @@ proof (intro g2.is_hc_AdjI)
   qed
 qed
 
-lemma shorter_tour_is_hc:
+(* lemma shorten_tour_is_hc:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) (x#y#T @ [x])" (is "g2.is_hc_Adj (f G) ?T") and "e \<in> g1.uedges G"
       and "isin2 (V\<^sub>H G) x" "\<not> isin2 (V\<^sub>H\<^sub>e e) x" "isin2 (V\<^sub>H\<^sub>e e) y" 
-   shows "g2.is_hc_Adj (f G) (x#hp_starting_at y @ filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T @ [x])" (is "g2.is_hc_Adj (f G) ?T'")
+   shows "g2.is_hc_Adj (f G) (x#hp_starting_at y @ filter (Not o isin2 (V\<^sub>H\<^sub>e e)) (T @ [x]))" (is "g2.is_hc_Adj (f G) ?T'")
 proof (intro g2.is_hc_AdjI)
   have hd_eq_last: "hd ?T = last ?T" and T_non_nil: "?T \<noteq> []"
     using g2.path_non_empty by (auto simp add: g2.hd_path_betw g2.last_path_betw)
   hence rotT_hd_last_eq: "hd ?T' = last ?T'"
     using rotate_tour_hd_eq_last by auto
 
-  have "g2.vertices (f G) = List.set (tl ?T)"
+  have "g2.vertices (f G) = set (tl ?T)"
     using assms by (elim g2.is_hc_AdjE)
-  thus set_tl_rotT: "g2.vertices (f G) = set (tl ?T')"
-    using hd_eq_last set_tl_rotate_tour sorry
+  moreover hence "g2.vertices (f G) - set2 (V\<^sub>H\<^sub>e e) = set (filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T @ [x])"
+    using invar_vertices_of_He apply (auto simp add: g2.set_specs)
+    sorry
+  moreover have "set2 (V\<^sub>H\<^sub>e e) = set (hp_starting_at y)"
+    using assms vertices_of_He hp_starting_at_set by auto
+  ultimately show set_tl_rotT: "g2.vertices (f G) = set (tl ?T')"
+    using assms vertices_f set_vertices_of_H by auto
 
   have "distinct (tl ?T)"
     using assms by (elim g2.is_hc_AdjE)
@@ -3554,29 +3510,33 @@ proof (intro g2.is_hc_AdjI)
     thus ?thesis
       using rotT_hd_last_eq by fastforce
   qed
-qed
+qed *)
 
-lemma shorten_tour_for_edge:
+(* lemma shorten_tour_for_edge:
   assumes "g1.ugraph_adj_map_invar G" "g2.is_hc_Adj (f G) (x#y#T @ [x])" (is "g2.is_hc_Adj (f G) ?T") and "e \<in> g1.uedges G"
       and "isin2 (V\<^sub>H G) x" "\<not> isin2 (V\<^sub>H\<^sub>e e) x" "isin2 (V\<^sub>H\<^sub>e e) y"
-  shows "cost_of_path (c G) (x#hp_starting_at y @ filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T @ [x]) \<le> cost_of_path (c G) ?T"
-  (is "cost_of_path (c G) (x#?hp\<^sub>y @ ?T\<^sub>f) \<le> cost_of_path (c G) ?T")
+  shows "cost_of_path (c G) (x#hp_starting_at y @ filter (Not o isin2 (V\<^sub>H\<^sub>e e)) (T @ [x])) \<le> cost_of_path (c G) (x#y#T @ [x])"
+  (is "cost_of_path (c G) (x#?hpy @ ?fT) \<le> cost_of_path (c G) ?T")
 proof -
   have "y \<in> set2 (V\<^sub>H\<^sub>e e)"
     using assms invar_vertices_of_H invar_vertices_of_He by (auto simp add: g2.set_specs)
   hence y_is_vert: "isin2 (V\<^sub>H G) y"
-    using assms(1,3) invar_vertices_of_H set_vertices_of_H by (auto simp add: g2.set_specs)
+    using assms invar_vertices_of_H set_vertices_of_H by (auto simp add: g2.set_specs)
   
   obtain e\<^sub>x where "e\<^sub>x \<in> g1.uedges G" "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x"
     using assms by (elim isin_vertices_of_H_obtain_edge)
   moreover hence "rep1 e\<^sub>x \<noteq> rep1 e"
-    using assms(5) isin_vertices_of_He_unique[OF \<open>isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x\<close>] by auto
+    using assms isin_vertices_of_He_unique[OF \<open>isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x\<close>] by auto
   ultimately have x_y_no_vert: "\<not> are_vertices_in_He G x y"
     using assms vertices_in_He_rep_iff invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
 
-  have "cost_of_path (c G) ((x#?hp\<^sub>y) @ ?T\<^sub>f) = c G x (hd ?hp\<^sub>y) + cost_of_path (c G) ?hp\<^sub>y + c G (last ?hp\<^sub>y) (hd ?T\<^sub>f) + cost_of_path (c G) ?T\<^sub>f"
-    using hp_starting_at_non_nil by (auto simp add: cost_of_path_append cost_of_path_cons last_ConsR)
-  also have "... \<le> c G x (hd ?hp\<^sub>y) + cost_of_path (c G) (y#T @ [x])"
+  obtain w i where "y = (rep1 e,w,i)"
+    using assms by (elim isin_vertices_of_He_elim2) auto
+  hence "cost_of_path (c G) ?hpy = 11"
+    using assms g1.rep_of_edge_is_edge cost_hp_starting_at by simp
+  hence "cost_of_path (c G) (x#?hpy @ ?fT) = c G x (hd ?hpy) + 11 + c G (last ?hpy) (hd ?fT) + cost_of_path (c G) ?fT"
+    using assms hp_starting_at_non_nil by (auto simp add: cost_of_path_append cost_of_path_cons last_ConsR)
+  also have "... \<le> c G x (hd ?hpy) + cost_of_path (c G) (y#T @ [x])"
     sorry
   also have "... \<le> c G x y + cost_of_path (c G) (y#T @ [x])"
     using assms y_is_vert x_y_no_vert cost_hd_hp_starting_at_leq by auto
@@ -3584,32 +3544,108 @@ proof -
     by auto
   finally show ?thesis 
     by auto
+qed *)
+
+lemma 
+  assumes "g1.ugraph_adj_map_invar G"
+  shows "11 + c G (last (hp_starting_at x)) y + cost_of_path (c G) (y#filter (Not o isin2 (V\<^sub>H\<^sub>e e)) T) \<le> cost_of_path (c G) (x#T)"
+  sorry
+
+lemma replace_hp_tour_leq:
+  assumes "g1.ugraph_adj_map_invar G" "set T \<subseteq> g2.vertices (f G)"
+  shows "cost_of_path (c G) (replace_hp G T) \<le> cost_of_path (c G) T"
+  using assms
+proof (induction G T rule: replace_hp.induct[case_names Nil Cons])
+  case (Nil G)
+  thus ?case by auto
+next
+  case Cons_T: (Cons G x T)
+  let ?fT="filter (\<lambda>y. \<not> are_vertices_in_He G x y) T"
+
+  show ?case
+  proof (cases ?fT)
+    case Nil
+    then show ?thesis sorry
+  next
+    case Cons_fT: (Cons y fT)
+    moreover have "set ?fT \<subseteq> set T"
+      by auto 
+    ultimately have "y \<in> set ?fT"
+      by auto
+    hence "y \<in> set T" and no_vert_in_He_xy: "\<not> are_vertices_in_He G x y" 
+      and vert_xy: "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
+      using Cons_T by  auto
+
+    have "cost_of_path (c G) (replace_hp G (x#T)) = cost_of_path (c G) (hp_starting_at x @ replace_hp G ?fT)"
+      by auto
+    also have "... = cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) (hd (hp_starting_at y)) + cost_of_path (c G) (replace_hp G ?fT)"
+      using Cons_fT hp_starting_at_non_nil replace_hp_Cons_non_nil by (simp add: cost_of_path_append2)
+    also have "... \<le> cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) (hd (hp_starting_at y)) + cost_of_path (c G) ?fT"
+      using Cons_T by auto
+    also have "... \<le> 11 + c G (last (hp_starting_at x)) (hd (hp_starting_at y)) + cost_of_path (c G) (y#fT)"
+      using Cons_fT Cons_T cost_hp_starting_at2 invar_vertices_of_H by (auto simp add: g2.set_specs)
+    also have "... \<le> 11 + c G x y + cost_of_path (c G) (y#fT)"
+      using Cons_T vert_xy no_vert_in_He_xy cost_last_hp_x_hd_hp_y_leq by auto
+    also have "... \<le> cost_of_path (c G) (x#T)"
+      using Cons_fT
+      sorry
+    finally show ?thesis 
+      by auto
+  qed
 qed
 
-lemma cost_of_tour_of_hp_starting_vertices_leq:
-  assumes "g1.ugraph_adj_map_invar G" (* "g2.is_hc_Adj (f G) T" and "\<exists>e. e \<in> g1.uedges G" *)
-  shows "cost_of_path (c G) (tour_of_hp_starting_vertices (map_tour_to_hp_staring_vertices G T)) \<le> cost_of_path (c G) T"
-  \<comment> \<open>The induced tour computed by the function \<open>g\<close> has lower cost compared to the original tour \<open>T\<close>.\<close>
-  using assms(1)
-proof (rule fold4.fold_uedgesE)
-  let ?f="map_edge_to_hp_start_vertex G T"
-  fix es
-  assume "distinct es" "map rep1 es = es" and set_es_fold: "set es = g1.uedges G" 
-    "fold_g1_uedges4 (\<lambda>e xs. xs @ [?f e]) G [] = fold (\<lambda>e xs. xs @ [?f e]) es []"
-  (* hence es_non_empty [simp]: "es \<noteq> []" and len_es [simp]: "length es = int (card (g1.uedges G))"
-    using assms by (auto simp add: distinct_card[symmetric]) *)
+lemma cost_shorten_tour_leq:
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" "g2.is_hc_Adj (f G) T" 
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" \<comment> \<open>There has to be at least one edge with weight 5.\<close>
+  shows "cost_of_path (c G) (shorten_tour G T) \<le> cost_of_path (c G) T"
+  using assms
+proof -
+  let ?f="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
+  let ?T'="rotate_tour ?f T"
 
-  have "map_tour_to_hp_staring_vertices G T = map ?f es"
-    using set_es_fold by (auto simp add: fold_concat_map)
+  have "finite (g1.uedges G)"
+    using assms by auto
+  hence edge_exists: "\<exists>e. e \<in> g1.uedges G"
+    using assms(2) all_not_in_conv by fastforce
 
-  thm cost_rotate_tour_eq
+  have hdT_eq_lastT: "hd T = last T"
+    using assms by (auto elim: g2.is_hc_AdjE simp add: g2.hd_path_betw g2.last_path_betw)
 
-  find_theorems "cost_of_path ?c ?x \<ge> 0"
+  obtain x y T' where T'_CCons: "?T' = x#y#T'" and "\<not> are_vertices_in_He G x y" and c_xy: "c G x y = 5"
+    using assms by (elim rotate_tour_hc_elim)
 
-  show ?thesis
+  have "\<not> are_vertices_in_He G (last (replace_hp G (tl ?T'))) (hd (replace_hp G (tl ?T')))" 
+    (is "\<not> are_vertices_in_He G ?last ?hd")
     sorry
+  hence c_last_hd: "c G ?last ?hd \<le> 5"
+    using assms cost_x_y_leq5 by auto
+
+  have "g2.is_hc_Adj (f G) ?T'"
+    using assms rotate_tour_is_hc by auto
+  hence "g2.vertices (f G) = set (tl ?T')"
+    by (elim g2.is_hc_AdjE)
+  moreover have "\<exists>v. v \<in> g2.vertices (f G)"
+    using assms edge_exists vertices_f_non_empty by auto
+  ultimately have "tl ?T' \<noteq> []"
+    by auto
+  hence rhp_tlT_non_nil: "replace_hp G (tl ?T') \<noteq> []"
+    using replace_hp_non_nil by auto
+
+  have "cost_of_path (c G) (shorten_tour G T) = cost_of_path (c G) (last (replace_hp G (tl ?T'))#replace_hp G (tl ?T'))"
+    by (auto simp add: Let_def)
+  also have "... = c G ?last ?hd + cost_of_path (c G) (replace_hp G (tl ?T'))"
+    using rhp_tlT_non_nil by (auto simp add: cost_of_path_cons)
+  also have "... \<le> c G ?last ?hd + cost_of_path (c G) (tl ?T')"
+    thm replace_hp_tour_leq sorry
+  also have "... \<le> c G x y + cost_of_path (c G) (tl ?T')"
+    using c_xy c_last_hd by auto
+  also have "... = cost_of_path (c G) ?T'"
+    using T'_CCons by auto
+  also have "... = cost_of_path (c G) T"
+    using assms cost_rotate_tour[OF hdT_eq_lastT c_sym] by auto
+  finally show ?thesis
+    by auto
 qed
-(* TODO: tricky! *)
 
 end
 
@@ -3618,29 +3654,30 @@ section \<open>Reduction Proof\<close>
 context VC4_To_mTSP
 begin
 
-lemma hc_from_vc:
+lemma hp_of_vc:
   assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" "card1 X > 1"
       and "g1.is_vc_Adj G X" "set_invar1 X"
   obtains T where "g2.is_hc_Adj (f G) T" "cost_of_path (c G) T \<le> 15 * int (card (g1.uedges G)) + card1 X"
 proof -
-  have edge_exists: "\<exists>e. e \<in> g1.uedges G"
-    using assms(2) finite_sets1
-    by (metis all_not_in_conv dual_order.irrefl obtain_subset_with_card_n order_less_imp_le subset_empty)
+  have "finite (g1.uedges G)"
+    using assms by auto
+  hence edge_exists: "\<exists>e. e \<in> g1.uedges G"
+    using assms(2) all_not_in_conv by fastforce
 
-  have distinct: "distinct (hp_from_vc G X)" 
-    using assms(1,4,5) by (rule distinct_hp_from_vc)
-  moreover have set: "List.set (hp_from_vc G X) = g2.vertices (f G)"
-    using assms(1,4,5) by (rule set_hp_from_vc)
+  have distinct: "distinct (hp_of_vc G X)" 
+    using assms(1,4,5) by (rule distinct_hp_of_vc)
+  moreover have set: "List.set (hp_of_vc G X) = g2.vertices (f G)"
+    using assms(1,4,5) by (rule set_hp_of_vc)
   moreover obtain u\<^sub>1 v\<^sub>1 u\<^sub>2 v\<^sub>2 where uv12_isin: "isin1 X u\<^sub>1" "isin1 X u\<^sub>2" "rep1 (uEdge u\<^sub>1 v\<^sub>1) \<in> g1.uedges G" 
     "rep1 (uEdge u\<^sub>2 v\<^sub>2) \<in> g1.uedges G" and
-    path: "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_from_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)" 
+    path: "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_of_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)" 
       (is "g2.path_betw (f G) ?u\<^sub>2 _ ?u\<^sub>1")
     using assms edge_exists by (elim path_hp_from_vc)
-  moreover have cost_hp: "cost_of_path (c G) (hp_from_vc G X) \<le> 15 * int (card (g1.uedges G)) + card1 X - 5"
-    using assms edge_exists by (intro cost_hp_from_vc)
-  moreover have "distinct_adj (?u\<^sub>1#hp_from_vc G X)" (is "distinct_adj ?T")
-      and "last (hp_from_vc G X) = ?u\<^sub>1"
-      and "?u\<^sub>1 \<in> List.set (hp_from_vc G X)" "List.set (hp_from_vc G X) \<subseteq> g2.vertices (f G)"
+  moreover have cost_hp: "cost_of_path (c G) (hp_of_vc G X) \<le> 15 * int (card (g1.uedges G)) + card1 X - 5"
+    using assms edge_exists by (intro cost_hp_of_vc)
+  moreover have "distinct_adj (?u\<^sub>1#hp_of_vc G X)" (is "distinct_adj ?T")
+      and "last (hp_of_vc G X) = ?u\<^sub>1"
+      and "?u\<^sub>1 \<in> List.set (hp_of_vc G X)" "List.set (hp_of_vc G X) \<subseteq> g2.vertices (f G)"
     using distinct set distinct_distinct_adj path g2.path_non_empty g2.hd_path_betw apply (intro iffD2[OF distinct_adj_Cons]) apply auto[1]
     using path apply (intro g2.last_path_betw) apply simp
     using path g2.last_path_betw g2.path_non_empty last_in_set apply metis
@@ -3653,56 +3690,15 @@ proof -
 
   have "c G ?u\<^sub>1 ?u\<^sub>2 \<le> 5"
     using assms by (intro cost_u1_u2_leq5)
-  moreover have "hp_from_vc G X \<noteq> []"
+  moreover have "hp_of_vc G X \<noteq> []"
     using path by (auto intro!: g2.path_non_empty)
-  moreover have "hd (hp_from_vc G X) = ?u\<^sub>2"
+  moreover have "hd (hp_of_vc G X) = ?u\<^sub>2"
     using path by (auto intro!: g2.hd_path_betw)
-  ultimately have cost: "cost_of_path (c G) (?u\<^sub>1#hp_from_vc G X) \<le> 15 * card (g1.uedges G) + card (set1 X)" 
+  ultimately have cost: "cost_of_path (c G) (?u\<^sub>1#hp_of_vc G X) \<le> 15 * card (g1.uedges G) + card (set1 X)" 
     using cost_hp by (auto simp add: cost_of_path_cons)
   thus ?thesis
     using that hc by auto
 qed
-
-(* lemma hc_from_vc:
-  assumes "g1.ugraph_adj_map_invar G" "\<exists>e. e \<in> g1.uedges G" \<comment> \<open>The set of edges of the graph \<open>G\<close> is non-empty.\<close>
-      and "g1.is_vc_Adj G X" "set_invar1 X"
-  obtains T where "g2.is_hc_Adj (f G) T" "cost_of_path (c G) T \<le> 15 * int (card (g1.uedges G)) + card1 X" 
-proof -
-  have distinct: "distinct (hp_from_vc G X)" 
-    using assms(1,3,4) by (rule distinct_hp_from_vc)
-  moreover have set: "List.set (hp_from_vc G X) = g2.vertices (f G)"
-    using assms(1,3,4) by (rule set_hp_from_vc)
-  moreover obtain u\<^sub>1 v\<^sub>1 u\<^sub>2 v\<^sub>2 where 
-    path: "g2.path_betw (f G) (rep1 (uEdge u\<^sub>1 v\<^sub>1),u\<^sub>1,2) (hp_from_vc G X) (rep1 (uEdge u\<^sub>2 v\<^sub>2),u\<^sub>2,1)" 
-      (is "g2.path_betw (f G) ?u\<^sub>2 _ ?u\<^sub>1")
-    using assms by (elim path_hp_from_vc)
-  moreover have cost_hp: "cost_of_path (c G) (hp_from_vc G X) \<le> 15 * int (card (g1.uedges G)) + card1 X - 5"
-    using assms by (rule cost_hp_from_vc)
-  moreover have "distinct_adj (?u\<^sub>1#hp_from_vc G X)" (is "distinct_adj ?T")
-      and "last (hp_from_vc G X) = ?u\<^sub>1"
-      and "?u\<^sub>1 \<in> List.set (hp_from_vc G X)" "List.set (hp_from_vc G X) \<subseteq> g2.vertices (f G)"
-    using distinct set distinct_distinct_adj path g2.path_non_empty g2.hd_path_betw apply (intro iffD2[OF distinct_adj_Cons]) apply auto[1]
-    using path apply (intro g2.last_path_betw) apply simp
-    using path g2.last_path_betw g2.path_non_empty last_in_set apply metis
-    using path g2.path_vertices apply simp
-    done
-  moreover hence "g2.path_betw (f G) ?u\<^sub>1 ?T ?u\<^sub>1" 
-    using assms f_is_complete by (intro g2.path_betw_in_complete_graph) auto
-  ultimately have hc: "g2.is_hc_Adj (f G) ?T"
-    by (intro g2.is_hc_AdjI) auto
-
-  have "c G ?u\<^sub>1 ?u\<^sub>2 \<le> 5"
-    using assms by (intro cost_u1_u2_leq5)
-  moreover have "hp_from_vc G X \<noteq> []"
-    using path by (auto intro!: g2.path_non_empty)
-  moreover have "hd (hp_from_vc G X) = ?u\<^sub>2"
-    using path by (auto intro!: g2.hd_path_betw)
-  ultimately have cost: "cost_of_path (c G) (?u\<^sub>1#hp_from_vc G X) \<le> 15 * card (g1.uedges G) + card (set1 X)" 
-    using cost_hp by (auto simp add: cost_of_path_cons)
-
-  show ?thesis
-    using that hc cost by auto
-qed *)
 
 lemma cost_of_opt_mTSP:
   assumes "g1.ugraph_adj_map_invar G"
@@ -3718,7 +3714,7 @@ proof -
   have "g1.is_vc_Adj G OPT\<^sub>V\<^sub>C"
     using assms by (elim g1.is_min_vc_AdjE)
   then obtain T where "g2.is_hc_Adj (f G) T" "cost_of_path (c G) T \<le> 15 * int (card ?E) + ?\<tau>_G"
-    using assms by (elim hc_from_vc) 
+    using assms by (elim hp_of_vc) 
   moreover hence "cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> cost_of_path (c G) T"
     using assms g2.is_tsp_AdjE by blast
   ultimately show ?thesis
@@ -3750,32 +3746,35 @@ qed
 (* ----- 2nd condition for a L-reduction ----- *)
 
 lemma card_g_leq_k:
-  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" "card1 (g G T) > 1"
+  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" (is "card ?E > _") 
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" \<comment> \<open>There has to be at least one edge with weight 5.\<close>
       and "g2.is_hc_Adj (f G) T" 
   obtains k where "card1 (g G T) \<le> k" and "15 * int (card (g1.uedges G)) + k \<le> cost_of_path (c G) T"
     \<comment> \<open>The cost of the vertex cover computed by the function \<open>g\<close> is linked to the cost of the 
     given Hamiltonian cycle of the graph \<open>f G\<close>.\<close>
   using assms
-proof (rule cost_of_tour_of_hp_starting_vertices)
-  let ?T'="tour_of_hp_starting_vertices (map_tour_to_hp_staring_vertices G T)"
-  fix k 
-  assume "card1 (g G T) \<le> k" "15 * int (card (g1.uedges G)) + k \<le> cost_of_path (c G) ?T'"
-  moreover have "cost_of_path (c G) ?T' \<le> cost_of_path (c G) T"
-    using assms by (intro cost_of_tour_of_hp_starting_vertices_leq)
+proof (rule cost_shorten_tour_geq)
+  fix k               
+  assume "card1 (g G T) \<le> k" "15 * int (card ?E) + k \<le> cost_of_path (c G) (shorten_tour G T)"
+  moreover have "cost_of_path (c G) (shorten_tour G T) \<le> cost_of_path (c G) T"
+    using assms by (intro cost_shorten_tour_leq)
   ultimately show ?thesis
     using that by auto
-qed (* needed for proof of \<open>l_reduction2\<close> *)
+qed
 
 lemma l_reduction2:
-  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" "card1 OPT\<^sub>V\<^sub>C > 1" (is "?\<tau>_G > 1")
-      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C"
+  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" (is "card ?E > _") 
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" (is "?\<tau>_G > 1")
       and opt_mtsp: "g2.is_tsp_Adj (f G) (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P" 
       and "g2.is_hc_Adj (f G) T"
   shows "\<bar> card1 (g G T) - card1 OPT\<^sub>V\<^sub>C \<bar> \<le> 1 * \<bar> cost_of_path (c G) T - cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<bar>" 
   \<comment> \<open>Second condition for a L-Reduction.\<close>
-  using assms(1-5)
-proof -
-  let ?E="g1.uedges G"
+  using assms(1-5,7)
+proof (rule card_g_leq_k)
+  fix k 
+  assume card_leq_k: "card1 (g G T) \<le> k" 
+    and cost_T_geq: "15 * int (card ?E) + k \<le> cost_of_path (c G) T"
+  
   have cost_mtsp: "cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> 15 * int (card (g1.uedges G)) + ?\<tau>_G"
     using assms cost_of_opt_mTSP by auto
 
@@ -3783,8 +3782,6 @@ proof -
     using assms by (intro g_is_vc)
   hence "g1.is_vc_Adj G OPT\<^sub>V\<^sub>C" and tauG_leq: "?\<tau>_G \<le> card1 (g G T)"
     using assms by (auto elim: g1.is_min_vc_AdjE)
-  then obtain k where card_leq_k: "card1 (g G T) \<le> k" and cost_T_geq: "15 * int (card ?E) + k \<le> cost_of_path (c G) T"
-    using assms by (elim card_g_leq_k) auto
 
   have "card1 (g G T) - ?\<tau>_G \<le> k - ?\<tau>_G"
     using card_leq_k by auto
