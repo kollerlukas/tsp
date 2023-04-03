@@ -16,7 +16,12 @@ lemma cost_of_path_geq_0:
 lemma cost_of_path_cons_leq: 
   assumes "\<And>x y. c x y \<ge> (0::'b::{ordered_semiring_0})"
   shows "cost_of_path c P \<le> cost_of_path c (v#P)"
-  using assms by (induction P arbitrary: v rule: list012.induct) (auto simp add: add_increasing)
+  using assms by (induction P rule: list012_induct) (auto simp add: add_increasing)
+
+lemma cost_of_path_cons_less: 
+  assumes "\<And>x y. c x y \<ge> (1::int)" (* specify correct types *)
+  shows "cost_of_path c (y#P) + 1 \<le> cost_of_path c (x#y#P)"
+  using assms by auto
 
 lemma cost_of_path_short_cut: 
   "cost_of_path c (u#short_cut F (v#P)) = c u v + cost_of_path c (short_cut F (v#P))"

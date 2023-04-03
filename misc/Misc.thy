@@ -111,17 +111,30 @@ qed
 lemma list_eq_even_len_gr1:
   assumes "X \<noteq> {}" "even (card X)" "set xs = X"
   shows "length xs > 1"
-  using assms by (induction xs rule: list012.induct) auto
+  using assms by (induction xs rule: list012_induct) auto
 
 lemma set_tl_eq_set:
   assumes "length xs > 1" "distinct (tl xs)" "hd xs = last xs"
   shows "set (tl xs) = set xs"
-  using assms by (induction xs rule: list012.induct) auto
+  using assms by (induction xs rule: list012_induct) auto
 
 lemma list_len_geq2_elim:
   assumes "length xs \<ge> 2"
   obtains x y ys where "xs = x#y#ys"
-  using assms by (induction xs rule: list012.induct) auto
+  using assms by (induction xs rule: list012_induct) auto
+
+lemma list_len_geq2_split_hd_last:
+  assumes "length xs \<ge> 2"
+  obtains x y ys where "xs = x#ys @ [y]"
+  using assms
+proof (rule list_len_geq2_elim)
+  fix x y ys
+  assume "xs = x#y#ys"
+  moreover obtain ys' where "y#ys = ys' @ [last (y#ys)]"
+    using split_last by blast
+  ultimately show ?thesis
+    using that by auto
+qed
 
 lemma list_split_for_2elems:
   assumes "a \<in> set xs" "b \<in> set xs" "a \<noteq> b"

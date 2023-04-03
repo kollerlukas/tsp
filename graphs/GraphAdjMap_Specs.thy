@@ -410,6 +410,29 @@ definition "is_hc_Adj G T \<equiv> (\<exists>u. path_betw G u T u) \<and> distin
 lemma is_hc_AdjI: "(\<exists>u. path_betw G u T u) \<Longrightarrow> distinct (tl T) \<Longrightarrow> vertices G = List.set (tl T) \<Longrightarrow> is_hc_Adj G T"
   by (auto simp: is_hc_Adj_def)
 
+lemma is_hc_AdjI_compl_graph:
+  assumes "is_complete_Adj G" 
+      and "length T > 2" "hd T = last T" "distinct (tl T)" "vertices G = List.set (tl T)"
+    shows "is_hc_Adj G T"
+proof (intro is_hc_AdjI[OF _ assms(4) assms(5)])
+  have "length T \<ge> 2"
+    using assms by auto
+  then obtain x y xs where [simp]: "T = x#y#xs"
+    by (elim list_len_geq2_elim)
+  hence "x \<noteq> y"
+    using assms by auto
+  moreover have "distinct_adj (tl T)"
+    using assms distinct_distinct_adj by blast
+  ultimately have "distinct_adj T"
+    by auto
+  moreover have "List.set T \<subseteq> vertices G"
+    using assms by auto
+  ultimately have "path_betw G (hd T) T (last T)"
+    using assms by (intro path_betw_in_complete_graph) auto
+  thus "\<exists>u. path_betw G u T u"
+    using assms by auto
+qed
+
 lemma is_hc_AdjE: 
   assumes "is_hc_Adj G T"
   obtains u where "path_betw G u T u" "distinct (tl T)" "vertices G = List.set (tl T)"
