@@ -9,99 +9,6 @@ fun the_default where
 
 definition "set_of_pair \<equiv> \<lambda>(u,v). {u,v}"
 
-(* ------ Test Stuff (START) ------ *)
-
-(* section \<open>Executable Type for Undirected Edges\<close>
-
-fun uedge_eq :: "'v \<times> 'v \<Rightarrow> 'v \<times> 'v \<Rightarrow> bool" where
-  "uedge_eq (u\<^sub>1,v\<^sub>1) (u\<^sub>2,v\<^sub>2) = (u\<^sub>1 = u\<^sub>2 \<and> v\<^sub>1 = v\<^sub>2 \<or> u\<^sub>1 = v\<^sub>2 \<and> v\<^sub>1 = u\<^sub>2)"
-
-lemma reflp_list_eq: "reflp uedge_eq"
-  unfolding reflp_def by simp
-
-lemma symp_list_eq: "symp uedge_eq"
-  unfolding symp_def by simp
-
-lemma transp_list_eq: "transp uedge_eq"
-  unfolding transp_def by simp
-
-lemma equivp_list_eq: "equivp uedge_eq"
-  by (intro equivpI reflp_list_eq symp_list_eq transp_list_eq)
-
-quotient_type 'v uedge = "'v \<times> 'v" / uedge_eq
-  morphisms Rep_uedge Abs_uedge
-  by (rule equivp_list_eq) *)
-
-(* term uedge
-context includes lifting_syntax
-begin
-
-lemma uedge_eq_transfer [transfer_rule]:
-  assumes [transfer_rule]: "bi_unique A" (* "right_unique A" "right_total A"*) 
-  shows "(A ===> A ===> (=)) uedge_eq uedge_eq"
-  apply transfer_prover
-  sorry
-
-quotient_type 'v uedge = "'v \<times> 'v" / uedge_eq parametric uedge_eq_transfer
-  (* morphisms Rep_uedge Abs_uedge *)
-  by (rule equivp_list_eq)
-end *)
-
-(* subsection \<open>Constructors for Undirected Edges\<close>
-
-lift_definition uEdge :: "'v \<times> 'v \<Rightarrow> 'v uedge" is "\<lambda>(u,v). (u,v)" .
-
-lift_definition set_of_uedge :: "'v uedge \<Rightarrow> 'v set" is "\<lambda>(u,v). {u,v}" by auto
-
-lemma set_of_uEdge[simp]: "set_of_uedge (uEdge (u,v)) = {u,v}"
-  by (metis case_prod_conv set_of_uedge.abs_eq uEdge.abs_eq)
-
-instantiation uedge :: (equal) equal
-begin
-
-lift_definition equal_uedge :: "'a uedge \<Rightarrow> 'a uedge \<Rightarrow> bool" is uedge_eq
-  by auto
-
-instance
-  by standard (transfer; clarsimp)
-
-end
-  
-value "uEdge (1::int,2::nat) = uEdge (2::nat,1::nat)"
-
-fun test :: "'a uedge \<Rightarrow> bool" where
-  "test (uEdge u v) = undefined" *)
-
-locale ugraph_abs_antisym = 
-  fixes E :: "('a \<times> 'a) set"
-  assumes finite: "finite E"
-      and irreflexive: "\<And>v. (v,v) \<notin> E"
-      and anti_symmetric: "\<And>u v. (u,v) \<in> E \<Longrightarrow> (v,u) \<notin> E"
-begin
-
-definition "uE \<equiv> set_of_pair ` E"
-
-lemma finite_uE: "finite uE"
-  unfolding uE_def using finite by auto
-
-lemma irreflexive2: "(u,v) \<in> E \<Longrightarrow> u \<noteq> v"
-  using irreflexive by auto
-
-lemma edge_invar_uE:
-  assumes "e \<in> uE"
-  obtains u v where "e = {u,v}" "u \<noteq> v"
-  using assms[unfolded uE_def] irreflexive2 by (auto simp: set_of_pair_def)
-
-lemma graph_uE: "graph_invar uE"
-  using finite_uE edge_invar_uE  by (force intro!: graph_invarI2)+
-
-sublocale graph_abs uE
-  using graph_uE by unfold_locales
-
-end
-
-(* ------ Test Stuff (END) ------ *)
-
 context Map
 begin
 
@@ -154,9 +61,6 @@ lemma set_of_list: "set (set_of_list xs) = List.set xs"
 
 lemma isin_set_of_list: "isin (set_of_list xs) x \<longleftrightarrow> x \<in> List.set xs"
   using invar_set_of_list set_of_list by (auto simp: set_specs)
-
-(* lemma set_of_list_comm: "isin (set_of_list (xs @ ys)) x \<longleftrightarrow> isin (set_of_list (ys @ xs)) x"
-  by (auto simp: isin_set_of_list simp del: set_of_list.simps) *)
 
 end
 
@@ -306,7 +210,7 @@ lemma vertices_subgraph:
 lemma edges_are_pair_of_vertices: "edges G \<subseteq> vertices G \<times> vertices G"
   unfolding edges_def vertices_def by auto
 
-lemma edges_finite: 
+lemma finite_edges: 
   assumes "finite (vertices G)" 
   shows "finite (edges G)"
 proof (rule finite_subset[OF edges_are_pair_of_vertices])
@@ -503,8 +407,8 @@ lemma isin_uedges: "isin (\<N> G u) v \<Longrightarrow> rep (uEdge u v) = e \<Lo
 lemma uedges_empty: "uedges map_empty = {}"
   unfolding uedges_def by (auto simp: edges_empty)
 
-lemma uedges_finite: "finite (vertices G) \<Longrightarrow> finite (uedges G)"
-  unfolding uedges_def using edges_finite by auto
+lemma finite_uedges: "finite (vertices G) \<Longrightarrow> finite (uedges G)"
+  unfolding uedges_def using finite_edges by auto
 
 lemma set_of_uedge: "set_of_uedge (uEdge u v) = {u,v}"
   unfolding set_of_uedge_def by auto
@@ -584,6 +488,34 @@ next
     ultimately show ?thesis 
       using prepend_path by auto
   qed
+qed
+
+lemma path_dist_sym:
+  assumes "ugraph_adj_map_invar G"
+  shows "path_dist G u v = path_dist G v u"
+proof -
+  have rev_path_iff: "\<And>P. path_betw G u P v \<longleftrightarrow> path_betw G v (rev P) u"
+    using assms rev_path
+  proof (intro iffI)
+
+    fix P
+    assume "path_betw G v (rev P) u"
+    hence "path_betw G u (rev (rev P)) v"
+      using assms by (rule rev_path)
+    thus "path_betw G u P v"
+      by auto
+  qed auto
+
+  have "path_dist G u v = Min ({enat (length (tl P)) |P. path_betw G u P v \<and> distinct P} \<union> {\<infinity>})"
+    unfolding path_dist_def by auto
+  also have "... = Min ({enat (length (tl (rev P))) |P. path_betw G v (rev P) u \<and> distinct (rev P)} \<union> {\<infinity>})"
+    using rev_path_iff length_rev distinct_rev by auto
+  also have "... = Min ({enat (length (tl P)) |P. path_betw G v P u \<and> distinct P} \<union> {\<infinity>})"
+    by (metis (mono_tags, opaque_lifting) rev_rev_ident)
+  also have "... = path_dist G v u"
+    unfolding path_dist_def by auto
+  finally show ?thesis
+    by auto
 qed
 
 lemma path_dist_less:
@@ -972,29 +904,6 @@ lemma fold_vsetE:
   obtains xs where "distinct xs" "List.set xs = set X" "fold_vset f X a = fold f xs a"
   using assms fold_vset by blast
 
-(* lemma fold_vset_empty: "fold_vset f set_empty M = fold f [] M"
-proof -
-  obtain xs where "List.set xs = set set_empty" "fold_vset f set_empty M = fold f xs M"
-    using set_specs fold_vset by metis
-  thus ?thesis
-    using set_specs by auto
-qed
-
-lemma fold_vset_induct[consumes 1, case_names empty insert]:
-  assumes "set_invar X"
-      and "\<And>M. P (fold_vset f set_empty M)"
-      and "\<And>M X x. set_invar X \<Longrightarrow> \<not> isin X x \<Longrightarrow> P (fold_vset f X M) \<Longrightarrow> 
-    P (fold_vset f (insert x X) M)"
-  shows "P (fold_vset f X M)"
-proof -
-  obtain xs where "distinct xs" "List.set xs = set X" "fold_vset f X M = fold f xs M"
-    using assms fold_vset by blast
-  moreover have "P (fold f xs M)"
-    using assms by (induction xs arbitrary: M) (auto simp: fold_vset_empty)
-  ultimately show ?thesis 
-    by auto
-qed *)
-
 end
 
 subsection \<open>Compute Adjacency Maps from Set of Vertices\<close>
@@ -1092,7 +1001,7 @@ lemma finite_graph_of_vertices:
       and "\<And>x. isin X x \<Longrightarrow> \<exists>y. isin (n x) y" \<comment> \<open>Every neighborhood is non-empty.\<close>
       and "\<And>x y. isin X x \<Longrightarrow> isin (n x) y \<Longrightarrow> isin X y" \<comment> \<open>Every neighborhood can only be a subset of \<open>X\<close>.\<close>
   shows "finite (uedges (graph_of_vertices n X))"
-  using assms finite_sets uedges_finite vertices_graph_of_vertices by auto
+  using assms finite_sets finite_uedges vertices_graph_of_vertices by auto
 
 lemma invar_graph_of_vertices:
   assumes "set_invar X" 

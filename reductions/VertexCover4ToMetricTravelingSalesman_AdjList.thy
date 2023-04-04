@@ -236,7 +236,6 @@ interpretation lreduction: VC4_To_mTSP
   lset_insert lset_delete lset_isin lset_set lset_invar lset_union lset_inter lset_diff rep_uedge_prod
   fold_uedges fold_uedges fold_uedges fold_uedges fold_uedges
   fold_vset fold_vset fold_vset
-  choose_edge
   apply unfold_locales
   apply (rule ugraph_adj_list.rep_prod_is_rep(1))
   apply (rule ugraph_adj_list.rep_prod_is_rep(2))
@@ -249,9 +248,6 @@ interpretation lreduction: VC4_To_mTSP
   apply (elim fold_vset; blast)
   using finite_lsets apply simp
   apply (elim fold_vset; blast)
-  apply (rule choose_edge) 
-  apply simp
-  apply simp
   done
 
 \<comment> \<open>Functions\<close>
