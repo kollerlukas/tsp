@@ -201,8 +201,10 @@ fun replace_hp :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list 
 | "replace_hp G (x#T) = hp_starting_at x @ replace_hp G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T)"
 
 fun shorten_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "shorten_tour G T = (let f = \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2; 
-    T' = replace_hp G (tl (rotate_tour f T)) in last T'#T')"
+  (* "shorten_tour G T = (let f = \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2; 
+    T' = replace_hp G (tl (rotate_tour f T)) in T' @ [hd T'])" *)
+  "shorten_tour G T = (case rotate_tour (\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2) T of
+      x#y#T' \<Rightarrow> last (hp_starting_at y)#replace_hp G (filter (\<lambda>z. \<not> are_vertices_in_He G y z) T') @ hp_starting_at y)"
 
 fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
   "vc_of_tour G [] = set_empty1"
@@ -227,7 +229,7 @@ fun c :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 
     (if is_edge_in_He G (uEdge (e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2)) then 1
     else if are_vertices_in_He G (e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2) then 
       the_enat (min_dist_in_He G (e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2))
-    else if w\<^sub>1 = w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2 \<and> (i\<^sub>1 = 1 \<or> i\<^sub>1 = 2) \<and> (i\<^sub>2 = 1 \<or> i\<^sub>2 = 2) then 4
+    else if rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2 \<and> w\<^sub>1 = w\<^sub>2 \<and> (i\<^sub>1 = 1 \<or> i\<^sub>1 = 2) \<and> (i\<^sub>2 = 1 \<or> i\<^sub>2 = 2) then 4
     else 5)"
 
 fun g :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
@@ -1567,7 +1569,7 @@ lemma last_hp_starting_at:
   shows "last (hp_starting_at (e,x,i)) = (rep1 e,x,2)"
   using assms g1.rep_simps by auto
 
-lemma cost_last_hp_x_hd_hp_y_leq: 
+(* lemma cost_last_hp_x_hd_hp_y_leq: 
   assumes "g1.ugraph_adj_map_invar G" and "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
       and "\<not> are_vertices_in_He G x y"
   shows "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) \<le> c G (last (hp_starting_at x)) y" (is "c G ?lstx ?hdy \<le> _")
@@ -1598,25 +1600,74 @@ proof (cases x; cases y)
     using assms rep_neq vert_x vert_y invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff 
     by (auto simp add: g2.set_specs)
 
-  thus ?thesis
+  thus "c G ?lstx ?hdy \<le> c G ?lstx y"
   proof cases
     assume "w\<^sub>x = w\<^sub>y"
-    hence "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 4"
-      and "c G (last (hp_starting_at x)) y \<ge> 4"
+    hence "c G ?lstx ?hdy = 4" and "c G ?lstx y \<ge> 4"
       using assms rep_neq last_x hd_y no_vert_lastx_hdy no_vert_lastx_y edge_in_He_are_vertices 
       by (auto simp add: g1.rep_idem)
     thus ?thesis
       by auto
   next
     assume "w\<^sub>x \<noteq> w\<^sub>y"
-    hence "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 5"
-      and "c G (last (hp_starting_at x)) y = 5"
+    hence "c G ?lstx ?hdy = 5" and "c G ?lstx y = 5"
       using assms rep_neq last_x hd_y no_vert_lastx_hdy no_vert_lastx_y edge_in_He_are_vertices 
       by (auto simp add: g1.rep_idem)
     thus ?thesis
       by auto
   qed
+qed *)
+
+lemma cost_x_hd_hp_y_leq: 
+  assumes "g1.ugraph_adj_map_invar G" and "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
+      and "\<not> are_vertices_in_He G x y"
+  shows "c G x (hd (hp_starting_at y)) \<le> c G x y" (is "c G _ ?hdy \<le> _")
+proof (cases x; cases y)
+  fix e\<^sub>x w\<^sub>x i\<^sub>x e\<^sub>y w\<^sub>y i\<^sub>y
+  assume [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)" and [simp]: "y = (e\<^sub>y,w\<^sub>y,i\<^sub>y)"
+  hence vert_x: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" "e\<^sub>x \<in> g1.uedges G" 
+    and vert_y: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" "e\<^sub>y \<in> g1.uedges G"
+    using assms fst_of_vertex_is_edge by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x" and "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) y"
+    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+  moreover then obtain u\<^sub>x v\<^sub>x u\<^sub>y v\<^sub>y where edge_y: "rep1 e\<^sub>y = uEdge u\<^sub>y v\<^sub>y" "w\<^sub>y \<in> {u\<^sub>y,v\<^sub>y}"
+    and edge_x: "rep1 e\<^sub>x = uEdge u\<^sub>x v\<^sub>x" "w\<^sub>x \<in> {u\<^sub>x,v\<^sub>x}" "i\<^sub>x \<in> {1..6}"
+    by (elim isin_vertices_of_He_elim2) auto
+  ultimately have rep_neq: "rep1 e\<^sub>x \<noteq> rep1 e\<^sub>y"
+    using assms invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff by (auto simp add: g2.set_specs)
+
+  have hd_y: "?hdy = (rep1 e\<^sub>y,w\<^sub>y,1)"
+    using vert_y isin_vertices_of_He_edge hd_hp_starting_at[OF edge_y] by auto
+  moreover hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) ?hdy"
+    using edge_y by (auto intro!: isin_vertices_of_He_intro2 simp del: vertices_of_He.simps)
+  ultimately have no_vert_x_hdy: "\<not> are_vertices_in_He G x ?hdy"
+    using assms rep_neq vert_x vert_y invar_vertices_of_He vertices_of_He vertices_in_He_rep_iff 
+    by (auto simp add: g2.set_specs)
+
+  consider "w\<^sub>x = w\<^sub>y" "i\<^sub>x = 1 \<or> i\<^sub>x = 2" | "w\<^sub>x \<noteq> w\<^sub>y" | "i\<^sub>x \<noteq> 1" "i\<^sub>x \<noteq> 2"
+    by auto
+  thus "c G x ?hdy \<le> c G x y"
+  proof cases
+    assume "w\<^sub>x = w\<^sub>y" "i\<^sub>x = 1 \<or> i\<^sub>x = 2"
+    hence "c G x ?hdy = 4" and "c G x y \<ge> 4"
+      using assms rep_neq hd_y no_vert_x_hdy edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
+    thus ?thesis
+      by auto
+  next
+    assume "w\<^sub>x \<noteq> w\<^sub>y"
+    hence "c G x ?hdy = 5" and "c G x y = 5"
+      using assms rep_neq hd_y no_vert_x_hdy edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
+    thus ?thesis
+      by auto
+  next
+    assume "i\<^sub>x \<noteq> 1" "i\<^sub>x \<noteq> 2"
+    hence "c G x ?hdy = 5" and "c G x y = 5"
+      using assms rep_neq hd_y no_vert_x_hdy edge_in_He_are_vertices by (auto simp add: g1.rep_idem)
+    thus ?thesis
+      by auto
+  qed
 qed
+
 
 lemma cost_hp_starting_at: 
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
@@ -1650,6 +1701,45 @@ lemma replace_hp_Cons_non_nil: "replace_hp G (x#T) \<noteq> []"
 lemma dist_map_inj: "distinct (map h xs) \<Longrightarrow> inj_on h (set xs)"
   by (induction xs) auto
 
+lemma replace_hp_induct_prems:
+  assumes "g1.ugraph_adj_map_invar G"  
+      and "set es \<subseteq> g1.uedges G" "distinct es" "set (x#T) = \<Union> ((g2.vertices o H\<^sub>e) ` set es)"
+  obtains e\<^sub>x where "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" "set es = set (filter ((\<noteq>) e\<^sub>x) es) \<union> {e\<^sub>x}"
+    and "distinct (filter ((\<noteq>) e\<^sub>x) es)" 
+    and "set (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T) = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))"
+proof -
+  let ?h="\<lambda>y. \<not> are_vertices_in_He G x y"
+  obtain e\<^sub>x where vert_x_He: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
+    and ex_in_es: "e\<^sub>x \<in> set es" and ex_is_edge: "e\<^sub>x \<in> g1.uedges G"
+    using assms(2,4) by (fastforce simp del: He.simps f.simps)
+
+  have vert_x: "x \<in> g2.vertices (f G)"
+    using assms vert_x_He ex_is_edge vertices_f by auto
+  hence "\<forall>y. are_vertices_in_He G x y \<longleftrightarrow> y \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
+    using assms(1) ex_is_edge vert_x_He are_vertices_in_He_intro are_vertices_in_He_elim2 by blast
+  hence set_filter: "set (filter ?h T) = set (x#T) - g2.vertices (H\<^sub>e e\<^sub>x)" (is "set ?fT = _")
+    using vert_x_He by auto
+  moreover have "set (x#T) = g2.vertices (H\<^sub>e e\<^sub>x) \<union> \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))"
+    using assms ex_in_es by auto
+  moreover have "\<And>e. e \<in> set (filter ((\<noteq>) e\<^sub>x) es) \<Longrightarrow> g2.vertices (H\<^sub>e e\<^sub>x) \<inter> g2.vertices (H\<^sub>e e) = {}" 
+  proof (intro vertices_of_He_disjoint)
+    fix e
+    assume "e \<in> set (filter ((\<noteq>) e\<^sub>x) es)"
+    hence "e\<^sub>x \<noteq> e" and "rep1 e\<^sub>x = e\<^sub>x" "rep1 e = e"
+      using assms ex_in_es g1.rep_of_edge by auto
+    thus "rep1 e\<^sub>x \<noteq> rep1 e"
+      by auto
+  qed
+  ultimately have "set ?fT = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))" 
+    by auto
+  moreover have set_es_es': "set es = set (filter ((\<noteq>) e\<^sub>x) es) \<union> {e\<^sub>x}"
+    using ex_in_es by (induction es) auto
+  moreover have dist_es': "distinct (filter ((\<noteq>) e\<^sub>x) es)"
+    using assms by auto
+  ultimately show ?thesis
+    using that vert_x_He by blast
+qed
+
 lemma concat_order_for_replace_hp_and_vc_of_tour:
   assumes "g1.ugraph_adj_map_invar G" "set es \<subseteq> g1.uedges G" 
       and "distinct es" "set T = \<Union> ((g2.vertices o H\<^sub>e) ` set es)"
@@ -1669,45 +1759,22 @@ proof (induction G T arbitrary: es thesis rule: replace_hp.induct[case_names Nil
 next
   case (Cons G x T)
   let ?h="\<lambda>y. \<not> are_vertices_in_He G x y"
-  obtain e\<^sub>x where vert_x_He: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
-    and ex_in_es: "e\<^sub>x \<in> set es" and ex_is_edge: "e\<^sub>x \<in> g1.uedges G"
-    using Cons(4,6) by (fastforce simp del: He.simps f.simps)
-  hence "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x" and "rep1 e\<^sub>x = e\<^sub>x"
-    using invar_vertices_of_He vertices_of_He g1.rep_of_edge g2.set_specs by blast+
-  then obtain u i where [simp]: "x = (e\<^sub>x,u,i)"
-    by (elim isin_vertices_of_He_elim2) auto
-  have vert_x: "x \<in> g2.vertices (f G)"
-    using "Cons.prems"(2) vert_x_He ex_is_edge vertices_f by auto
-  hence "\<forall>y. are_vertices_in_He G x y \<longleftrightarrow> y \<in> g2.vertices (H\<^sub>e e\<^sub>x)"
-    using "Cons.prems"(2) ex_is_edge vert_x_He are_vertices_in_He_intro are_vertices_in_He_elim2 by blast
-  hence set_filter: "set (filter ?h T) = set (x#T) - g2.vertices (H\<^sub>e e\<^sub>x)" (is "set ?fT = _")
-    using vert_x_He by auto
-  moreover have "set (x#T) =  g2.vertices (H\<^sub>e e\<^sub>x) \<union> \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))"
-    using "Cons.prems"(5) ex_in_es by auto
-  moreover have "\<And>e. e \<in> set (filter ((\<noteq>) e\<^sub>x) es) \<Longrightarrow> g2.vertices (H\<^sub>e e\<^sub>x) \<inter> g2.vertices (H\<^sub>e e) = {}" 
-  proof (intro vertices_of_He_disjoint)
-    fix e
-    assume "e \<in> set (filter ((\<noteq>) e\<^sub>x) es)"
-    hence "e\<^sub>x \<noteq> e" and "rep1 e\<^sub>x = e\<^sub>x" "rep1 e = e"
-      using "Cons.prems"(3,4) ex_in_es g1.rep_of_edge by auto
-    thus "rep1 e\<^sub>x \<noteq> rep1 e"
-      by auto
-  qed
-  ultimately have "set ?fT = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))" 
-    (is "_ = \<Union> ((g2.vertices o H\<^sub>e) ` set ?es')")
-    by auto
-  moreover have set_es_es': "set es = set ?es' \<union> {e\<^sub>x}"
-    using ex_in_es by (induction es) auto
-  moreover have dist_es': "distinct ?es'"
-    using "Cons.prems" by auto
-  moreover have "set ?es' \<subseteq> g1.uedges G"
-    using "Cons.prems" by auto
-  moreover have "length ?es' < length es"
-    using ex_in_es by (simp add: length_filter_less)
-  ultimately obtain xs where xs_subset: "set xs \<subseteq> set ?fT" and dist_xs: "distinct xs" and len_xs: "length xs = length ?es'" 
-    and map_xs: "set ?es' = (\<lambda>(e,_,_). e) ` set xs" and vert_xs: "set xs \<subseteq> g2.vertices (f G)"
-    and "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<not> are_vertices_in_He G x y"
-    and "replace_hp G ?fT = concat (map hp_starting_at xs)"
+  obtain e\<^sub>x where vert_x_He: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" 
+    and set_es_es': "set es = set (filter ((\<noteq>) e\<^sub>x) es) \<union> {e\<^sub>x}"
+    and dist_es': "distinct (filter ((\<noteq>) e\<^sub>x) es)" 
+    and "set (filter ?h T) = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>x) es))"
+    using Cons by (elim replace_hp_induct_prems)
+  moreover hence edge_ex: "e\<^sub>x \<in> g1.uedges G" and "set (filter ((\<noteq>) e\<^sub>x) es) \<subseteq> g1.uedges G"
+    using Cons(4) by blast+
+  moreover hence vert_x: "x \<in> g2.vertices (f G)"
+    using Cons(3) vert_x_He vertices_f by (auto simp del: He.simps f.simps)
+  ultimately obtain xs where xs_subset: "set xs \<subseteq> set (filter ?h T)" 
+    and dist_xs: "distinct xs" 
+    and len_xs: "length xs = length (filter ((\<noteq>) e\<^sub>x) es)" 
+    and map_xs: "set (filter ((\<noteq>) e\<^sub>x) es) = (\<lambda>(e,_,_). e) ` set xs" 
+    and vert_xs: "set xs \<subseteq> g2.vertices (f G)"
+    and no_vert_xs: "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    and "replace_hp G (filter ?h T) = concat (map hp_starting_at xs)"
     using Cons(3) by (elim Cons.IH) blast+
   hence "replace_hp G (x#T) = concat (map hp_starting_at (x#xs))"
     using Cons by auto
@@ -1716,17 +1783,26 @@ next
   moreover have vert_xxs: "set (x#xs) \<subseteq> g2.vertices (f G)"
     using vert_x vert_xs by auto
   moreover have "distinct (x#xs)"
-    using vert_x_He set_filter dist_xs xs_subset by auto
-  moreover have map_xxs: "set es = (\<lambda>(e,_,_). e) ` set (x#xs)"
+    using dist_xs xs_subset are_vertices_in_He_refl[OF Cons(3) vert_x] by auto
+  moreover have "(\<lambda>(e,_,_). e) x = e\<^sub>x"
+  proof -
+    have "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x"
+      using vert_x_He invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+    moreover have "rep1 e\<^sub>x = e\<^sub>x"
+      using edge_ex by (auto simp add: g1.rep_of_edge)
+    ultimately show ?thesis
+      using isin_vertices_of_He_elim2 by fastforce
+  qed
+  moreover hence map_xxs: "set es = (\<lambda>(e,_,_). e) ` set (x#xs)"
     using set_es_es' map_xs by auto
   moreover have len_xxs: "length (x#xs) = length es"
   proof -
     have "length es = card (set es)"
       using Cons(5) distinct_card[symmetric] by auto
-    also have "... = card (set ?es' \<union> {e\<^sub>x})"
+    also have "... = card (set (filter ((\<noteq>) e\<^sub>x) es) \<union> {e\<^sub>x})"
       using set_es_es' by auto
-    also have "... = length ?es' + 1"
-      using dist_es' distinct_card[of ?es'] by auto
+    also have "... = length (filter ((\<noteq>) e\<^sub>x) es) + 1"
+      using dist_es' distinct_card[of "filter ((\<noteq>) e\<^sub>x) es"] by auto
     also have "... = length xs + 1"
       using len_xs by auto
     finally show ?thesis
@@ -1736,24 +1812,17 @@ next
   proof -
     fix y z
     assume y_in_xxs: "y \<in> set (x#xs)" and z_in_xxs: "z \<in> set (x#xs)" and yz_neq: "y \<noteq> z"
-    hence "y \<in> g2.vertices (f G)" "z \<in> g2.vertices (f G)"
-      using vert_xxs by auto
-    then obtain e\<^sub>y e\<^sub>z where vert_y: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" "e\<^sub>y \<in> g1.uedges G" and [simp]: "(\<lambda>(e,_,_). e) y = e\<^sub>y" 
-      and vert_z: "z \<in> g2.vertices (H\<^sub>e e\<^sub>z)" "e\<^sub>z \<in> g1.uedges G" and [simp]: "(\<lambda>(e,_,_). e) z = e\<^sub>z" 
-      using Cons(3) fst_of_vertex_is_edge by (cases y; cases z) (fastforce simp del: He.simps f.simps)
-
-    have "card ((\<lambda>(e,_,_). e) ` set (x#xs)) = length (x#xs)"
-      using map_xxs len_xxs distinct_card[OF Cons(5)] by auto
-    hence "distinct (map (\<lambda>(e,_,_). e) (x#xs))"
-      by (intro card_distinct) auto
-    hence "\<And>a b. a \<in> set (x#xs) \<Longrightarrow> b \<in> set (x#xs) \<Longrightarrow> (\<lambda>(e,_,_). e) a = (\<lambda>(e,_,_). e) b \<Longrightarrow> a = b"
-      using dist_map_inj[of "\<lambda>(e,_,_). e" "x#xs"] by (auto simp add: inj_on_def)
-    hence "(\<lambda>(e,_,_). e) y \<noteq> (\<lambda>(e,_,_). e) z"
-      using y_in_xxs z_in_xxs yz_neq inj_on_def by blast
-    hence "e\<^sub>y \<noteq> e\<^sub>z"
+    then consider "y = x" "z \<in> set xs" | "y \<in> set xs" "z = x" | "y \<in> set xs" "z \<in> set xs"
       by auto
     thus "\<not> are_vertices_in_He G y z"
-      using Cons(3) vert_y vert_z vertices_in_He_rep_iff by (auto simp add: g1.rep_of_edge)
+      using xs_subset no_vert_xs yz_neq
+    proof cases
+      assume "y \<in> set xs" "z = x" 
+      hence "\<not> are_vertices_in_He G z y"
+        using xs_subset by auto
+      thus ?thesis 
+        using Cons(3) are_vertices_in_He_sym by blast
+    qed auto
   qed
   ultimately show ?case 
     using Cons by blast
@@ -1832,6 +1901,92 @@ next
     by auto
 qed
 
+lemma hc_len_gr2:
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 0" and "g2.is_hc_Adj (f G) T"
+  shows "length T > 2"
+proof -
+  have "finite (g1.uedges G)"
+    using assms by auto
+  hence edge_exists: "\<exists>e. e \<in> g1.uedges G"
+    using assms(2) all_not_in_conv by fastforce
+  then obtain e where edge_e: "e \<in> g1.uedges G"
+    by auto
+  moreover then obtain u\<^sub>1 v\<^sub>1 where "rep1 e = uEdge u\<^sub>1 v\<^sub>1" "u\<^sub>1 \<noteq> v\<^sub>1"
+    using assms by (elim g1.uedge_not_refl_elim)
+  ultimately have "g2.vertices (H\<^sub>e e) \<subseteq> g2.vertices (f G)"
+    using assms vertices_f by (auto simp del: f.simps) 
+  moreover have "card (g2.vertices (H\<^sub>e e)) = 12"
+    using assms edge_e card_vertices_of_He by auto
+  moreover have "finite (g2.vertices (f G))"
+    using assms finite_vertices_f by auto
+  ultimately have "card (g2.vertices (f G)) \<ge> 12"
+    using card_mono by metis
+  moreover have "distinct (tl T)" "g2.vertices (f G) = set (tl T)"
+    using assms by (auto elim!: g2.is_hc_AdjE)
+  ultimately have "length (tl T) > 2"
+    using distinct_card[of "tl T"] by auto
+  thus ?thesis
+    by auto
+qed
+
+lemma rotate_tour_hc_elim:
+  defines "h \<equiv> \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T" 
+  obtains x y T' where "rotate_tour h T = x#y#T'" "\<not> are_vertices_in_He G x y"
+proof -
+  let ?h'="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2::'v1 uedge,w\<^sub>2::'v1,i\<^sub>2::'nat). rep1 e\<^sub>1 = rep1 e\<^sub>2"
+  have "finite (g1.uedges G)" and "card (g1.uedges G) \<ge> 2"
+    using assms by auto
+  then obtain e\<^sub>1 e\<^sub>2 where edge_e1_e2: "e\<^sub>1 \<in> g1.uedges G" "e\<^sub>2 \<in> g1.uedges G" and "e\<^sub>1 \<noteq> e\<^sub>2"
+    using finite_card_geq2 by blast
+  moreover then obtain u\<^sub>1 v\<^sub>1 u\<^sub>2 v\<^sub>2 where "e\<^sub>1 = uEdge u\<^sub>1 v\<^sub>1" "e\<^sub>2 = uEdge u\<^sub>2 v\<^sub>2"
+    by (cases e\<^sub>1; cases e\<^sub>2)
+  ultimately have "(e\<^sub>1,u\<^sub>1,1) \<in> g2.vertices (H\<^sub>e e\<^sub>1)" "(e\<^sub>2,u\<^sub>2,1) \<in> g2.vertices (H\<^sub>e e\<^sub>2)"
+    and "(e\<^sub>1,u\<^sub>1,1) \<noteq> (e\<^sub>2,u\<^sub>2,1)" and "\<not> ?h' (e\<^sub>1,u\<^sub>1,1) (e\<^sub>2,u\<^sub>2,1)"
+    using isin_vertices_of_He_intro2 invar_vertices_of_He vertices_of_He
+    by (auto intro!: isin_vertices_of_He_intro2 simp add: g1.rep_of_edge g2.set_specs simp del: vertices_of_He.simps)
+  moreover hence "(e\<^sub>1,u\<^sub>1,1) \<in> g2.vertices (f G)" "(e\<^sub>2,u\<^sub>2,1) \<in> g2.vertices (f G)"
+    using assms edge_e1_e2 vertices_f by auto
+  moreover have "set (tl T) = g2.vertices (f G)"
+    using assms by (auto elim: g2.is_hc_AdjE)
+  moreover hence "g2.vertices (f G) \<subseteq> set T"
+    using set_tl_subset by fastforce
+  ultimately obtain x y where "x \<in> set T" "y \<in> set T" "x \<noteq> y" "\<not> ?h' x y"
+    by blast
+  hence "cost_of_path (\<lambda>x y. if \<not> ?h' x y then (1::nat) else 0) T > 0"
+    by (intro rotate_tour_invariant_intro) auto
+  moreover have "\<And>x y. \<not> ?h' x y \<longleftrightarrow> h x y"
+    unfolding h_def by auto
+  ultimately have rot_T_invar: "cost_of_path (\<lambda>x y. if h x y then (1::nat) else 0) T > 0"
+    by auto 
+
+  have "length T > 2"
+    using assms hc_len_gr2 by auto
+  hence "length (rotate_tour h T) \<ge> 2"
+    using length_rotate_tour[of h T] by auto
+  then obtain x y T' where rot_T: "rotate_tour h T = x#y#T'"
+    by (elim list_len_geq2_elim)
+  hence hxy: "h x y"
+    using rot_T_invar not_hd_snd_rotate_tour[of h T] by blast
+  moreover have "x \<in> g2.vertices (f G)" and "y \<in> g2.vertices (f G)"
+  proof -
+    have "hd T = last T" and "g2.vertices (f G) = set (tl T)"
+      using assms by (auto elim: g2.is_hc_AdjE simp add: g2.hd_path_betw g2.last_path_betw)
+    moreover hence "hd (rotate_tour h T) = last (rotate_tour h T)" and "set (tl (rotate_tour h T)) = set (tl T)"
+      using rotate_tour_hd_eq_last set_tl_rotate_tour by blast+
+    ultimately show "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
+      using rot_T by fastforce+
+  qed
+  moreover obtain e\<^sub>x w\<^sub>x i\<^sub>x e\<^sub>y w\<^sub>y i\<^sub>y where [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)" and [simp]: "y = (e\<^sub>y,w\<^sub>y,i\<^sub>y)"
+    using assms fst_of_vertex_is_edge by (cases x; cases y) 
+  moreover have "e\<^sub>x \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" and "e\<^sub>y \<in> g1.uedges G" "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)"
+    using assms calculation fst_of_vertex_is_edge by blast+
+  ultimately have "\<not> are_vertices_in_He G x y"
+    unfolding h_def using assms vertices_in_He_rep_iff by blast
+  thus ?thesis
+    using that rot_T by auto
+qed
+
 lemma concat_order_for_shorten_tour_and_g:
   assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T"
   obtains xs where "xs \<noteq> []" "distinct xs" "g1.uedges G = (\<lambda>(e,_,_). e) ` set xs" 
@@ -1843,58 +1998,109 @@ lemma concat_order_for_shorten_tour_and_g:
 proof (rule fold4.fold_uedgesE)
   let ?fst3="\<lambda>(x,_,_). x"
   let ?snd3="\<lambda>(_,x,_). x"
-  let ?f="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
-  let ?T'="tl (rotate_tour ?f T)"
+  let ?f="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
 
-  have "g2.vertices (f G) = set (tl T)" and "hd T = last T"
+  fix es
+  obtain x y T' where rot_T: "rotate_tour ?f T = x#y#T'" and no_vert_xy: "\<not> are_vertices_in_He G x y"
+    using assms by (elim rotate_tour_hc_elim)
+  moreover have set_tlT: "set (tl T) = g2.vertices (f G)" and "hd T = last T"
     using assms by (auto elim: g2.is_hc_AdjE simp add: g2.hd_path_betw g2.last_path_betw)
-  hence "g2.vertices (f G) = set ?T'"
-    using set_tl_rotate_tour by auto
-  moreover have "finite (g1.uedges G)"
-    using assms by auto
-  moreover hence "\<exists>e. e \<in> g1.uedges G"
-    using assms(2) all_not_in_conv by fastforce
-  moreover hence "\<exists>v. v \<in> g2.vertices (f G)"
-    using assms vertices_f_non_empty by auto
-  ultimately have "?T' \<noteq> []"
-    by auto
-  hence rhp_T'_non_nil: "replace_hp G ?T' \<noteq> []"
-    using replace_hp_non_nil by auto
+  moreover hence "hd (rotate_tour ?f T) = last (rotate_tour ?f T)"
+    and set_tl_rot_T: "set (tl (rotate_tour ?f T)) = set (tl T)"
+    using rotate_tour_hd_eq_last set_tl_rotate_tour by blast+
+  ultimately have "x \<in> set (tl T)" and "y \<in> set (tl T)"
+    by fastforce+
+  hence vert_x: "x \<in> g2.vertices (f G)" and vert_y: "y \<in> g2.vertices (f G)"
+    using set_tlT by auto
 
-  fix es             
-  assume dist_es: "distinct es" and set_es: "set es = g1.uedges G" 
-  moreover have "set (tl T) = g2.vertices (f G)" and "hd T = last T"
-    using assms by (auto elim!: g2.is_hc_AdjE simp add: g2.last_path_betw g2.hd_path_betw)
-  moreover hence "set ?T' = g2.vertices (f G)"
-    using set_tl_rotate_tour by auto
-  moreover hence "set ?T' = \<Union> ((g2.vertices o H\<^sub>e) ` set es)"
-    using assms vertices_f set_es by auto
-  moreover have "\<forall>e \<in> set es. rep1 e = e"
-    using calculation g1.rep_of_edge by auto
-  ultimately obtain xs where dist_xs_subset: "distinct xs" "set xs \<subseteq> g2.vertices (f G)" 
-    and len_xs_es_eq: "length xs = length es" and "set es = (\<lambda>(e,_,_). e) ` set xs" 
-    and no_vert_xy: "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<not> are_vertices_in_He G x y"
-    and "replace_hp G ?T' = concat (map hp_starting_at xs)"
-    using assms(1) dist_es set_es 
-    by (elim concat_order_for_replace_hp_and_vc_of_tour[where T="?T'"]) blast+ 
-  moreover hence xs_non_nil_edges: "xs \<noteq> []" "g1.uedges G = ?fst3 ` set xs"
-    using rhp_T'_non_nil set_es dist_es by (auto simp add: distinct_card[symmetric]) 
-  moreover hence "last (concat (map hp_starting_at xs)) = last (hp_starting_at (last xs))"
-    using hp_starting_at_non_nil by (auto simp add: last_concat_map)
-  ultimately have st_concat: "shorten_tour G T = last (hp_starting_at (last xs))#concat (map hp_starting_at xs)" 
-    by auto
-  hence "g G T = vc_of_tour G (concat (map hp_starting_at xs))"
-    by auto
-  also have "... = g1.set_of_list (map ?snd3 (rev xs))"
-    using assms(1) dist_xs_subset no_vert_xy vc_of_tour_concat_hp by auto
-  finally have g_list: "g G T = g1.set_of_list (map ?snd3 (rev xs))"
-    by auto
+  let ?h="\<lambda>z. \<not> are_vertices_in_He G y z"
 
-  have len_xs: "length xs = card (g1.uedges G)"
-    using dist_es set_es len_xs_es_eq distinct_card by fastforce
-  
-  show ?thesis
-    using that dist_xs_subset len_xs xs_non_nil_edges no_vert_xy st_concat g_list by auto
+  assume dist_es: "distinct es" and set_es: "set es = g1.uedges G"
+  moreover hence "set (y#T') = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
+    using assms(1) rot_T set_tlT set_tl_rot_T vertices_f by auto
+  ultimately obtain e\<^sub>y where vert_y_He: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" 
+    and set_es_fes: "set es = set (filter ((\<noteq>) e\<^sub>y) es) \<union> {e\<^sub>y}"
+    and dist_es': "distinct (filter ((\<noteq>) e\<^sub>y) es)" 
+    and "set (filter ?h T') = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>y) es))"
+    using assms by (elim replace_hp_induct_prems) blast+
+  moreover hence edge_ey: "e\<^sub>y \<in> g1.uedges G" and "set (filter ((\<noteq>) e\<^sub>y) es) \<subseteq> g1.uedges G"
+    using set_es by blast+
+  ultimately obtain xs where xs_subset: "set xs \<subseteq> set (filter ?h T')" 
+    and dist_xs: "distinct xs" 
+    and len_xs: "length xs = length (filter ((\<noteq>) e\<^sub>y) es)" 
+    and set_fes: "set (filter ((\<noteq>) e\<^sub>y) es) = (\<lambda>(e,_,_). e) ` set xs" 
+    and vert_xs: "set xs \<subseteq> g2.vertices (f G)"
+    and no_vert_xs: "\<And>x y. x \<in> set xs \<Longrightarrow> y \<in> set xs \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<not> are_vertices_in_He G x y"
+    and rhp_yfT: "replace_hp G (filter ?h T') = concat (map hp_starting_at xs)"
+    using assms by (elim concat_order_for_replace_hp_and_vc_of_tour) blast+
+
+  have "y \<notin> set xs"
+    using xs_subset no_vert_xy are_vertices_in_He_refl[OF assms(1) vert_y] by auto
+  hence dist_xsx: "distinct (xs @ [y])"
+    using dist_xs by auto
+  moreover have set_xsx: "set (xs @ [y]) \<subseteq> g2.vertices (f G)"
+    using vert_y vert_xs by auto
+  moreover have "\<And>x. x \<in> set xs \<Longrightarrow> \<not> are_vertices_in_He G y x"
+    using xs_subset by auto
+  moreover hence no_vert_xsx:"\<And>x z. x \<in> set (xs @ [y]) \<Longrightarrow> z \<in> set (xs @ [y]) \<Longrightarrow> x \<noteq> z \<Longrightarrow> \<not> are_vertices_in_He G x z"
+  proof -
+    fix x z
+    assume "x \<in> set (xs @ [y])" "z \<in> set (xs @ [y])" and yz_neq: "x \<noteq> z"
+    then consider "x = y" "z \<in> set xs" | "x \<in> set xs" "z = y" | "x \<in> set xs" "z \<in> set xs"
+      by auto
+    thus "\<not> are_vertices_in_He G x z"
+      using xs_subset no_vert_xs yz_neq
+    proof cases
+      assume "x \<in> set xs" "z = y"
+      hence "\<not> are_vertices_in_He G z x"
+        using xs_subset by auto
+      thus ?thesis 
+        using assms(1) are_vertices_in_He_sym by blast
+    qed auto
+  qed
+  moreover have "shorten_tour G T = last (hp_starting_at (last (xs @ [y])))#concat (map hp_starting_at (xs @ [y]))"
+    using rhp_yfT rot_T by auto
+  moreover hence "g G T = g1.set_of_list (map (\<lambda>(_,u,_). u) (rev (xs @ [y])))"
+    using assms(1) dist_xsx set_xsx no_vert_xsx vc_of_tour_concat_hp[of _ "xs @ [y]"] by auto
+  moreover have "xs @ [y] \<noteq> []" 
+    by auto
+  moreover have "g1.uedges G = (\<lambda>(e,_,_). e) ` set (xs @ [y])"
+  proof -
+    have "(\<lambda>(e,_,_). e) y = e\<^sub>y"
+    proof -
+      have "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) y"
+        using vert_y_He invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
+      moreover have "rep1 e\<^sub>y = e\<^sub>y"
+        using edge_ey by (auto simp add: g1.rep_of_edge)
+      ultimately show ?thesis
+        using isin_vertices_of_He_elim2 by fastforce
+    qed
+    hence "(\<lambda>(e,_,_). e) ` set (xs @ [y]) = (\<lambda>(e,_,_). e) ` set xs \<union> {e\<^sub>y}"
+      by auto
+    also have "... = set (filter ((\<noteq>) e\<^sub>y) es) \<union> {e\<^sub>y}"
+      using set_fes by auto
+    also have "... = set es"
+      using set_es_fes by auto
+    also have "... = g1.uedges G"
+      using set_es by auto
+    finally show ?thesis 
+      by auto
+  qed
+  moreover have "length (xs @ [y]) = card (g1.uedges G)" 
+  proof -
+    have "length (xs @ [y]) = length (filter ((\<noteq>) e\<^sub>y) es) + 1"
+      using len_xs by auto
+    also have "... = card (set (filter ((\<noteq>) e\<^sub>y) es) \<union> {e\<^sub>y})"
+      using dist_es' distinct_card[of "filter ((\<noteq>) e\<^sub>y) es"] by auto
+    also have "... = card (set es)"
+      using set_es_fes by auto
+    also have "... = card (g1.uedges G)"
+      using set_es by auto
+    finally show ?thesis
+      by auto
+  qed
+  ultimately show ?thesis
+    using that by blast
 qed
 
 lemma invar_vc_of_tour: "set_invar1 (vc_of_tour G T)"
@@ -2679,48 +2885,6 @@ proof (intro cost_rotate_tour)
     using assms by (elim g2.is_hc_AdjE) (auto simp add: g2.hd_path_betw g2.last_path_betw)
 qed auto
 
-lemma hc_len_gr2:
-  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 0" and "g2.is_hc_Adj (f G) T"
-  shows "length T > 2"
-proof -
-  have "finite (g1.uedges G)"
-    using assms by auto
-  hence edge_exists: "\<exists>e. e \<in> g1.uedges G"
-    using assms(2) all_not_in_conv by fastforce
-  then obtain e where edge_e: "e \<in> g1.uedges G"
-    by auto
-  moreover then obtain u\<^sub>1 v\<^sub>1 where "rep1 e = uEdge u\<^sub>1 v\<^sub>1" "u\<^sub>1 \<noteq> v\<^sub>1"
-    using assms by (elim g1.uedge_not_refl_elim)
-  ultimately have "g2.vertices (H\<^sub>e e) \<subseteq> g2.vertices (f G)"
-    using assms vertices_f by (auto simp del: f.simps) 
-  moreover have "card (g2.vertices (H\<^sub>e e)) = 12"
-    using assms edge_e card_vertices_of_He by auto
-  moreover have "finite (g2.vertices (f G))"
-    using assms finite_vertices_f by auto
-  ultimately have "card (g2.vertices (f G)) \<ge> 12"
-    using card_mono by metis
-  moreover have "distinct (tl T)" "g2.vertices (f G) = set (tl T)"
-    using assms by (auto elim!: g2.is_hc_AdjE)
-  ultimately have "length (tl T) > 2"
-    using distinct_card[of "tl T"] by auto
-  thus ?thesis
-    by auto
-qed
-
-lemma rotate_tour_hc_elim:
-  defines "h \<equiv> \<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
-  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T" 
-      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1" \<comment> \<open>There has to be at least one edge with weight 5.\<close>
-  obtains x y T' where "rotate_tour h T = x#y#T'" "\<not> are_vertices_in_He G x y" "c G x y = 5"
-proof -
-  have "length T > 2"
-    using assms hc_len_gr2 by auto
-  hence "length (rotate_tour h T) > 2"
-    using length_rotate_tour by metis
-  show ?thesis
-    sorry
-qed
-
 lemma cost_x_y_4_or_5:
   defines "snd3 \<equiv> \<lambda>(_,v,_). v"
   assumes "g1.ugraph_adj_map_invar G"
@@ -2799,14 +2963,14 @@ next
     assume "snd3 x = snd3 y" "c G (last (hp_starting_at x)) (hd (concat (map hp_starting_at (y#xs)))) = 4"
     hence "cost_of_path ?c (x#y#xs) = k"
       and "cost_of_path (c G) (concat (map hp_starting_at (x#y#xs))) = ?sum (x#y#xs) + (length (tl (x#y#xs))) * 4 + k"
-      using cost_concat_eq hp_starting_at_non_nil cost_eq_k by (auto simp add: cost_of_path_append2)
+      using cost_concat_eq hp_starting_at_non_nil cost_eq_k by (auto simp add: cost_of_path_append)
     thus ?thesis
       using CCons by auto
   next
     assume "snd3 x \<noteq> snd3 y" "c G (last (hp_starting_at x)) (hd (concat (map hp_starting_at (y#xs)))) = 5"
     hence "cost_of_path ?c (x#y#xs) = k + 1"
       and "cost_of_path (c G) (concat (map hp_starting_at (x#y#xs))) = ?sum (x#y#xs) + (length (tl (x#y#xs))) * 4 + k + 1"
-      using cost_concat_eq hp_starting_at_non_nil cost_eq_k by (auto simp add: cost_of_path_append2)
+      using cost_concat_eq hp_starting_at_non_nil cost_eq_k by (auto simp add: cost_of_path_append)
     thus ?thesis
       using CCons by auto
   qed
@@ -3052,31 +3216,6 @@ proof (rule g1.uedge_not_refl_elim)
     using assms cost_path_geq_len[OF assms(1) distinct_distinct_adj] by fastforce
 qed *)
 
-lemma cost_hp_starting_at_append_leq:
-  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" 
-      and "set (x#xs) = g2.vertices (H\<^sub>e e)" "distinct (x#xs)"
-      and "\<And>y. y \<in> set ys \<Longrightarrow> \<not> are_vertices_in_He G x y"
-  shows "cost_of_path (c G) (hp_starting_at x @ ys) \<le> cost_of_path (c G) (x#xs @ ys)"
-  using assms
-proof (cases ys)
-  case Nil
-  have "x \<in> g2.vertices (f G)"
-    using assms vertices_f by auto
-  hence "cost_of_path (c G) (hp_starting_at x @ []) = 11"
-    using assms cost_hp_starting_at2 by auto
-  also have "... = int (card (g2.vertices (H\<^sub>e e))) - 1"
-    using assms card_vertices_of_He by auto
-  also have "... = int (length (x#xs)) - 1"
-    using assms distinct_card by metis
-  also have "... \<le> cost_of_path (c G) (x#xs)"
-    using assms cost_path_geq_len[OF _ distinct_distinct_adj, of _ "x#xs"] by auto
-  finally show ?thesis 
-    using Nil by auto
-next
-  case (Cons y ys')
-  then show ?thesis sorry
-qed
-
 lemma len_drop_drop_less: "length (dropWhile (Not o h) (dropWhile h xs)) < length xs + 1"
 proof (induction xs)
   case (Cons x xs)
@@ -3107,7 +3246,7 @@ lemma cost_filter_leq_aux:
   assumes "g1.ugraph_adj_map_invar G" and "ys\<^sub>1 \<noteq> []" "xs\<^sub>1 \<noteq> []"
     and "distinct (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)" "set (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<subseteq> g2.vertices (f G)"
     and "\<And>z. z \<in> set ys\<^sub>1 \<Longrightarrow> h z" "\<And>z. z \<in> set xs\<^sub>1 \<Longrightarrow> \<not> h z" "ys\<^sub>2 \<noteq> [] \<Longrightarrow> h (hd ys\<^sub>2)"
-  shows "cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<ge> cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + 1"
+  shows "cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<ge> cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + 2"
   using assms
 proof (induction h ys\<^sub>2 arbitrary: ys\<^sub>1 xs\<^sub>1 rule: dropWhile_induct)
   case Nil
@@ -3127,15 +3266,15 @@ proof (induction h ys\<^sub>2 arbitrary: ys\<^sub>1 xs\<^sub>1 rule: dropWhile_i
   
   have "filter h (ys\<^sub>1 @ xs\<^sub>1) = ys\<^sub>1" and "filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1) = xs\<^sub>1"
     using Nil by (auto simp add: h_def simp del: are_vertices_in_He.simps) 
-  hence "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1)) + 1 
-    = cost_of_path (c G) ys\<^sub>1 + length xs\<^sub>1 + 1"
+  hence "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1)) + 2 
+    = cost_of_path (c G) ys\<^sub>1 + length xs\<^sub>1 + 2"
     by auto
   also have "... \<le> cost_of_path (c G) ys\<^sub>1 + cost_of_path (c G) xs\<^sub>1 + 4"
     using cost_xs_geq by auto
   also have "... \<le> cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) (hd xs\<^sub>1) + cost_of_path (c G) xs\<^sub>1"
     using c_last_xs_y by auto
   also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1)"
-    using Nil by (auto simp add: cost_of_path_append2[of ys\<^sub>1 xs\<^sub>1,symmetric])
+    using Nil by (auto simp add: cost_of_path_append[of ys\<^sub>1 xs\<^sub>1,symmetric])
   finally show ?case
     by (auto simp add: h_def)
 next
@@ -3163,27 +3302,27 @@ next
       by (induction ys\<^sub>2) (auto split: if_splits)
     hence "filter h (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2) = ys\<^sub>1 @ y\<^sub>2#ys\<^sub>2" and "filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2) = xs\<^sub>1"
       using DropWhile(7-9) by (auto simp add: h_def)
-    hence "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @  y\<^sub>2#ys\<^sub>2)) + 1 
-      = cost_of_path (c G) (ys\<^sub>1 @ y\<^sub>2#ys\<^sub>2) + length xs\<^sub>1 + 1"
+    hence "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @  y\<^sub>2#ys\<^sub>2)) + 2 
+      = cost_of_path (c G) (ys\<^sub>1 @ y\<^sub>2#ys\<^sub>2) + length xs\<^sub>1 + 2"
       by auto
-    also have "... \<le> cost_of_path (c G) (ys\<^sub>1 @ y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 2"
+    also have "... \<le> cost_of_path (c G) (ys\<^sub>1 @ y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 3"
       using cost_xs_geq by auto
-    also have "... = cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) (hd (y\<^sub>2#ys\<^sub>2)) + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 2"
-      using DropWhile(3) by (subst cost_of_path_append2[of ys\<^sub>1 "y\<^sub>2#ys\<^sub>2",symmetric]) auto
-    also have "... \<le> cost_of_path (c G) ys\<^sub>1 + 5 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 2"
+    also have "... = cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) (hd (y\<^sub>2#ys\<^sub>2)) + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 3"
+      using DropWhile(3) by (subst cost_of_path_append[of ys\<^sub>1 "y\<^sub>2#ys\<^sub>2",symmetric]) auto
+    also have "... \<le> cost_of_path (c G) ys\<^sub>1 + 5 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2) + cost_of_path (c G) xs\<^sub>1 + 3"
       using DropWhile(2) cost_x_y_leq5 by auto
-    also have "... \<le> cost_of_path (c G) ys\<^sub>1 + 4 + cost_of_path (c G) xs\<^sub>1 + 4 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
+    also have "... = cost_of_path (c G) ys\<^sub>1 + 4 + cost_of_path (c G) xs\<^sub>1 + 4 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
       by auto
     also have "... \<le> cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) (hd xs\<^sub>1) + cost_of_path (c G) xs\<^sub>1 + 4 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
       using DropWhile(2) no_vert_y1_x1 cost_x_y_geq4 by auto
     also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1) + 4 + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
-      using DropWhile(3,4) by (subst cost_of_path_append2[of ys\<^sub>1 xs\<^sub>1,symmetric]) auto
+      using DropWhile(3,4) by (subst cost_of_path_append[of ys\<^sub>1 xs\<^sub>1,symmetric]) auto
     also have "... \<le> cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1) + c G (last xs\<^sub>1) (hd (y\<^sub>2#ys\<^sub>2)) + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
       using DropWhile(2) no_vert_x1_y2 cost_x_y_geq4 by auto
     also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1) + c G (last (ys\<^sub>1 @ xs\<^sub>1)) (hd (y\<^sub>2#ys\<^sub>2)) + cost_of_path (c G) (y\<^sub>2#ys\<^sub>2)"
       using DropWhile(4) by auto
     also have "... = cost_of_path (c G) ((ys\<^sub>1 @ xs\<^sub>1) @ y\<^sub>2#ys\<^sub>2)"
-      using DropWhile(3,4) by (subst cost_of_path_append2[of "ys\<^sub>1 @ xs\<^sub>1",symmetric]) auto
+      using DropWhile(3,4) by (subst cost_of_path_append[of "ys\<^sub>1 @ xs\<^sub>1",symmetric]) auto
     finally show ?thesis 
       by (auto simp add: h_def)
   next
@@ -3205,18 +3344,18 @@ next
     moreover have "?ys\<^sub>3 \<noteq> [] \<Longrightarrow> h (hd ?ys\<^sub>3)"
       using hd_dropWhile[of "Not o h" "dropWhile h ys\<^sub>2"] by auto
     ultimately have cost_IH_geq: "cost_of_path (c G) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3) \<ge> 
-      cost_of_path (c G) (filter h ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + length (filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 1"
+      cost_of_path (c G) (filter h ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + length (filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 2"
       using DropWhile(2) h_def by (intro DropWhile(1)[folded h_def]) blast+
 
     have dist_adj_xs1: "distinct_adj xs\<^sub>1"
       using DropWhile(5) distinct_distinct_adj by auto
 
-    have "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + 1 
-      = cost_of_path (c G) (ys\<^sub>1 @ filter h ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + length (xs\<^sub>1 @ filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 1"
+    have "cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)) + 2 
+      = cost_of_path (c G) (ys\<^sub>1 @ filter h ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + length (xs\<^sub>1 @ filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 2"
       using DropWhile(7-9) by (auto simp add: h_def)
     also have "... = cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) y\<^sub>2 + cost_of_path (c G) (filter h ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3))
-      + length xs\<^sub>1 + length (filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 1"
-      using hy2 DropWhile(3) by (subst cost_of_path_append2) auto
+      + length xs\<^sub>1 + length (filter (Not o h) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3)) + 2"
+      using hy2 DropWhile(3) by (subst cost_of_path_append) auto
     also have "... \<le> cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) y\<^sub>2 + cost_of_path (c G) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3) + length xs\<^sub>1"
       using cost_IH_geq by auto
     also have "... \<le> cost_of_path (c G) ys\<^sub>1 + 5 + cost_of_path (c G) ((y\<^sub>2#?ys\<^sub>2) @ ?xs\<^sub>2 @ ?ys\<^sub>3) + length xs\<^sub>1"
@@ -3228,12 +3367,12 @@ next
     also have "... \<le> cost_of_path (c G) ys\<^sub>1 + c G (last ys\<^sub>1) (hd xs\<^sub>1) + cost_of_path (c G) xs\<^sub>1 + 4 + cost_of_path (c G) (y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3)"
       using DropWhile(2) no_vert_y1_x1 cost_x_y_geq4 by auto 
     also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1) + 4 + cost_of_path (c G) (y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3)"
-      using DropWhile(3,4) by (auto simp add: cost_of_path_append2[of ys\<^sub>1 xs\<^sub>1,symmetric])
+      using DropWhile(3,4) by (auto simp add: cost_of_path_append[of ys\<^sub>1 xs\<^sub>1,symmetric])
     also have "... \<le> cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1) + c G (last xs\<^sub>1) (hd (y\<^sub>2#?ys\<^sub>2)) + cost_of_path (c G) (y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3)"
        using DropWhile(2) no_vert_x1_y2 cost_x_y_geq4 by auto
     also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3)"
-      using DropWhile(3,4) cost_of_path_append2[of "ys\<^sub>1 @ xs\<^sub>1" "y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3",symmetric] by auto
-    also have "... \<le> cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)"
+      using DropWhile(3,4) cost_of_path_append[of "ys\<^sub>1 @ xs\<^sub>1" "y\<^sub>2#?ys\<^sub>2 @ ?xs\<^sub>2 @ ?ys\<^sub>3",symmetric] by auto
+    also have "... = cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ y\<^sub>2#ys\<^sub>2)"
       by auto
 
     finally show ?thesis 
@@ -3246,7 +3385,7 @@ lemma cost_filter_leq:
   defines "h \<equiv> \<lambda>y. \<not> are_vertices_in_He G x y"
   assumes "g1.ugraph_adj_map_invar G" 
     and "distinct ys" "set ys \<subseteq> g2.vertices (f G)" and "\<exists>x \<in> set ys. \<not> h x" "h (hd ys)"
-  shows "cost_of_path (c G) ys \<ge> cost_of_path (c G) (filter h ys) + length (filter (Not o h) ys) + 1"
+  shows "cost_of_path (c G) ys \<ge> cost_of_path (c G) (filter h ys) + length (filter (Not o h) ys) + 2"
 proof -
   let ?ys\<^sub>1="takeWhile h ys"
   let ?xs\<^sub>1="takeWhile (Not o h) (dropWhile h ys)"
@@ -3266,10 +3405,44 @@ proof -
     using set_takeWhileD[of _ "Not o h"] by auto
   moreover have "?ys\<^sub>2 \<noteq> [] \<Longrightarrow> h (hd ?ys\<^sub>2)"
     using hd_dropWhile[of "Not o h"] by auto
-  ultimately have "cost_of_path (c G) (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2) \<ge> cost_of_path (c G) (filter h (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2)) + length (filter (Not o h) (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2)) + 1"
+  ultimately have "cost_of_path (c G) (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2) \<ge> 
+    cost_of_path (c G) (filter h (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2)) + length (filter (Not o h) (?ys\<^sub>1 @ ?xs\<^sub>1 @ ?ys\<^sub>2)) + 2"
     unfolding h_def using assms(2) by (intro cost_filter_leq_aux)
   thus ?thesis
     by auto
+qed
+
+lemma cost_hp_starting_at_append_leq:
+  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" 
+      and "set (x#xs) = g2.vertices (H\<^sub>e e)" "distinct (x#xs)"
+      and "\<And>y. y \<in> set ys \<Longrightarrow> \<not> are_vertices_in_He G x y"
+      and "z \<in> g2.vertices (f G)" "\<not> are_vertices_in_He G z x"
+  shows "cost_of_path (c G) (z#hp_starting_at x @ ys) \<le> cost_of_path (c G) (z#x#xs @ ys)"
+  using assms
+proof (cases ys)
+  case Nil
+  have vert_x: "x \<in> g2.vertices (f G)"
+    using assms vertices_f by auto
+  have "cost_of_path (c G) (z#hp_starting_at x) 
+    = c G z (hd (hp_starting_at x)) + cost_of_path (c G) (hp_starting_at x)"
+    using assms hp_starting_at_non_nil by (auto simp add: cost_of_path_cons)
+  also have "... = c G z (hd (hp_starting_at x)) + 11"
+    using assms vert_x cost_hp_starting_at2 by auto
+  also have "... \<le> c G z x + 11"
+    using assms vert_x cost_x_hd_hp_y_leq[of G z x] by auto
+  also have "... = c G z x + int (card (g2.vertices (H\<^sub>e e))) - 1"
+    using assms card_vertices_of_He by auto
+  also have "... = c G z x + int (length (x#xs)) - 1"
+    using assms distinct_card by metis
+  also have "... \<le> c G z x + cost_of_path (c G) (x#xs)"
+    using assms cost_path_geq_len[OF _ distinct_distinct_adj, of _ "x#xs"] by auto
+  also have "... = cost_of_path (c G) (z#x#xs)"
+    by auto
+  finally show ?thesis 
+    using Nil by auto
+next
+  case (Cons y ys')
+  then show ?thesis sorry
 qed
 
 lemma cost_replace_hp_step_leq:
@@ -3277,7 +3450,9 @@ lemma cost_replace_hp_step_leq:
   defines "h \<equiv> \<lambda>y. \<not> are_vertices_in_He G x y"
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" and "x \<in> g2.vertices (H\<^sub>e e)"
       and "distinct (x#T)" "set (x#T) \<subseteq> g2.vertices (f G)" "g2.vertices (H\<^sub>e e) \<subseteq> set (x#T)"
-  shows "cost_of_path (c G) (hp_starting_at x @ filter h T) \<le> cost_of_path (c G) (x#T)"
+      and "z\<^sub>1 \<in> g2.vertices (f G)" "\<not> are_vertices_in_He G z\<^sub>1 x"
+      and "\<And>y z. y \<in> set (x#T) \<Longrightarrow> z \<in> set zs \<Longrightarrow> \<not> are_vertices_in_He G y z"
+  shows "cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ filter h T @ zs) \<le> cost_of_path (c G) (z\<^sub>1#x#T @ zs)"
 proof -
   let ?xs="takeWhile (Not o h) T"
   let ?ys="dropWhile (Not o h) T"
@@ -3285,15 +3460,15 @@ proof -
     by auto
   have set_xs_subset: "set (x#?xs) \<subseteq> g2.vertices (H\<^sub>e e)"
   proof
-    fix y
-    assume "y \<in> set (x#?xs)"
+    fix x'
+    assume "x' \<in> set (x#?xs)"
     moreover have "\<And>y. y \<in> set ?xs \<Longrightarrow> \<not> h y"
       using set_takeWhileD[of _ "Not o h" T] by auto
     moreover have "are_vertices_in_He G x x"
       using assms are_vertices_in_He_refl by auto
-    ultimately have "are_vertices_in_He G x y"
-      unfolding h_def by (cases "y = x") auto
-    thus "y \<in> g2.vertices (H\<^sub>e e)"
+    ultimately have "are_vertices_in_He G x x'"
+      unfolding h_def by (cases "x' = x") auto
+    thus "x' \<in> g2.vertices (H\<^sub>e e)"
       using assms are_vertices_in_He_elim2 by auto
   qed
 
@@ -3319,13 +3494,15 @@ proof -
       using assms set_takeWhileD[of x] by auto
     moreover hence "distinct (x#?xs)"
       using assms distinct_takeWhile by auto
-    moreover have no_vert_ys: "\<And>y. y \<in> set ?ys \<Longrightarrow> \<not> are_vertices_in_He G x y" 
+    moreover have "\<And>z. z \<in> set zs \<Longrightarrow> \<not> are_vertices_in_He G x z"
+      using assms(10) by auto
+    moreover hence no_vert_ys: "\<And>y. y \<in> set (?ys @ zs) \<Longrightarrow> \<not> are_vertices_in_He G x y" 
       using ys_h by (auto simp add: h_def)
-    ultimately have "cost_of_path (c G) (hp_starting_at x @ ?ys) \<le> cost_of_path (c G) (x#?xs @ ?ys)"
+    ultimately have "cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ ?ys @ zs) \<le> cost_of_path (c G) (z\<^sub>1#x#?xs @ ?ys @ zs)"
       using assms set_xs by (intro cost_hp_starting_at_append_leq)
-    also have "... = cost_of_path (c G) (x#T)"
-      using T_split by auto
-    finally have "cost_of_path (c G) (hp_starting_at x @ ?ys) \<le> cost_of_path (c G) (x#T)"
+    also have "... = cost_of_path (c G) (z\<^sub>1#x#T @ zs)"
+      using T_split by (subst append_assoc[of ?xs ?ys,symmetric]) auto
+    finally have "cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ ?ys @ zs) \<le> cost_of_path (c G) (z\<^sub>1#x#T @ zs)"
       by auto
     thus ?thesis
       using filter_T_eq_ys by auto
@@ -3346,6 +3523,9 @@ proof -
     ultimately have no_vert_last_xs_y: "\<not> are_vertices_in_He G (last (x#?xs)) y"
       using assms are_vertices_in_He_trans by blast
 
+    have vert_x: "x \<in> g2.vertices (f G)"
+      using assms by auto
+
     have "set (hp_starting_at x) = g2.vertices (H\<^sub>e e)"
       using assms set_hp_starting_at by auto
     hence "last (hp_starting_at x) \<in> g2.vertices (H\<^sub>e e)"
@@ -3354,6 +3534,11 @@ proof -
       using assms by (intro are_vertices_in_He_intro) auto
     hence no_vert_lasthpx_y: "\<not> are_vertices_in_He G (last (hp_starting_at x)) y"
       using assms no_vert_x_y are_vertices_in_He_trans by blast
+
+    have "last ?ys \<in> set (x#T)"
+      using ys_non_nil set_dropWhileD[OF last_in_set, of "Not o h" T] by auto
+    hence no_vert_lastys_zs: "\<And>z. z \<in> set zs \<Longrightarrow> \<not> are_vertices_in_He G (last ?ys) z"  
+      using assms by auto
 
     have "x \<notin> set T"
       using assms by auto
@@ -3397,38 +3582,72 @@ proof -
       using vert_noth_iff by blast
     moreover have hd_ys: "h (hd ?ys)"
       using ys_non_nil hd_dropWhile[of "Not o h"] by auto
-    ultimately have "cost_of_path (c G) ?ys \<ge> cost_of_path (c G) (filter h ?ys) + int (length (filter (Not o h) ?ys)) + 1"
+    ultimately have "cost_of_path (c G) ?ys \<ge> cost_of_path (c G) (filter h ?ys) + int (length (filter (Not o h) ?ys)) + 2"
       using assms(2) unfolding h_def by (intro cost_filter_leq)
-    hence cost_yfilter_ys: "cost_of_path (c G) (y#filter h ys) \<le> cost_of_path (c G) ?ys - int (length (filter (Not o h) ?ys)) - 1"
+    hence cost_yfilter_ys: "cost_of_path (c G) (y#filter h ys) \<le> cost_of_path (c G) ?ys - int (length (filter (Not o h) ?ys)) - 2"
       using ys hd_ys by auto
 
-    have "cost_of_path (c G) (hp_starting_at x @ filter h T) = cost_of_path (c G) (hp_starting_at x @ y#filter h ys)"
+    have cost_yfilter_ys_zs: 
+      "cost_of_path (c G) (y#filter h ys @ zs) \<le> cost_of_path (c G) (?ys @ zs) - int (length (filter (Not o h) ?ys)) - 1"
+    proof (cases zs)
+      case Nil
+      thus ?thesis 
+        using cost_yfilter_ys by auto
+    next
+      case (Cons z zs)
+      hence no_vert_lastys_z: "\<not> are_vertices_in_He G (last ?ys) z"
+        using no_vert_lastys_zs by auto
+
+      have "cost_of_path (c G) (y#filter h ys @ z#zs) = cost_of_path (c G) (y#filter h ys) + c G (last (y#filter h ys)) z + cost_of_path (c G) (z#zs)"
+        using cost_of_path_append[of "y#filter h ys" "z#zs"] by fastforce
+      also have "... \<le> cost_of_path (c G) (y#filter h ys) + 5 + cost_of_path (c G) (z#zs)"
+        using assms cost_x_y_leq5 by auto
+      also have "... \<le> cost_of_path (c G) ?ys - int (length (filter (Not o h) ?ys)) - 2 + 5 + cost_of_path (c G) (z#zs)"
+        using cost_yfilter_ys by auto
+      also have "... = cost_of_path (c G) ?ys + 4 + cost_of_path (c G) (z#zs) - int (length (filter (Not o h) ?ys)) - 1"
+        by auto
+      also have "... \<le> cost_of_path (c G) ?ys + c G (last ?ys) (hd (z#zs)) + cost_of_path (c G) (z#zs) - int (length (filter (Not o h) ?ys)) - 1"
+        using assms cost_x_y_geq4[OF _ no_vert_lastys_z] by auto
+      also have "... \<le> cost_of_path (c G) (?ys @ z#zs) - int (length (filter (Not o h) ?ys)) - 1"
+        using ys_non_nil by (subst cost_of_path_append) auto
+      finally show ?thesis
+        using Cons by auto
+    qed
+
+    have "cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ filter h T @ zs) = cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ y#filter h ys @ zs)"
       using filter_T by auto
-    also have "... = cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) y + cost_of_path (c G) (y#filter h ys)"
-      using hp_starting_at_non_nil by (auto simp add: cost_of_path_append2)
-    also have "... = 11 + c G (last (hp_starting_at x)) y + cost_of_path (c G) (y#filter h ys)"
+    also have "... = c G z\<^sub>1 (hd (hp_starting_at x)) + cost_of_path (c G) (hp_starting_at x) 
+      + c G (last (hp_starting_at x)) y + cost_of_path (c G) (y#filter h ys @ zs)"
+      using hp_starting_at_non_nil by (auto simp add: cost_of_path_cons cost_of_path_append)
+    also have "... \<le> c G z\<^sub>1 x + cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) y 
+      + cost_of_path (c G) (y#filter h ys @ zs)"
+      using assms vert_x cost_x_hd_hp_y_leq by auto
+      (* using assms cost_x_y_leq5 by auto *)
+    also have "... = c G z\<^sub>1 x + 11 + c G (last (hp_starting_at x)) y + cost_of_path (c G) (y#filter h ys @ zs)"
       using assms vertices_f cost_hp_starting_at2[of _ x] by auto 
-    also have "... \<le> 11 + 5 + cost_of_path (c G) (y#filter h ys)"
-      using assms no_vert_lasthpx_y cost_x_y_leq5 by auto
-    also have "... \<le> 11 + 5 + cost_of_path (c G) ?ys - int (length (filter (Not o h) ?ys)) - 1"
-      using cost_yfilter_ys by auto
-    also have "... = 11 + 4 + cost_of_path (c G) ?ys - int (length (filter (Not o h) ?ys))"
+    also have "... \<le> c G z\<^sub>1 x + 11 + 5 + cost_of_path (c G) (y#filter h ys @ zs)"
+      using assms (* no_vert_lasthpx_y *) cost_x_y_leq5 by auto
+    also have "... \<le> c G z\<^sub>1 x + 11 + 5 + cost_of_path (c G) (?ys @ zs) - int (length (filter (Not o h) ?ys)) - 1"
+      using cost_yfilter_ys_zs by auto
+    also have "... = c G z\<^sub>1 x + 11 + 4 + cost_of_path (c G) (?ys @ zs) - int (length (filter (Not o h) ?ys))"
       by auto
-    also have "... \<le> 12 - int (length (filter (Not o h) ?ys)) - 1 + 4 + cost_of_path (c G) ?ys"
+    also have "... = c G z\<^sub>1 x + 12 - int (length (filter (Not o h) ?ys)) - 1 + 4 + cost_of_path (c G) (?ys @ zs)"
       by auto
-    also have "... = length (x#?xs) - 1 + 4 + cost_of_path (c G) ?ys"
+    also have "... = c G z\<^sub>1 x + length (x#?xs) - 1 + 4 + cost_of_path (c G) (?ys @ zs)"
       using len_xs by auto
-    also have "... \<le> cost_of_path (c G) (x#?xs) + 4 + cost_of_path (c G) ?ys"
+    also have "... \<le> c G z\<^sub>1 x + cost_of_path (c G) (x#?xs) + 4 + cost_of_path (c G) (?ys @ zs)"
       using assms dist_adj_xs cost_path_geq_len[of _ "x#?xs"] by auto
-    also have "... \<le> cost_of_path (c G) (x#?xs) + c G (last (x#?xs)) y + cost_of_path (c G) ?ys"
+    also have "... = cost_of_path (c G) (z\<^sub>1#x#?xs) + 4 + cost_of_path (c G) (?ys @ zs)"
+      by auto
+    also have "... \<le> cost_of_path (c G) (z\<^sub>1#x#?xs) + c G (last (x#?xs)) y + cost_of_path (c G) (?ys @ zs)"
       using assms no_vert_last_xs_y cost_x_y_geq4 by auto
-    also have "... \<le> cost_of_path (c G) (x#?xs) + c G (last (x#?xs)) y + cost_of_path (c G) (y#ys)"
+    also have "... = cost_of_path (c G) (z\<^sub>1#x#?xs) + c G (last (x#?xs)) y + cost_of_path (c G) (y#ys @ zs)"
       using ys by auto
-    also have "... = cost_of_path (c G) ((x#?xs) @ (y#ys))"
-      by (subst cost_of_path_append2) auto
-    also have "... = cost_of_path (c G) (x#?xs @ ?ys)"
+    also have "... = cost_of_path (c G) ((z\<^sub>1#x#?xs) @ (y#ys @ zs))"
+      by (subst cost_of_path_append) auto
+    also have "... = cost_of_path (c G) (z\<^sub>1#x#(?xs @ ?ys) @ zs)"
       using ys by auto
-    also have "... = cost_of_path (c G) (x#T)"
+    also have "... = cost_of_path (c G) (z\<^sub>1#x#T @ zs)"
       by auto
     finally show ?thesis
       by auto
@@ -3439,9 +3658,11 @@ lemma replace_hp_tour_leq:
   assumes "g1.ugraph_adj_map_invar G" 
       and "distinct T" "set T \<subseteq> g2.vertices (f G)" 
       and "\<exists>es. set es \<subseteq> g1.uedges G \<and> set T = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
-  shows "cost_of_path (c G) (replace_hp G T) \<le> cost_of_path (c G) T"
+      and "z\<^sub>1 \<in> g2.vertices (f G)" "T \<noteq> [] \<Longrightarrow> \<not> are_vertices_in_He G z\<^sub>1 (hd T)" 
+      and "\<And>y. y \<in> set T \<Longrightarrow> \<not> are_vertices_in_He G y z\<^sub>2"
+  shows "cost_of_path (c G) (z\<^sub>1#replace_hp G T @ [z\<^sub>2]) \<le> cost_of_path (c G) (z\<^sub>1#T @ [z\<^sub>2])"
   using assms
-proof (induction G T rule: replace_hp.induct[case_names Nil Cons])
+proof (induction G T arbitrary: z\<^sub>1 rule: replace_hp.induct[case_names Nil Cons])
   case (Nil G)
   thus ?case by auto
 next
@@ -3472,19 +3693,17 @@ next
   qed
   ultimately have "set ?fT = \<Union> ((g2.vertices o H\<^sub>e) ` set ?es')"
     by auto
-  hence "\<exists>es. set es \<subseteq> g1.uedges G \<and> set ?fT = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
+  hence set_fT: "\<exists>es. set es \<subseteq> g1.uedges G \<and> set ?fT = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
     using edges_es filter_is_subset[of "(\<noteq>) e" es] by blast
-  moreover have "distinct ?fT"
-    using Cons_T by auto
-  moreover have "set ?fT \<subseteq> g2.vertices (f G)"
-    using Cons_T filter_is_subset[of ?h T] by auto
-  ultimately have cost_IH_leq: "cost_of_path (c G) (replace_hp G ?fT) \<le> cost_of_path (c G) ?fT"
-    using Cons_T(2) by (intro Cons_T(1))
 
   have "g2.vertices (H\<^sub>e e) \<subseteq> set (x#T)"
     using set_xT e_in_es by auto
-  hence cost_hpx_filter_leq: "cost_of_path (c G) (hp_starting_at x @ ?fT) \<le> cost_of_path (c G) (x#T)"
-    using Cons_T(2-4) edge_e vert_x_He by (intro cost_replace_hp_step_leq)
+  moreover have "\<not> are_vertices_in_He G z\<^sub>1 x"
+    using Cons_T(7) by auto
+  ultimately have cost_hpx_filter_leq:
+    "cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ ?fT @ [z\<^sub>2])
+      \<le> cost_of_path (c G) (z\<^sub>1#x#T @ [z\<^sub>2])"
+    using Cons_T(2-4,6,8) edge_e vert_x_He by (intro cost_replace_hp_step_leq) auto
 
   show ?case
   proof (cases ?fT)
@@ -3493,28 +3712,44 @@ next
       using cost_hpx_filter_leq by auto
   next
     case Cons_fT: (Cons y fT)
-    moreover have "set ?fT \<subseteq> set T"
-      by auto 
-    ultimately have "y \<in> set ?fT"
-      by auto
-    hence "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)"
-      using Cons_T by auto
+
+    have "set (hp_starting_at x) = g2.vertices (H\<^sub>e e)"
+      using Cons_T(2) edge_e vert_x_He set_hp_starting_at by auto
+    hence vert_lastx_He: "last (hp_starting_at x) \<in> g2.vertices (H\<^sub>e e)"
+      using hp_starting_at_non_nil last_in_set by blast
+    hence vert_x_lastx: "are_vertices_in_He G x (last (hp_starting_at x))"
+      using Cons_T(2) edge_e vert_x_He by (intro are_vertices_in_He_intro) auto
     moreover have "\<not> are_vertices_in_He G x y"
       using Cons_eq_filterD[OF Cons_fT[symmetric]] by auto
-    ultimately have c_lastx_hdy_leq: "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) \<le> c G (last (hp_starting_at x)) y"
-      using Cons_T(2) by (intro cost_last_hp_x_hd_hp_y_leq)
+    ultimately have "\<not> are_vertices_in_He G (last (hp_starting_at x)) y"
+      using Cons_T(2) are_vertices_in_He_trans by blast
 
-    have "cost_of_path (c G) (replace_hp G (x#T)) = cost_of_path (c G) (hp_starting_at x @ replace_hp G ?fT)"
+    have "\<not> are_vertices_in_He G x (hd ?fT)"
+      using Cons_eq_filterD[OF Cons_fT[symmetric]] by auto
+    hence "?fT \<noteq> [] \<Longrightarrow> \<not> are_vertices_in_He G (last (hp_starting_at x)) (hd ?fT)"
+      using Cons_T(2) vert_x_lastx are_vertices_in_He_trans by blast
+    moreover have "last (hp_starting_at x) \<in> g2.vertices (f G)"
+      using Cons_T(2) vert_lastx_He edge_e vertices_f by auto
+    moreover have "distinct ?fT"
+      using Cons_T by auto
+    moreover have "set ?fT \<subseteq> g2.vertices (f G)"
+      using Cons_T filter_is_subset[of ?h T] by auto
+    moreover have "\<And>y. y \<in> set ?fT \<Longrightarrow> \<not> are_vertices_in_He G y z\<^sub>2"
+      using Cons_T(8) by auto
+    ultimately have cost_IH_leq: 
+      "cost_of_path (c G) (last (hp_starting_at x)#replace_hp G ?fT @ [z\<^sub>2]) 
+        \<le> cost_of_path (c G) (last (hp_starting_at x)#?fT @ [z\<^sub>2])"
+      using Cons_T(2) set_fT by (intro Cons_T(1))
+
+    have "cost_of_path (c G) (z\<^sub>1#replace_hp G (x#T) @ [z\<^sub>2]) = cost_of_path (c G) (z\<^sub>1#hp_starting_at x @ replace_hp G ?fT @ [z\<^sub>2])"
       by auto
-    also have "... = cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) (hd (hp_starting_at y)) + cost_of_path (c G) (replace_hp G ?fT)"
-      using Cons_fT hp_starting_at_non_nil replace_hp_Cons_non_nil by (simp add: cost_of_path_append2)
-    also have "... \<le> cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) y + cost_of_path (c G) (replace_hp G ?fT)"
-      using c_lastx_hdy_leq by auto
-    also have "... \<le> cost_of_path (c G) (hp_starting_at x) + c G (last (hp_starting_at x)) y + cost_of_path (c G) ?fT"
+    also have "... =  cost_of_path (c G) (z\<^sub>1#hp_starting_at x) + cost_of_path (c G) (last (hp_starting_at x)#replace_hp G ?fT @ [z\<^sub>2])"
+      using Cons_fT hp_starting_at_non_nil replace_hp_Cons_non_nil by (simp add: cost_of_path_cons cost_of_path_append)
+    also have "... \<le> cost_of_path (c G) (z\<^sub>1#hp_starting_at x) + cost_of_path (c G) (last (hp_starting_at x)#?fT @ [z\<^sub>2])"
       using cost_IH_leq by auto
-    also have "... = cost_of_path (c G) (hp_starting_at x @ y#fT)"
-      using Cons_fT hp_starting_at_non_nil by (simp add: cost_of_path_append2)
-    also have "... \<le> cost_of_path (c G) (x#T)"
+    also have "... = cost_of_path (c G) ((z\<^sub>1#hp_starting_at x) @ ?fT @ [z\<^sub>2])"
+      using hp_starting_at_non_nil cost_of_path_append_last[of "z\<^sub>1#hp_starting_at x",symmetric] by auto
+    also have "... \<le> cost_of_path (c G) (z\<^sub>1#x#T @ [z\<^sub>2])"
       using Cons_fT cost_hpx_filter_leq by auto
     finally show ?thesis
       by auto
@@ -3527,68 +3762,114 @@ lemma cost_shorten_tour_leq:
   shows "cost_of_path (c G) (shorten_tour G T) \<le> cost_of_path (c G) T"
   using assms
 proof -
-  let ?f="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). w\<^sub>1 \<noteq> w\<^sub>2 \<and> rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
-  let ?T'="rotate_tour ?f T"
+  let ?h\<^sub>1="\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2"
 
   have "finite (g1.uedges G)"
     using assms by auto
   hence edge_exists: "\<exists>e. e \<in> g1.uedges G"
     using assms(2) all_not_in_conv by fastforce
 
-  have hdT_eq_lastT: "hd T = last T"
+  have hdT_eq_lastT: "hd T = last T" and "distinct (tl T)" and set_tl_T: "set (tl T) = g2.vertices (f G)"
     using assms by (auto elim: g2.is_hc_AdjE simp add: g2.hd_path_betw g2.last_path_betw)
-  moreover obtain x y T' where T'_CCons: "?T' = x#y#T'" and "\<not> are_vertices_in_He G x y" and c_xy: "c G x y = 5"
+  moreover obtain x y T' where rot_T_CCons: "rotate_tour ?h\<^sub>1 T = x#y#T'" and no_vert_xy: "\<not> are_vertices_in_He G x y"
     using assms by (elim rotate_tour_hc_elim)
-  ultimately have "hd ?T' = last ?T'"
-    using rotate_tour_hd_eq_last by blast
+  ultimately have "hd (rotate_tour ?h\<^sub>1 T) = last (rotate_tour ?h\<^sub>1 T)"
+    and dist_tl_rot_T: "distinct (tl (rotate_tour ?h\<^sub>1 T))" 
+    and set_tl_rot_T: "set (tl (rotate_tour ?h\<^sub>1 T)) = set (tl T)"
+    using rotate_tour_hd_eq_last distinct_rotate_tour set_tl_rotate_tour by blast+
+  moreover hence vert_y: "y \<in> g2.vertices (f G)"
+    using set_tl_T rot_T_CCons by auto 
+  moreover hence "are_vertices_in_He G y y"
+    using assms are_vertices_in_He_refl by auto
+  ultimately have dist_yT': "distinct (y#T')" and T'_non_nil: "T' \<noteq> []" and last_T': "last T' = x"
+    using rot_T_CCons no_vert_xy by auto
+  moreover hence vert_x: "x \<in> g2.vertices (f G)"
+    using set_tl_T rot_T_CCons set_tl_rot_T by fastforce
+  moreover have "\<not> are_vertices_in_He G y x"
+    using assms no_vert_xy are_vertices_in_He_sym by blast
+  ultimately have last_fT': "last (filter (\<lambda>z. \<not> are_vertices_in_He G y z) T') = x" (is "last (filter ?h\<^sub>2 _) = _")
+    and fT'_non_nil: "filter (\<lambda>z. \<not> are_vertices_in_He G y z) T' \<noteq> []"
+    using filter_empty_conv[of ?h\<^sub>2 T'] by (auto intro!: last_filter)
 
-  (* have "\<not> are_vertices_in_He G (last (replace_hp G (tl ?T'))) (hd (replace_hp G (tl ?T')))" 
-    (is "\<not> are_vertices_in_He G ?last ?hd")
-    sorry *)
-  have c_last_hd: "c G (last (replace_hp G (tl ?T'))) (hd (replace_hp G (tl ?T'))) \<le> 5" 
-    (is "c G ?last ?hd \<le> _")
-    using assms cost_x_y_leq5 by auto
+  obtain e\<^sub>y where vert_y_He: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" and edge_ey: "e\<^sub>y \<in> g1.uedges G"
+    using assms vert_y vertices_f by auto
+  moreover hence vert_hdy_He: "hd (hp_starting_at y) \<in> g2.vertices (H\<^sub>e e\<^sub>y)" 
+    and vert_lasty_He: "last (hp_starting_at y) \<in> g2.vertices (H\<^sub>e e\<^sub>y)"
+    using assms set_hp_starting_at hp_starting_at_non_nil hd_in_set last_in_set by blast+
+  moreover have set_yT': "set (y#T') = g2.vertices (f G)"
+    using rot_T_CCons set_tl_rot_T set_tl_T by simp
+  ultimately have vert_ey_subset_yT': "g2.vertices (H\<^sub>e e\<^sub>y) \<subseteq> set (y#T')"
+    using assms vertices_f by auto
 
-  have "length T > 2"
-    using assms hc_len_gr2 by auto
-  hence hc_T': "g2.is_hc_Adj (f G) ?T'"
-    using assms rotate_tour_is_hc by auto
-  hence set_tlT': "g2.vertices (f G) = set (tl ?T')"
-    by (elim g2.is_hc_AdjE)
-  moreover have "\<exists>v. v \<in> g2.vertices (f G)"
-    using assms edge_exists vertices_f_non_empty by auto
-  ultimately have "tl ?T' \<noteq> []"
-    by auto
-  hence rhp_tlT_non_nil: "replace_hp G (tl ?T') \<noteq> []"
-    using replace_hp_non_nil by auto
-
-  have "distinct (tl ?T')"
-    using hc_T' by (elim g2.is_hc_AdjE)
-  moreover have "\<exists>es. set es \<subseteq> g1.uedges G \<and> set (tl ?T') = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
+  have "distinct (tl (rotate_tour ?h\<^sub>1 T))"
+    using dist_tl_rot_T by auto
+  hence "distinct (filter ?h\<^sub>2 T')"
+    using dist_yT' by auto
+  moreover have "\<exists>es. set es \<subseteq> g1.uedges G \<and> set (filter ?h\<^sub>2 T') = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
     using assms(1)
   proof (rule fold1.fold_uedgesE)
     fix es
-    assume "set es = g1.uedges G"
-    moreover hence "set (tl ?T') = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
-      using assms(1) set_tlT' vertices_f by auto
-    ultimately show ?thesis
-      by auto
+    assume "distinct es" and set_es: "set es = g1.uedges G"
+    moreover hence "set (y#T') = \<Union> ((g2.vertices \<circ> H\<^sub>e) ` set es)"
+      using assms(1) set_yT' vertices_f by auto
+    ultimately obtain e\<^sub>y where "set es = set (filter ((\<noteq>) e\<^sub>y) es) \<union> {e\<^sub>y}"
+      and "set (filter ?h\<^sub>2 T') = \<Union> ((g2.vertices o H\<^sub>e) ` set (filter ((\<noteq>) e\<^sub>y) es))"
+      using assms by (elim replace_hp_induct_prems) blast+
+    thus ?thesis
+      using set_es by blast
   qed
-  ultimately have cost_rph: "cost_of_path (c G) (replace_hp G (tl ?T')) \<le> cost_of_path (c G) (tl ?T')"
-    using assms(1) set_tlT' by (intro replace_hp_tour_leq) auto
+  moreover have "set (filter ?h\<^sub>2 T') \<subseteq> g2.vertices (f G)"
+    using set_tl_T rot_T_CCons set_tl_rot_T by auto
+  moreover have "last (hp_starting_at y) \<in> g2.vertices (f G)"
+    using assms edge_ey vert_lasty_He vertices_f by auto 
+  moreover have "filter ?h\<^sub>2 T' \<noteq> [] \<Longrightarrow> \<not> are_vertices_in_He G (last (hp_starting_at y)) (hd (filter ?h\<^sub>2 T'))"
+  proof -
+    assume "filter ?h\<^sub>2 T' \<noteq> []"
+    hence "hd (filter ?h\<^sub>2 T') \<in> set (filter ?h\<^sub>2 T')"
+      using hd_in_set by blast
+    hence "\<not> are_vertices_in_He G y (hd (filter ?h\<^sub>2 T'))"
+      by auto
+    moreover have "are_vertices_in_He G y (last (hp_starting_at y))"
+      using assms edge_ey vert_y_He vert_lasty_He by (intro are_vertices_in_He_intro)
+    ultimately show "\<not> are_vertices_in_He G (last (hp_starting_at y)) (hd (filter ?h\<^sub>2 T'))"
+      using assms are_vertices_in_He_trans by blast
+  qed
+  moreover have "\<And>z. z \<in> set (filter ?h\<^sub>2 T') \<Longrightarrow> \<not> are_vertices_in_He G z (hd (hp_starting_at y))"
+  proof -
+    fix z
+    assume "z \<in> set (filter ?h\<^sub>2 T')"
+    hence "\<not> are_vertices_in_He G y z"
+      by auto
+    moreover have "are_vertices_in_He G y (hd (hp_starting_at y))"
+      using assms edge_ey vert_y_He vert_hdy_He by (intro are_vertices_in_He_intro)
+    ultimately show "\<not> are_vertices_in_He G z (hd (hp_starting_at y))"
+      using assms are_vertices_in_He_trans are_vertices_in_He_sym by blast
+  qed
+  ultimately have rhp_leq: "cost_of_path (c G) (last (hp_starting_at y)#replace_hp G (filter ?h\<^sub>2 T') @ [hd (hp_starting_at y)])
+    \<le> cost_of_path (c G) (last (hp_starting_at y)#filter ?h\<^sub>2 T' @ [hd (hp_starting_at y)])"
+    using assms(1) by (intro replace_hp_tour_leq)
 
-  have "cost_of_path (c G) (shorten_tour G T) = cost_of_path (c G) (last (replace_hp G (tl ?T'))#replace_hp G (tl ?T'))"
-    by (auto simp add: Let_def)
-  also have "... = c G ?last ?hd + cost_of_path (c G) (replace_hp G (tl ?T'))"
-    using rhp_tlT_non_nil by (auto simp add: cost_of_path_cons)
-  also have "... \<le> c G ?last ?hd + cost_of_path (c G) (tl ?T')"
-    using cost_rph by auto
-  also have "... \<le> c G x y + cost_of_path (c G) (tl ?T')"
-    using c_xy c_last_hd by auto
-  also have "... = cost_of_path (c G) ?T'"
-    using T'_CCons by auto
+  have "cost_of_path (c G) (last (hp_starting_at y)#filter ?h\<^sub>2 T' @ hp_starting_at y) = cost_of_path (c G) (x#hp_starting_at y @ filter ?h\<^sub>2 T' @ [])"
+    using assms last_fT' fT'_non_nil c_sym hp_starting_at_non_nil by (subst rearrange_tour) auto
+  also have "... \<le> cost_of_path (c G) (x#y#T' @ [])"
+    using assms(1) edge_ey vert_y_He dist_yT' set_yT' vert_ey_subset_yT' vert_x no_vert_xy by (intro cost_replace_hp_step_leq) auto
+  finally have filter_leq: "cost_of_path (c G) (last (hp_starting_at y)#filter ?h\<^sub>2 T' @ hp_starting_at y) \<le> cost_of_path (c G) (x#y#T')"
+    by auto
+
+  have "cost_of_path (c G) (shorten_tour G T) = cost_of_path (c G) ((last (hp_starting_at y)#replace_hp G (filter ?h\<^sub>2 T')) @ hp_starting_at y)"
+    using rot_T_CCons by (auto simp add: Let_def)
+  also have "... = cost_of_path (c G) (last (hp_starting_at y)#replace_hp G (filter ?h\<^sub>2 T') @ [hd (hp_starting_at y)]) + cost_of_path (c G) (hp_starting_at y)"
+    using hp_starting_at_non_nil by (subst cost_of_path_append_hd) auto
+  also have "... \<le> cost_of_path (c G) (last (hp_starting_at y)#filter ?h\<^sub>2 T' @ [hd (hp_starting_at y)]) + cost_of_path (c G) (hp_starting_at y)"
+    using rhp_leq by auto
+  also have "... = cost_of_path (c G) ((last (hp_starting_at y)#filter ?h\<^sub>2 T') @ hp_starting_at y)"
+    using hp_starting_at_non_nil by (subst cost_of_path_append_hd) auto
+  also have "... \<le> cost_of_path (c G) (x#y#T')"
+    using filter_leq by auto
+  also have "... = cost_of_path (c G) (rotate_tour ?h\<^sub>1 T)"
+    using rot_T_CCons by auto
   also have "... = cost_of_path (c G) T"
-    using assms cost_rotate_tour[OF hdT_eq_lastT c_sym] by auto
+    using assms(1) cost_rotate_tour[OF hdT_eq_lastT c_sym] by auto
   finally show ?thesis
     by auto
 qed

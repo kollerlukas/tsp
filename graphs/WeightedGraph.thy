@@ -58,18 +58,36 @@ lemma cost_of_path_eq_cost:
   shows "cost_of_path (\<lambda>u v. c\<^sub>1 {u,v}) P = cost_of_path (\<lambda>u v. c\<^sub>2 {u,v}) P"
   using assms by (induction P rule: list012.induct) auto
 
-lemma cost_of_path_append:
+lemma cost_of_path_append_last:
   fixes c :: "'a \<Rightarrow> 'a \<Rightarrow> ('b::ordered_semiring_0)" \<comment> \<open>Needed for associativity.\<close>
   assumes "P\<^sub>1 \<noteq> []"
   shows "cost_of_path c (P\<^sub>1 @ P\<^sub>2) = cost_of_path c P\<^sub>1 + cost_of_path c (last P\<^sub>1#P\<^sub>2)"
-  using assms by (induction P\<^sub>1 arbitrary: P\<^sub>2 rule: list012.induct) 
+  using assms by (induction P\<^sub>1 arbitrary: P\<^sub>2 rule: list012_induct) 
     (auto simp: cost_of_path_cons add.assoc)
 
-lemma cost_of_path_append2:
+lemma cost_of_path_append_hd:
+  fixes c :: "'a \<Rightarrow> 'a \<Rightarrow> ('b::ordered_semiring_0)" \<comment> \<open>Needed for associativity.\<close>
+  assumes "P\<^sub>2 \<noteq> []"
+  shows "cost_of_path c (P\<^sub>1 @ P\<^sub>2) = cost_of_path c (P\<^sub>1 @ [hd P\<^sub>2]) + cost_of_path c P\<^sub>2"
+  using assms proof (induction P\<^sub>1 arbitrary: P\<^sub>2 rule: list012_induct)
+  case Nil
+  then show ?case by auto
+next
+  case (Singleton v)
+  then show ?case by (auto simp: cost_of_path_cons add.assoc)
+next
+  case (CCons u v P\<^sub>1)
+  have "cost_of_path c (u#v#P\<^sub>1 @ P\<^sub>2) = c u v + cost_of_path c (v#P\<^sub>1 @ [hd P\<^sub>2]) + cost_of_path c P\<^sub>2"
+    using CCons.IH[of "P\<^sub>2", OF CCons.prems] by (auto simp: cost_of_path_cons add.assoc)
+  thus ?case 
+    by (auto simp: cost_of_path_cons add.assoc)
+qed
+
+lemma cost_of_path_append:
   fixes c :: "'a \<Rightarrow> 'a \<Rightarrow> ('b::ordered_semiring_0)" \<comment> \<open>Needed for associativity.\<close>
   assumes "P\<^sub>1 \<noteq> []" "P\<^sub>2 \<noteq> []" 
   shows "cost_of_path c (P\<^sub>1 @ P\<^sub>2) = cost_of_path c P\<^sub>1 + c (last P\<^sub>1) (hd P\<^sub>2) + cost_of_path c P\<^sub>2"
-  using assms by (auto simp add: cost_of_path_append cost_of_path_cons add.assoc)
+  using assms by (auto simp add: cost_of_path_append_last cost_of_path_cons add.assoc)
 
 lemma cost_of_path_append_geq_0: 
   assumes "\<And>x y. c x y \<ge> (0::'b::{ordered_semiring_0})"
@@ -78,7 +96,7 @@ lemma cost_of_path_append_geq_0:
 proof cases
   assume "P\<^sub>1 \<noteq> [] \<and> P\<^sub>2 \<noteq> []"
   hence "cost_of_path c (P\<^sub>1 @ P\<^sub>2) = cost_of_path c P\<^sub>1 + c (last P\<^sub>1) (hd P\<^sub>2) + cost_of_path c P\<^sub>2"
-    by (auto simp add: cost_of_path_append2)
+    by (auto simp add: cost_of_path_append)
   also have "... = c (last P\<^sub>1) (hd P\<^sub>2) + (cost_of_path c P\<^sub>1 + cost_of_path c P\<^sub>2)"
     apply (subst add.commute)
     apply (subst add.assoc)
@@ -118,7 +136,7 @@ proof (induction xs arbitrary: acc rule: list012.induct)
     hence "cost_of_path c (rotate_tour_acc acc f (x#y#xs)) = cost_of_path c ((y#xs @ acc) @ [y])"
       using 3 by auto
     also have "... = cost_of_path c ((y#xs) @ acc) + c (last ((y#xs) @ acc)) y"
-      using cost_of_path_append2[of "(y#xs) @ acc" "[y]"] by auto
+      using cost_of_path_append[of "(y#xs) @ acc" "[y]"] by auto
     also have "... = cost_of_path c ((x#y#xs) @ acc)"
       using 3 by (auto simp add: add.commute)
     finally show ?thesis by auto
@@ -131,7 +149,7 @@ lemma cost_rotate_tour:
   shows "cost_of_path c (rotate_tour f xs) = cost_of_path c xs"
   using assms by (auto simp add: cost_rotate_tour_acc)    
 
-lemma rotate_tour_acc_cost_0:
+(* lemma rotate_tour_acc_cost_0:
   assumes "xs \<noteq> []" "hd (xs @ acc) = last (xs @ acc)"
       and "cost_of_path (\<lambda>x y. if f x y then (1::nat) else 0) xs = 0"
   shows "rotate_tour_acc acc f xs = (last xs)#acc @ tl xs"
@@ -181,42 +199,112 @@ proof (induction xs arbitrary: thesis rule: list012.induct)
     ultimately show ?thesis
       using 3 by auto
   qed
-qed auto
+qed auto *)
 
 lemma not_hd_snd_rotate_tour_acc: 
-  assumes "cost_of_path (\<lambda>x y. if \<not> f x \<and> f y then (1::nat) else 0) xs > 0" 
-      (is "cost_of_path ?c xs > 0") and "rotate_tour_acc acc (\<lambda>x y. \<not> f x \<and> f y) xs = x#y#xs'"
-  shows "\<not> f x" "f y"
-  using assms by (induction xs arbitrary: acc rule: list012.induct) (auto split: if_splits)
+  assumes "cost_of_path (\<lambda>x y. if f x y then (1::nat) else 0) xs > 0" 
+      (is "cost_of_path ?c xs > 0") and "rotate_tour_acc acc f xs = x#y#xs'"
+  shows "f x y"
+  using assms by (induction xs arbitrary: acc rule: list012_induct) (auto split: if_splits)
 
 lemma not_hd_snd_rotate_tour: 
-  assumes "cost_of_path (\<lambda>x y. if \<not> f x \<and> f y then (1::nat) else 0) xs > 0" 
-      and "rotate_tour (\<lambda>x y. \<not> f x \<and> f y) xs = x#y#xs'"
-  shows "\<not> f x" "f y"
+  assumes "cost_of_path (\<lambda>x y. if f x y then (1::nat) else 0) xs > 0" 
+      and "rotate_tour f xs = x#y#xs'"
+  shows "f x y"
   using assms(2) not_hd_snd_rotate_tour_acc[OF assms(1), of "[]" x y xs'] by auto
 
 lemma rotate_tour_invariant:
-  assumes "\<not> f x" "f y"
-  shows "cost_of_path (\<lambda>x y. if \<not> f x \<and> f y then (1::nat) else 0) (x#xs @ [y]) > 0"
-  using assms cost_of_path_geq_0 by (induction xs arbitrary: x y) auto
+  assumes "\<not> f x y" and trans: "\<And>x y z. f x y \<Longrightarrow> f y z \<Longrightarrow> f x z" and "y \<in> set xs"
+  shows "cost_of_path (\<lambda>x y. if \<not> f x y then (1::nat) else 0) (x#xs) > 0" 
+    (is "cost_of_path ?h _ > 0")
+  using assms 
+proof (induction xs arbitrary: x y)
+  case Nil
+  then show ?case by auto
+next
+  case (Cons x\<^sub>1 xs)
+  consider "f x x\<^sub>1" | "\<not> f x x\<^sub>1"
+    by auto
+  then show ?case 
+    using cost_of_path_geq_0
+  proof cases
+    assume "f x x\<^sub>1"
+    hence "\<not> f x\<^sub>1 y" and "x\<^sub>1 \<noteq> y" 
+      using Cons by blast+
+    moreover hence "y \<in> set xs"
+      using Cons set_ConsD by metis
+    ultimately have "cost_of_path ?h (x\<^sub>1#xs) > 0"
+      using Cons by blast
+    thus ?thesis 
+      by auto
+  qed auto
+qed
 
 lemma rotate_tour_invariant_intro:
-  assumes "xs = xs\<^sub>1 @ x#xs\<^sub>2 @ y#xs\<^sub>3" "\<not> f x" "f y"
-  shows "cost_of_path (\<lambda>x y. if \<not> f x \<and> f y then (1::nat) else 0) xs > 0" (is "cost_of_path ?c xs > 0")
-proof -
-  have "0 < cost_of_path ?c (x#xs\<^sub>2 @ [y])"
+  assumes sym: "\<And>x y. f x y \<Longrightarrow> f y x"
+      and trans: "\<And>x y z. f x y \<Longrightarrow> f y z \<Longrightarrow> f x z" 
+      and "x \<in> set xs" "y \<in> set xs" "x \<noteq> y" "\<not> f x y"
+  shows "cost_of_path (\<lambda>x y. if \<not> f x y then (1::nat) else 0) xs > 0" 
+    (is "cost_of_path ?h xs > 0")
+  using assms(3-5)
+proof (rule list_split_for_2elems)
+  fix xs\<^sub>1 xs\<^sub>2
+  assume [simp]: "xs = xs\<^sub>1 @ x#xs\<^sub>2" and "y \<in> set xs\<^sub>2"
+  hence "0 < cost_of_path ?h (x#xs\<^sub>2)"
     using assms by (intro rotate_tour_invariant)
-  also have "... \<le> cost_of_path ?c (x#xs\<^sub>2 @ [y]) + cost_of_path ?c xs\<^sub>3"
+  also have "... \<le> cost_of_path ?h xs\<^sub>1 + cost_of_path ?h (x#xs\<^sub>2)"
     using cost_of_path_geq_0 by auto
-  also have "... \<le> cost_of_path ?c ((x#xs\<^sub>2 @ [y]) @ xs\<^sub>3)"
+  also have "... \<le> cost_of_path ?h (xs\<^sub>1 @ x#xs\<^sub>2)"
     by (intro cost_of_path_append_geq_0) auto
-  also have "... \<le> cost_of_path ?c xs\<^sub>1 + cost_of_path ?c (x#xs\<^sub>2 @ y#xs\<^sub>3)"
+  finally show "cost_of_path ?h xs > 0"
+    by auto
+next
+  fix xs\<^sub>1 xs\<^sub>2
+  assume [simp]: "xs = xs\<^sub>1 @ y#xs\<^sub>2" and "x \<in> set xs\<^sub>2"
+  moreover have "\<not> f y x"
+    using assms by blast
+  ultimately have "0 < cost_of_path ?h (y#xs\<^sub>2)"
+    using assms by (intro rotate_tour_invariant)
+  also have "... \<le> cost_of_path ?h xs\<^sub>1 + cost_of_path ?h (y#xs\<^sub>2)"
     using cost_of_path_geq_0 by auto
-  also have "... \<le> cost_of_path ?c (xs\<^sub>1 @ x#xs\<^sub>2 @ y#xs\<^sub>3)"
+  also have "... \<le> cost_of_path ?h (xs\<^sub>1 @ y#xs\<^sub>2)"
     by (intro cost_of_path_append_geq_0) auto
-  also have "... = cost_of_path ?c xs"
-    using assms by auto
-  finally show ?thesis
+  finally show "cost_of_path ?h xs > 0"
+    by auto
+qed
+
+lemma rearrange_tour:
+  fixes c :: "'a \<Rightarrow> 'a \<Rightarrow> ('b::ordered_semiring_0)" \<comment> \<open>Needed for commutativity.\<close>
+  assumes "\<And>u v. c u v = c v u"
+      and "xs \<noteq> []" "ys \<noteq> []"
+  shows "cost_of_path c (last xs#ys @ xs) = cost_of_path c (last ys#xs @ ys)"
+  using assms
+proof (induction ys arbitrary: xs rule: list012_induct)
+  case Nil
+  then show ?case by auto
+next
+  case (Singleton y)
+  have "cost_of_path c (last xs#[y] @ xs) = cost_of_path c ([y] @ xs) + c (last xs) y"
+    by (auto simp add: add.commute)
+  also have "... = cost_of_path c ([y] @ xs @ [y])"
+    using Singleton cost_of_path_append_last[of "[y] @ xs" c "[y]"] by auto
+  also have "... = cost_of_path c (last [y]#xs @ [y])"
+    by auto
+  finally show ?case 
+    by auto
+next
+  case (CCons y z ys)
+  have "cost_of_path c (last xs#y#z#ys @ xs) = cost_of_path c (y#z#ys @ xs) + c (last xs) y"
+    by (auto simp add: add.commute add.left_commute)
+  also have "... = cost_of_path c (y#z#ys @ xs @ [y])"
+    using CCons cost_of_path_append_last[of "y#z#ys @ xs" c "[y]"] by auto
+  also have "... = cost_of_path c (last (xs @ [y])#z#ys @ xs @ [y])"
+    by auto
+  also have "... = cost_of_path c (last (z#ys)#xs @ [y] @ z#ys)"
+    using CCons CCons.IH[of "xs @ [y]"] by auto
+  also have "... = cost_of_path c (last (y#z#ys)#xs @ y#z#ys)"
+    by auto
+  finally show ?case
     by auto
 qed
 
@@ -267,7 +355,7 @@ next
     assume "f x \<noteq> []" and "?fyxs \<noteq> []"
     hence "cost_of_path c (concat (map f (x#y#xs))) 
       = cost_of_path c (f x) + c (last (f x)) (hd ?fyxs) + cost_of_path c ?fyxs"
-      by (auto simp add: cost_of_path_append2)
+      by (auto simp add: cost_of_path_append)
     also have "... \<le> cost_of_path c (f x) + k + cost_of_path c ?fyxs"
       using 3 \<open>f x \<noteq> []\<close> \<open>?fyxs \<noteq> []\<close> cost_hd_concat_map[of "y#xs" f c "last (f x)" k] by auto
     also have "... \<le> (\<Sum>x\<leftarrow>(x#y#xs). cost_of_path c (f x)) + (length (tl (x#y#xs))) * k"

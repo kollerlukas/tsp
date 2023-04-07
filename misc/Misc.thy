@@ -138,8 +138,7 @@ qed
 
 lemma list_split_for_2elems:
   assumes "a \<in> set xs" "b \<in> set xs" "a \<noteq> b"
-  obtains xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ a#xs\<^sub>2" "b \<in> set xs\<^sub>2"
-  | xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ b#xs\<^sub>2" "a \<in> set xs\<^sub>2"
+  obtains xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ a#xs\<^sub>2" "b \<in> set xs\<^sub>2" | xs\<^sub>1 xs\<^sub>2 where "xs = xs\<^sub>1 @ b#xs\<^sub>2" "a \<in> set xs\<^sub>2"
   using assms 
 proof (induction xs arbitrary: a b thesis)
   case Nil
@@ -305,6 +304,14 @@ lemma concat_map_filter_empty:
   assumes "\<And>x. \<not> P x \<Longrightarrow> f x = []"
   shows "concat (map f (filter P xs)) = concat (map f xs) "
   using assms by (induction xs) auto
+
+lemma last_filter_non_nil:
+  assumes "xs \<noteq> []" "last xs = x" "f x"
+  shows "filter f xs \<noteq> [] \<and> last (filter f xs) = x"
+  using assms by (induction xs rule: list012_induct) auto
+
+lemma last_filter: "xs \<noteq> [] \<Longrightarrow> last xs = x \<Longrightarrow> f x \<Longrightarrow> last (filter f xs) = x"
+  using last_filter_non_nil by fastforce
 
 subsection \<open>Repeated Elements in Lists\<close>
 
@@ -485,7 +492,7 @@ lemma finite_even_cardI2:
   shows "even (card ({x,y} \<union> X))"
   using assms by auto
 
-lemma finite_card_geq2: "finite A \<Longrightarrow> a \<in> A \<Longrightarrow> a \<noteq> b \<Longrightarrow> b \<in> A \<Longrightarrow> card A \<ge> 2"
+lemma finite_card_geq2: "finite A \<Longrightarrow> (\<exists>a b. a \<in> A \<and> b \<in> A \<and> a \<noteq> b) \<longleftrightarrow> card A \<ge> 2"
   by (induction A rule: finite2_induct) auto
 
 lemma card'_leq: "card' A \<le> enat k \<Longrightarrow> card A \<le> k"
