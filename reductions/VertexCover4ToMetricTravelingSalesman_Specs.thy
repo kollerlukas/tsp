@@ -1,3 +1,4 @@
+(* Author: Lukas Koller *)
 theory VertexCover4ToMetricTravelingSalesman_Specs
   imports Main tsp.GraphAdjMap_Specs WeightedGraph
 begin
@@ -193,17 +194,6 @@ fun hp_of_vc :: "'g1 \<Rightarrow> 'v1set \<Rightarrow> ('v1 uedge \<times> 'v1 
   "hp_of_vc G X = fold_v1set1 (\<lambda>u T. T @ hp_for_neighborhood u (partition_for_vertex G X u)) X []"
   \<comment> \<open>Compute a Hamiltonian path on \<open>f G\<close> that is induced by the vertex cover \<open>X\<close> of the graph \<open>G\<close>.\<close>
 
-
-(* fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "hp_starting_at (e,w,i) = (case rep1 e of uEdge u v \<Rightarrow> if w = v \<and> (i = 1 \<or> i = 2) then hp_v1 e else hp_u1 e)" *)
-
-(* fun hp_starting_at :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "hp_starting_at (e,w,i) = (case rep1 e of uEdge u v \<Rightarrow> if w = v then hp_v1 e else hp_u1 e)"
-
-fun replace_hp :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
-  "replace_hp G [] = []"
-| "replace_hp G (x#T) = hp_starting_at x @ replace_hp G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T)" *)
-
 fun to_covering_vertex :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1" where
   "to_covering_vertex G (x#T) = (case (x,last (takeWhile (are_vertices_in_He G x) (x#T))) of
       ((e,w\<^sub>1,i\<^sub>1),(_,w\<^sub>2,i\<^sub>2)) \<Rightarrow> case rep1 e of uEdge u v \<Rightarrow>
@@ -224,17 +214,6 @@ fun replace_hp :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list 
 fun shorten_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "shorten_tour G T = (case rotate_tour (\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2) T of
       x#y#T' \<Rightarrow> last (hp_starting_at G (y#T'))#replace_hp G (filter (\<lambda>z. \<not> are_vertices_in_He G y z) T') @ hp_starting_at G (y#T'))"
-
-(* fun to_covering_vertex :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 'v1" where
-  "to_covering_vertex (e,w,i) = (case rep1 e of uEdge u v \<Rightarrow> if w = v \<and> (i = 1 \<or> i = 2) then v else u)" *)
-
-(* fun to_covering_vertex :: "('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 'v1" where
-  "to_covering_vertex (e,w,i) = (case rep1 e of uEdge u v \<Rightarrow> if w = v then v else u)"
-
-fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
-  "vc_of_tour G [] = set_empty1"
-| "vc_of_tour G (x#T) = 
-    insert1 (to_covering_vertex x) (vc_of_tour G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T))" *)
 
 fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
   "vc_of_tour G [] = set_empty1"
@@ -867,19 +846,6 @@ proof -
     using assms by (intro is_edge_in_He_intro)
 qed
 
-(* lemma vertices_in_He_of_edge_in_He:
-  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
-  shows "x \<in> g2.vertices (H\<^sub>e e)" "y \<in> g2.vertices (H\<^sub>e e)"
-  using assms
-proof -
-  have y_isin_Nx: "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
-    using assms g2.rep_isin_uedges_elim[of "H\<^sub>e e", OF invar_He] by blast
-  moreover thus "x \<in> g2.vertices (H\<^sub>e e)"
-    by (auto intro!: g2.vertices_memberI1)
-  ultimately show "y \<in> g2.vertices (H\<^sub>e e)"
-    by (auto intro!: g2.vertices_memberI2)
-qed *)
-
 lemma vertices_in_He_of_edge_in_He:
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G"
   shows "is_edge_in_He G (uEdge x y) \<and> x \<in> g2.vertices (H\<^sub>e e) \<and> y \<in> g2.vertices (H\<^sub>e e) \<longleftrightarrow> rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
@@ -1380,63 +1346,6 @@ proof (cases x; cases y)
   qed auto
 qed
 
-(* lemma cost_u1_u2_leq5:
-  assumes "g1.ugraph_adj_map_invar G"     
-  shows "c G (e\<^sub>1,w\<^sub>1,1) (e\<^sub>2,w\<^sub>2,2) \<le> 5" (is "c G ?x ?y \<le> 5")
-proof cases 
-  assume "are_vertices_in_He G ?x ?y"
-  then obtain e where "e \<in> g1.uedges G" "?x \<in> g2.vertices (H\<^sub>e e)" "?y \<in> g2.vertices (H\<^sub>e e)"
-    using assms by (elim are_vertices_in_He_elim)
-  hence "isin2 (V\<^sub>H\<^sub>e e) ?x" and "isin2 (V\<^sub>H\<^sub>e e) ?y"
-    using invar_vertices_of_He by (auto simp add: vertices_of_He[symmetric] g2.set_specs 
-        simp del: vertices_of_He.simps)
-  hence "e\<^sub>1 = rep1 e" and "e\<^sub>2 = rep1 e"
-    by (auto intro!: isin_vertices_of_He_edge[symmetric])
-  hence [simp]: "e\<^sub>2 = e\<^sub>1"
-    by auto
-
-  obtain u v where "?y = (uEdge u v,w\<^sub>2,2)" and "rep1 e = uEdge u v" and isin_w2: "w\<^sub>2 \<in> {u,v}"
-    using \<open>isin2 (V\<^sub>H\<^sub>e e) ?y\<close> by (elim isin_vertices_of_He_elim2) auto
-  then consider "w\<^sub>1 = u" | "w\<^sub>1 = v"
-    using \<open>isin2 (V\<^sub>H\<^sub>e e) ?x\<close> by (elim isin_vertices_of_He_elim2) auto
-  thus ?thesis
-  proof cases
-    assume [simp]: "w\<^sub>1 = u"
-    hence [simp]: "e\<^sub>1 = rep1 (uEdge u v)"
-      using \<open>e\<^sub>1 = rep1 e\<close> g1.rep_simps(1)[OF \<open>rep1 e = uEdge u v\<close>] by auto
-    have "\<not> is_edge_in_He G (uEdge ?x ?y)"
-      using assms u1_u2_no_edge_in_He by simp
-    moreover have "rep1 (uEdge u v) \<in> g1.uedges G"
-      using \<open>e \<in> g1.uedges G\<close> 
-      by (auto intro!: g1.rep_of_edge_is_edge simp add: \<open>rep1 e = uEdge u v\<close>[symmetric])
-    moreover hence "min_dist_in_He G ?x ?y \<le> enat 4"
-      using assms isin_w2 min_dist_u1_v2_leq4 by auto
-    moreover hence "the_enat (min_dist_in_He G ?x ?y) \<le> 4"
-      by (cases "min_dist_in_He G ?x ?y") auto
-    ultimately show ?thesis
-      by simp
-  next
-    assume [simp]: "w\<^sub>1 = v"
-    hence [simp]: "e\<^sub>1 = rep1 (uEdge v u)"
-      using \<open>e\<^sub>1 = rep1 e\<close> g1.rep_simps(2)[OF \<open>rep1 e = uEdge u v\<close>] by auto
-    have "\<not> is_edge_in_He G (uEdge ?x ?y)"
-      using assms u1_u2_no_edge_in_He by simp
-    moreover have "rep1 (uEdge v u) \<in> g1.uedges G"
-      using \<open>e \<in> g1.uedges G\<close> g1.rep_simps
-      by (auto intro!: g1.rep_of_edge_is_edge simp add: \<open>rep1 e = uEdge u v\<close>[symmetric])
-    moreover hence "min_dist_in_He G ?x ?y \<le> enat 4"
-      using assms isin_w2 min_dist_u1_v2_leq4 by auto
-    moreover hence "the_enat (min_dist_in_He G ?x ?y) \<le> 4"
-      by (cases "min_dist_in_He G ?x ?y") auto
-    ultimately show ?thesis
-      by simp
-  qed
-next
-  assume "\<not> are_vertices_in_He G ?x ?y"
-  thus ?thesis
-    using assms cost_x_y_leq5 by auto
-qed (* TODO: combine with lemma above! *) *)
-
 lemma hd_hp_for_neighborhood:
   assumes "g1.ugraph_adj_map_invar G" "set_invar1 N\<^sub>u" and "\<exists>v. isin1 N\<^sub>u v" \<comment> \<open>The neighborhood is non-empty.\<close>
       and "\<And>v. isin1 N\<^sub>u v \<Longrightarrow> rep1 (uEdge u v) \<in> g1.uedges G" \<comment> \<open>Condition for partition of \<open>g1.uedges G\<close>.\<close>
@@ -1564,96 +1473,6 @@ proof (cases x)
   thus ?thesis
     using assms are_vertices_in_He by blast
 qed
-
-(* lemma set_hp_starting_at:
-  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e)"
-  shows "set (hp_starting_at x) = g2.vertices (H\<^sub>e e)"
-proof -
-  have "isin2 (V\<^sub>H\<^sub>e e) x"
-    using assms invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-  then obtain u v w i where "x = (uEdge u v,w,i)" and [simp]: "rep1 e = uEdge u v"
-    by (elim isin_vertices_of_He_elim2)
-  moreover hence [simp]: "x = (e,w,i)"
-    using assms g1.rep_of_edge by metis
-  ultimately have "uEdge u v \<in> g1.uedges G"
-    using assms g1.rep_of_edge_is_edge g1.rep_idem by fastforce
-  hence rep_e: "rep1 (uEdge u v) = uEdge u v" and "rep1 (uEdge u v) \<in> g1.uedges G"
-    using g1.rep_of_edge g1.rep_of_edge_is_edge by auto
-  hence "u \<noteq> v"
-    using assms by (intro g1.uedge_not_refl)
-  consider "w = v" "i = 1 \<or> i = 2" | "w \<noteq> v \<or> (i \<noteq> 1 \<and> i \<noteq> 2)"
-    by auto
-  thus ?thesis
-  proof cases
-    assume "w = v" "i = 1 \<or> i = 2"
-    thus ?thesis
-      by (auto simp add: vertices_hp_v1[symmetric] simp del: He.simps)
-  next
-    assume "w \<noteq> v \<or> (i \<noteq> 1 \<and> i \<noteq> 2)"
-    thus ?thesis
-      by (auto simp add: vertices_hp_u1[symmetric] simp del: He.simps)
-  qed
-qed
-
-lemma hd_hp_starting_at: 
-  assumes "rep1 e = uEdge u v" "w \<in> {u,v}"
-  obtains "i = 1 \<or> i = 2" "hd (hp_starting_at (e,w,i)) = (rep1 e,w,1)" 
-  | "w = u \<or> (i \<noteq> 1 \<and> i \<noteq> 2)" "hd (hp_starting_at (e,w,i)) = (rep1 e,u,1)"
-proof -
-  consider "w = v" "i = 1 \<or> i = 2" | "w \<noteq> v \<or> (i \<noteq> 1 \<and> i \<noteq> 2)"
-    by auto
-  thus ?thesis
-    using assms that g1.rep_simps by cases auto
-qed
-
-lemma last_hp_starting_at: 
-  assumes "rep1 e = uEdge u v" "w \<in> {u,v}"
-  obtains "i = 1 \<or> i = 2" "last (hp_starting_at (e,w,i)) = (rep1 e,w,2)" 
-  | "w = u \<or> (i \<noteq> 1 \<and> i \<noteq> 2)" "last (hp_starting_at (e,w,i)) = (rep1 e,u,2)"
-proof -
-  consider "w = v" "i = 1 \<or> i = 2" | "w \<noteq> v \<or> (i \<noteq> 1 \<and> i \<noteq> 2)"
-    by auto
-  thus ?thesis
-    using assms that g1.rep_simps by cases auto
-qed 
-
-lemma covering_vertex_hd_hp_starting_at:
-  assumes "g1.ugraph_adj_map_invar G" "x \<in> g2.vertices (f G)"
-  shows "to_covering_vertex (hd (hp_starting_at x)) = to_covering_vertex x"
-proof (cases x)
-  fix e w i
-  assume [simp]: "x = (e,w,i)"
-  hence vert_x_He: "x \<in> g2.vertices (H\<^sub>e e)" and edge_e: "e \<in> g1.uedges G" 
-    using assms fst_of_vertex_is_edge by auto
-  moreover hence "isin2 (V\<^sub>H\<^sub>e e) x"
-    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-  ultimately obtain u v where rep_e: "rep1 e = uEdge u v" and "w \<in> {u,v}"
-    by (elim isin_vertices_of_He_elim2) (auto simp add: g1.rep_of_edge)
-  then consider "i = 1 \<or> i = 2" "hd (hp_starting_at x) = (e,w,1)" 
-    | "w = u \<or> (i \<noteq> 1 \<and> i \<noteq> 2)" "hd (hp_starting_at x) = (e,u,1)"
-    using edge_e by (elim hd_hp_starting_at) (auto simp add: g1.rep_of_edge)
-  thus ?thesis
-    using rep_e by cases auto
-qed
-
-lemma covering_vertex_last_hp_starting_at:
-  assumes "g1.ugraph_adj_map_invar G" "x \<in> g2.vertices (f G)"
-  shows "to_covering_vertex (last (hp_starting_at x)) = to_covering_vertex x"
-proof (cases x)
-  fix e w i
-  assume [simp]: "x = (e,w,i)"
-  hence vert_x_He: "x \<in> g2.vertices (H\<^sub>e e)" and edge_e: "e \<in> g1.uedges G" 
-    using assms fst_of_vertex_is_edge by auto
-  moreover hence "isin2 (V\<^sub>H\<^sub>e e) x"
-    using invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-  ultimately obtain u v where rep_e: "rep1 e = uEdge u v" and "w \<in> {u,v}"
-    by (elim isin_vertices_of_He_elim2) (auto simp add: g1.rep_of_edge)
-  then consider "i = 1 \<or> i = 2" "last (hp_starting_at x) = (e,w,2)" 
-    | "w = u \<or> (i \<noteq> 1 \<and> i \<noteq> 2)" "last (hp_starting_at x) = (e,u,2)"
-    using edge_e by (elim last_hp_starting_at) (auto simp add: g1.rep_of_edge)
-  thus ?thesis
-    using rep_e by cases auto
-qed *)
 
 lemma last_takeWhile_vert_isin_He:
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" and "x \<in> g2.vertices (H\<^sub>e e)"

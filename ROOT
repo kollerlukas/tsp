@@ -3,6 +3,7 @@ session "tsp" = HOL +
   sessions
     "HOL-Library"
     "HOL-Data_Structures"
+    "HOL-Hoare"
     "Prim_Dijkstra_Simple"
 
   directories
@@ -15,15 +16,8 @@ session "tsp" = HOL +
     "reductions"
 
   theories [document = false]
-    "HOL-Library.Extended_Nat"
-    "HOL-Data_Structures.Set_Specs"
-    "Prim_Dijkstra_Simple.Undirected_Graph"
-    
-    "berge/Berge"
-
     "misc/Misc"
     "misc/Select"
-    "graphs/MultiGraph"
 
   theories
     "graphs/WeightedGraph"
@@ -35,7 +29,10 @@ session "tsp" = HOL +
     "problems/TravelingSalesman"
     "algorithms/DoubleTree"
     "algorithms/ChristofidesSerdyukov"
-    "reductions/VC4_to_mTSP_Poly"
+    "graphs/GraphAdjList"
+    "graphs/GraphAdjMap_Specs"
+    "reductions/VertexCover4ToMetricTravelingSalesman_Specs"
+    "reductions/VertexCover4ToMetricTravelingSalesman_AdjList"
 
   document_files
     "root.tex"

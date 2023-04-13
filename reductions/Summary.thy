@@ -1,5 +1,6 @@
+(* Author: Lukas Koller *)
 theory Summary
-  imports VertexCover4ToMetricTravelingSalesman
+  imports VertexCover4ToMetricTravelingSalesman_Specs
 begin
 
 section \<open>Reduction Functions\<close>

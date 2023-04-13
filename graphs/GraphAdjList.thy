@@ -1,3 +1,4 @@
+(* Author: Lukas Koller *)
 theory GraphAdjList
   imports GraphAdjMap_Specs
 begin

@@ -55,7 +55,7 @@ proof (intro graph_invarI2)
   ultimately show "finite (encode_as_graph E)"
     by (auto simp: encode_as_graph_def)
   
-  show "\<forall>e\<in>encode_as_graph E. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+  show "\<And>e. e \<in> encode_as_graph E \<Longrightarrow> \<exists>u v. e = {u,v} \<and> u \<noteq> v"
     using mgraph by (fastforce simp: encode_as_graph_def)
 qed
 

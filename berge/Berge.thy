@@ -1951,7 +1951,7 @@ qed
 subsection\<open>Direction 1 of Berge\<close>
 text\<open>If there is a bigger matching, then there is an augmenting path\<close>
 
-lemma smaller_matching_less_members:
+(* lemma smaller_matching_less_members:
   assumes "finite E" "card E < card E'"
   shows "card ((E \<oplus> E') \<inter> E) < card ((E \<oplus> E') \<inter> E')"
 proof-
@@ -2738,7 +2738,7 @@ proof-
     by(intro augmenting_path_exists_1 assms; auto)+
   then show ?thesis
     by metis
-qed
+qed *)
 
 subsection\<open>Direction 2 of Berge\<close>
 
@@ -2759,7 +2759,7 @@ lemma matching_insert:
 lemma symmetric_difference_assoc: "A \<oplus> (B \<oplus> C) = (A \<oplus> B) \<oplus> C"
   unfolding symmetric_diff_def by blast
 
-lemma symm_diff_is_matching:
+(* lemma symm_diff_is_matching:
   assumes 
     "alt_list (\<lambda>e. e \<notin> M) (\<lambda>e. e \<in> M) (edges_of_path p)"
     "matching M"
@@ -2968,7 +2968,7 @@ proof-
     using laterally_transfer_aug_path'[OF assms(1) matching matching' graph]
           laterally_transfer_aug_path'[OF card' matching' matching graph]
     by metis
-qed
+qed *)
 
 locale graph_matching_defs =
   graph_defs +

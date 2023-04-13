@@ -1,3 +1,4 @@
+(* Author: Lukas Koller *)
 theory FindHamiltonianPath
   imports GraphAdjList
 begin

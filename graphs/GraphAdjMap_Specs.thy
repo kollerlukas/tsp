@@ -1,3 +1,4 @@
+(* Author: Lukas Koller *)
 theory GraphAdjMap_Specs
   imports Main tsp.Misc tsp.Berge "HOL-Data_Structures.Map_Specs" "HOL-Data_Structures.Set_Specs"
     tsp.WeightedGraph tsp.HamiltonianCycle tsp.TravelingSalesman tsp.VertexCover

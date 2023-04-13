@@ -1,4 +1,5 @@
-theory VertexCover4ToMetricTravelingSalesman_AdjList                                                 
+(* Author: Lukas Koller *)
+theory VertexCover4ToMetricTravelingSalesman_AdjList
   imports VertexCover4ToMetricTravelingSalesman_Specs GraphAdjList
 begin  
 
