@@ -210,6 +210,9 @@ lemma vertices_subgraph:
 lemma edges_are_pair_of_vertices: "edges G \<subseteq> vertices G \<times> vertices G"
   unfolding edges_def vertices_def by auto
 
+lemma vertices_subset_fst_snd_edges: "vertices G \<subseteq> fst ` edges G \<union> snd ` edges G"
+  unfolding edges_def vertices_def by force
+
 lemma finite_edges: 
   assumes "finite (vertices G)" 
   shows "finite (edges G)"
@@ -224,7 +227,7 @@ inductive path_betw :: "'map \<Rightarrow> 'v \<Rightarrow> 'v list \<Rightarrow
   \<comment> \<open>Define predicate for paths on graphs that are represented by adjacency maps.\<close>
   (* TODO: connect with definition for set-set graph representation *)
 
-lemma path_non_empty: "path_betw M u P v \<Longrightarrow> P \<noteq> []"
+lemma path_non_nil: "path_betw M u P v \<Longrightarrow> P \<noteq> []"
   by (rule path_betw.cases) auto
 
 lemma singleton_pathI: "v \<in> vertices M \<Longrightarrow> path_betw M v [v] v"
@@ -242,7 +245,7 @@ lemma hd_path_betw: "path_betw M u P v \<Longrightarrow> hd P = u"
 lemma last_path_betw: 
   assumes "path_betw M u P v"
   shows "last P = v"
-  using assms path_non_empty by (induction M u P v rule: path_betw.induct) auto
+  using assms path_non_nil by (induction M u P v rule: path_betw.induct) auto
 
 lemma append_path_betw: 
   assumes "path_betw M u P v" "isin (\<N> M v) w" and "invar M"
@@ -282,7 +285,7 @@ lemma path_vertices:
 definition "path_dist M u v \<equiv> Min ({enat (length (tl P)) | P. path_betw M u P v \<and> distinct P} \<union> {\<infinity>})" 
   \<comment> \<open>The distance between two nodes in a graph represented by an adjacency map.\<close>
 
-definition "degree_Adj M v \<equiv> (let \<N>\<^sub>v = set (\<N> M v) in if \<N>\<^sub>v = {} then \<infinity> else card \<N>\<^sub>v)"
+definition "degree_Adj M v \<equiv> card (set (\<N> M v))"
 
 definition "is_complete_Adj G \<equiv> (\<forall>u v. u \<in> vertices G \<and> v \<in> vertices G \<and> u \<noteq> v \<longrightarrow> isin (\<N> G u) v)"
 
@@ -437,6 +440,54 @@ lemma vertices_def2:
   shows "vertices G = {u | u v. isin (\<N> G u) v}"
   using assms unfolding vertices_def by blast
 
+lemma vs_uedges_subset_vertices:
+  assumes "u \<in> Vs (set_of_uedge ` uedges G)"
+  shows "u \<in> vertices G"
+proof -
+  obtain e where "u \<in> e" "e \<in> set_of_uedge ` uedges G"
+    using assms by (elim vs_member_elim)
+  then obtain e\<^sub>u where [simp]: "e = set_of_uedge e\<^sub>u" and "e\<^sub>u \<in> uedges G"
+    by auto
+  then obtain x y where "e\<^sub>u = rep (uEdge x y)" and xy_isin: "x \<in> vertices G" "y \<in> vertices G"
+    unfolding uedges_def2 by (auto simp: vertices_def)
+  then consider "e\<^sub>u = uEdge x y" | "e\<^sub>u = uEdge y x"
+    using is_rep by auto
+  then consider "u = x" | "u = y"
+    using \<open>u \<in> e\<close> by cases (auto simp: set_of_uedge_def)
+  thus ?thesis
+    using xy_isin by auto
+qed
+
+lemma isin_neighborhood_set_edge: 
+  assumes "isin (\<N> G u) v"
+  shows "{u,v} \<in> set_of_uedge ` uedges G"
+proof -
+  have "rep (uEdge u v) \<in> uedges G"
+    using assms by (auto simp: uedges_def2)
+  then consider "uEdge u v \<in> uedges G" | "uEdge v u \<in> uedges G"
+    using is_rep by metis
+  then consider "set_of_uedge (uEdge u v) \<in> set_of_uedge ` uedges G" 
+    | "set_of_uedge (uEdge v u) \<in> set_of_uedge ` uedges G"
+    by cases (auto intro: imageI)
+  thus "{u,v} \<in> set_of_uedge ` uedges G"
+    by cases (auto simp: set_of_uedge doubleton_eq_iff)
+qed
+
+lemma vertices_subset_vs_uedges:
+  assumes "u \<in> vertices G"
+  shows "u \<in> Vs (set_of_uedge ` uedges G)"
+proof -
+  consider v where "isin (\<N> G u) v" | v where "isin (\<N> G v) u"
+    using assms[unfolded vertices_def] by auto
+  then consider v where "{u,v} \<in> set_of_uedge ` uedges G"
+    using isin_neighborhood_set_edge by cases fast+
+  thus ?thesis
+    by cases auto
+qed
+
+lemma vs_uedges: "Vs (set_of_uedge ` uedges G) = vertices G" 
+  using vs_uedges_subset_vertices vertices_subset_vs_uedges by auto
+
 lemma rev_path:
   assumes "path_betw G u P v" "ugraph_adj_map_invar G"
   shows "path_betw G v (rev P) u"
@@ -446,7 +497,36 @@ lemma rev_path:
 lemma finite_paths: 
   assumes "ugraph_adj_map_invar G"
   shows "finite {P | P. path_betw G u P v \<and> distinct P}"
-  sorry (* TODO: how to prove *)
+proof -
+  have "finite (set_of_uedge ` uedges G)"
+    using assms by auto
+  moreover have "\<And>e. e \<in> set_of_uedge ` uedges G \<Longrightarrow> finite e"
+    unfolding set_of_uedge_def by (auto split: uedge.splits)
+  ultimately have "finite (Vs (set_of_uedge ` uedges G))"
+    by (intro finite_VsI)
+  hence finite_vert: "finite (vertices G)"
+    using assms vs_uedges by auto
+  
+  have "\<And>P. path_betw G u P v \<Longrightarrow> List.set P \<subseteq> vertices G"
+    using path_vertices by auto
+  moreover have "\<And>P. List.set P \<subseteq> vertices G \<Longrightarrow> distinct P \<Longrightarrow> length P \<le> card (vertices G)"
+  proof -
+    fix P
+    assume "List.set P \<subseteq> vertices G" and dist_P: "distinct P"
+    moreover hence "card (List.set P) \<le> card (vertices G)"
+      using finite_vert card_mono by blast
+    moreover have "length P = card (List.set P)"
+      using dist_P by (auto simp add: distinct_card)
+    ultimately show "length P \<le> card (vertices G)"
+      by auto
+  qed
+  ultimately have "{P | P. path_betw G u P v \<and> distinct P} \<subseteq> {P |P. List.set P \<subseteq> vertices G \<and> length P \<le> card (vertices G)}"
+    by blast
+  moreover have "finite {P |P. List.set P \<subseteq> vertices G \<and> length P \<le> card (vertices G)}"
+    using finite_vert by (intro finite_lists_len_leq)
+  ultimately show ?thesis
+    using finite_subset by blast 
+qed
 
 lemma distinct_subpath:
   assumes "path_betw G u P v"
@@ -653,21 +733,6 @@ next
     using is_rep by auto
 qed
 
-lemma isin_neighborhood_set_edge: 
-  assumes "isin (\<N> G u) v"
-  shows "{u,v} \<in> set_of_uedge ` uedges G"
-proof -
-  have "rep (uEdge u v) \<in> uedges G"
-    using assms by (auto simp: uedges_def2)
-  then consider "uEdge u v \<in> uedges G" | "uEdge v u \<in> uedges G"
-    using is_rep by metis
-  then consider "set_of_uedge (uEdge u v) \<in> set_of_uedge ` uedges G" 
-    | "set_of_uedge (uEdge v u) \<in> set_of_uedge ` uedges G"
-    by cases (auto intro: imageI)
-  thus "{u,v} \<in> set_of_uedge ` uedges G"
-    by cases (auto simp: set_of_uedge doubleton_eq_iff)
-qed
-
 lemma set_edge_isin_neighborhood: 
   assumes "ugraph_adj_map_invar G" "{u,v} \<in> set_of_uedge ` uedges G"
   shows "isin (\<N> G u) v"
@@ -689,6 +754,36 @@ proof -
     using xy_isin by cases auto
 qed
 
+lemma set_of_rep_uedge: "set_of_uedge (rep (uEdge u v)) = {u,v}"
+  unfolding set_of_uedge_def by (rule rep_cases[of "uEdge u v"]) auto
+
+lemma set_of_uedge_rep_idem: "set_of_uedge (rep e) = set_of_uedge e"
+proof (cases e)
+  fix u v
+  assume e_case: "e = uEdge u v"
+  then consider "rep e = uEdge u v" | "rep e = uEdge v u"
+    using is_rep by auto
+  thus ?thesis
+    unfolding set_of_uedge_def using e_case by cases (auto simp add: doubleton_eq_iff)
+qed
+    
+lemma set_edge_isin_neighborhood_elim: 
+  assumes "ugraph_adj_map_invar G" "e \<in> set_of_uedge ` uedges G"
+  obtains u v where "e = {u,v}" and "isin (\<N> G u) v"
+proof -
+  obtain u v where "e = set_of_uedge (rep (uEdge u v))" "isin (\<N> G u) v"
+    using assms[unfolded uedges_def2] by auto
+  moreover hence "e = {u,v}"
+    using set_of_rep_uedge by auto
+  ultimately show ?thesis
+    using that by auto
+qed
+
+lemma set_edge_isin_neighborhood_iff:
+  assumes "ugraph_adj_map_invar G" 
+  shows "e \<in> set_of_uedge ` uedges G \<longleftrightarrow> (\<exists>u v. e = {u,v} \<and> isin (\<N> G u) v)"
+  using assms isin_neighborhood_set_edge set_edge_isin_neighborhood_elim by metis
+
 lemma inj_set_of_uedge:
   assumes "ugraph_adj_map_invar G"
   shows "inj_on set_of_uedge (uedges G)"
@@ -705,6 +800,28 @@ proof
     unfolding set_of_uedge_def by (auto simp add: rep_eq_iff doubleton_eq_iff)
   ultimately show "e\<^sub>1 = e\<^sub>2"
     by (auto simp add: rep_of_edge)
+qed
+
+lemma neighborhood_eq_set_for_edge:
+  assumes "ugraph_adj_map_invar G"
+  shows "(\<lambda>u. {u,v}) ` set (\<N> G v) = {e \<in> set_of_uedge ` uedges G. v \<in> e}"
+proof
+  show "(\<lambda>u. {u,v}) ` set (\<N> G v) \<subseteq> {e \<in> set_of_uedge ` uedges G. v \<in> e}"
+    using assms by (auto intro!: isin_neighborhood_set_edge simp add: set_specs)
+next
+  show "{e \<in> set_of_uedge ` uedges G. v \<in> e} \<subseteq> (\<lambda>u. {u,v}) ` set (\<N> G v)"
+  proof
+    fix e
+    assume "e \<in> {e \<in> set_of_uedge ` uedges G. v \<in> e}"
+    hence "e \<in> set_of_uedge ` uedges G" and "v \<in> e"
+      by auto
+    moreover then obtain u w where [simp]: "e = {u,w}" and w_isin_Nu: "isin (\<N> G u) w"
+      using assms by (elim set_edge_isin_neighborhood_elim) auto
+    ultimately consider "v = u" | "v = w"
+      by blast
+    thus "e \<in> (\<lambda>u. {u,v}) ` set (\<N> G v)"
+      using assms w_isin_Nu by cases (auto simp add: set_specs)
+  qed
 qed
 
 lemma uedges_anti_sym:
@@ -725,39 +842,6 @@ lemma card_uedges:
   assumes "ugraph_adj_map_invar G"
   shows "card (set_of_uedge ` uedges G) = card (uedges G)"
   using assms inj_set_of_uedge by (intro card_image)
-
-lemma vs_uedges_subset_vertices:
-  assumes "u \<in> Vs (set_of_uedge ` uedges G)"
-  shows "u \<in> vertices G"
-proof -
-  obtain e where "u \<in> e" "e \<in> set_of_uedge ` uedges G"
-    using assms by (elim vs_member_elim)
-  then obtain e\<^sub>u where [simp]: "e = set_of_uedge e\<^sub>u" and "e\<^sub>u \<in> uedges G"
-    by auto
-  then obtain x y where "e\<^sub>u = rep (uEdge x y)" and xy_isin: "x \<in> vertices G" "y \<in> vertices G"
-    unfolding uedges_def2 by (auto simp: vertices_def)
-  then consider "e\<^sub>u = uEdge x y" | "e\<^sub>u = uEdge y x"
-    using is_rep by auto
-  then consider "u = x" | "u = y"
-    using \<open>u \<in> e\<close> by cases (auto simp: set_of_uedge_def)
-  thus ?thesis
-    using xy_isin by auto
-qed
-
-lemma vertices_subset_vs_uedges:
-  assumes "u \<in> vertices G"
-  shows "u \<in> Vs (set_of_uedge ` uedges G)"
-proof -
-  consider v where "isin (\<N> G u) v" | v where "isin (\<N> G v) u"
-    using assms[unfolded vertices_def] by auto
-  then consider v where "{u,v} \<in> set_of_uedge ` uedges G"
-    using isin_neighborhood_set_edge by cases fast+
-  thus ?thesis
-    by cases auto
-qed
-
-lemma vs_uedges: "Vs (set_of_uedge ` uedges G) = vertices G" 
-  using vs_uedges_subset_vertices vertices_subset_vs_uedges by auto
 
 end
 
@@ -794,8 +878,22 @@ begin
 lemma graph_invar:
   assumes "ugraph_adj_map_invar G" 
   shows "graph_invar (set_of_uedge ` uedges G)" (is "graph_invar ?E")
-  apply (intro graph_invarI2)
-  sorry
+proof (intro graph_invarI2)
+  show "finite (set_of_uedge ` uedges G)"
+    using assms card_uedges by blast
+
+  show "\<And>e. e \<in> set_of_uedge ` uedges G \<Longrightarrow> \<exists>u v. e = {u, v} \<and> u \<noteq> v"
+  proof -
+    fix e
+    assume "e \<in> set_of_uedge ` uedges G"
+    then obtain u v where "e = {u,v}" "isin (\<N> G u) v"
+      using assms by (elim set_edge_isin_neighborhood_elim)
+    moreover hence "u \<noteq> v"
+      using assms by (intro adj_vertices_neq)
+    ultimately show "\<exists>u v. e = {u, v} \<and> u \<noteq> v"
+      by auto
+  qed
+qed
 
 lemma path_equiv: 
   assumes "ugraph_adj_map_invar G" "path_betw G u P v"
@@ -805,7 +903,25 @@ lemma path_equiv:
 lemma degree_equiv:
   assumes "ugraph_adj_map_invar G"
   shows "degree_Adj G v = degree (set_of_uedge ` uedges G) v"
-  sorry (* TODO *)
+proof -
+  have "\<And>X. v \<notin> X \<Longrightarrow> inj_on (\<lambda>u. {u,v}) X"
+    by rule (auto simp add: doubleton_eq_iff)
+  hence inj_nbh: "inj_on (\<lambda>u. {u,v}) (set (\<N> G v))"
+    using assms by (auto simp add: set_specs)
+
+  have finite_sofG: "finite (set_of_uedge ` uedges G)"
+    using assms by auto
+  hence "degree (set_of_uedge ` uedges G) v = card {e \<in> set_of_uedge ` uedges G. v \<in> e}"
+    unfolding degree_def2 by auto
+  also have "... = card ((\<lambda>u. {u,v}) ` set (\<N> G v))"
+    using assms neighborhood_eq_set_for_edge by auto 
+  also have "... = card (set (\<N> G v))"
+    using card_image inj_nbh by auto
+  also have "... = degree_Adj G v"
+    unfolding degree_Adj_def by auto
+  finally show ?thesis
+    by auto
+qed
 
 lemma is_complete_equiv: 
   assumes "is_complete_Adj G"
@@ -826,7 +942,26 @@ lemma is_tsp_equiv:
 lemma is_vc_equiv: 
   assumes "ugraph_adj_map_invar G" "is_vc_Adj G X" "set_invar X"
   shows "is_vc (set_of_uedge ` uedges G) (set X)"
-  sorry (* TODO *)
+proof (intro is_vcI)
+  show "\<And>e. e \<in> set_of_uedge ` uedges G \<Longrightarrow> e \<inter> set X \<noteq> {}"
+  proof -
+    fix e
+    assume "e \<in> set_of_uedge ` uedges G"
+    then obtain u v where "e = {u,v}" "isin (\<N> G u) v"
+      using assms by (elim set_edge_isin_neighborhood_elim)
+    moreover hence "isin X u \<or> isin X v"
+      using assms by (auto elim!: is_vc_AdjE)       
+    ultimately show "e \<inter> set X \<noteq> {}"
+      using assms by (auto simp add: set_specs)
+  qed
+
+  have "\<And>v. isin X v \<Longrightarrow> v \<in> vertices G"
+    using assms by (elim is_vc_AdjE)
+  hence "\<And>v. v \<in> set X \<Longrightarrow> v \<in> vertices G"
+    using assms set_specs by auto 
+  thus "set X \<subseteq> Vs (set_of_uedge ` uedges G)"
+    using vertices_subset_vs_uedges by blast
+qed
 
 lemma uedges_leq_max_degree_card_vc:
   assumes "ugraph_adj_map_invar G" "set_invar X"

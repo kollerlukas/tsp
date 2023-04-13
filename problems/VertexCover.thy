@@ -4,7 +4,7 @@ begin
 
 definition "is_vc E X \<equiv> (\<forall>e \<in> E. e \<inter> X \<noteq> {}) \<and> X \<subseteq> Vs E"
 
-lemma is_vsI:
+lemma is_vcI:
   assumes "\<And>e. e \<in> E \<Longrightarrow> e \<inter> X \<noteq> {}" "X \<subseteq> Vs E"
   shows "is_vc E X"
   unfolding is_vc_def using assms by auto

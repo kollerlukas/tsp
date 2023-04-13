@@ -172,33 +172,4 @@ proof
     using assms by auto
 qed
 
-fun choose_edge where
-  "choose_edge [] = None"
-| "choose_edge ((u,[])#G) = choose_edge G"
-| "choose_edge ((u,v#Nu)#G) = Some (ugraph_adj_list.rep (uEdge u v))"
-
-lemma choose_edge:
-  assumes "ugraph_adj_list.ugraph_adj_map_invar G" "ugraph_adj_list.uedges G \<noteq> {}" 
-  shows "the (choose_edge G) \<in> ugraph_adj_list.uedges G"
-  using assms 
-  unfolding ugraph_adj_list.uedges_def ugraph_adj_list.edges_def ugraph_adj_list.neighborhood_def
-proof (induction G rule: pair_list.induct)
-  case 1
-  then show ?case 
-    by auto
-next
-  case (2 u Nu G)
-  thus ?case 
-  proof (cases Nu)
-    case Nil
-    then show ?thesis 
-      using 2
-      sorry
-  next
-    case (Cons v Nu)
-    then show ?thesis 
-      by force
-  qed
-qed
-
 end

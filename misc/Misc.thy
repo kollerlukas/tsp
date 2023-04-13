@@ -393,6 +393,19 @@ lemma even_elem_append:
   shows "even_elems (xs @ ys) = even_elems xs @ even_elems ys"
   using assms by (induction xs arbitrary: ys rule: even_elems.induct) auto
 
+lemma even_induct_non_nil[consumes 1,case_names Singleton Doubleton CCons]:
+  assumes "xs \<noteq> []"
+      and "\<And>x. P [x]"
+      and "\<And>x y. P [x,y]"
+      and "\<And>x y z xs. P (z#xs) \<Longrightarrow> P (x#y#z#xs)"
+  shows "P xs"
+  using assms 
+proof (induction xs rule: even_elems.induct)
+  case (3 x y xs)
+  then show ?case
+    by (cases xs) auto
+qed auto
+
 section \<open>(Finite) Set Lemmas\<close>
 
 lemma mem_not_empty: "x \<in> A \<Longrightarrow> A \<noteq> {}"
@@ -497,6 +510,52 @@ lemma finite_card_geq2: "finite A \<Longrightarrow> (\<exists>a b. a \<in> A \<a
 
 lemma card'_leq: "card' A \<le> enat k \<Longrightarrow> card A \<le> k"
   by (metis card'_finite_enat enat_ile enat_ord_simps(1))
+
+lemma finite_lists_len_eq:
+  assumes "finite X"
+  shows "finite ({xs | xs. List.set xs \<subseteq> X \<and> length xs = k})"
+  using assms
+proof (induction k)
+  case 0
+  then show ?case by auto
+next
+  case (Suc k)
+  hence "finite (\<Union> {(\<lambda>P. x#P) ` {xs | xs. List.set xs \<subseteq> X \<and> length xs = k} | x. x \<in> X})"
+    using Suc by auto
+  moreover have "{xs | xs. List.set xs \<subseteq> X \<and> length xs = k + 1} 
+    \<subseteq> \<Union> {(\<lambda>P. x#P) ` {xs | xs. List.set xs \<subseteq> X \<and> length xs = k} | x. x \<in> X}" 
+    (is "?Xs' \<subseteq> \<Union> {(\<lambda>P. x#P) ` ?Xs | x. x \<in> X}")
+  proof
+    fix xs
+    assume "xs \<in> ?Xs'"
+    hence "List.set xs \<subseteq> X" "length xs = k + 1" and xs_non_nil: "xs \<noteq> []"
+      by auto
+    hence "hd xs \<in> X" and "List.set (tl xs) \<subseteq> X" "length (tl xs) = k"
+      using set_tl_subset[of xs] by auto
+    moreover hence "xs \<in> (\<lambda>P. hd xs#P) ` ?Xs"
+      using xs_non_nil by force
+    ultimately show "xs \<in> \<Union> {(\<lambda>P. x#P) ` ?Xs | x. x \<in> X}"
+      by blast
+  qed
+  ultimately show ?case 
+    using finite_subset by auto
+qed
+
+lemma finite_lists_len_leq:
+  assumes "finite X"
+  shows "finite ({xs | xs. List.set xs \<subseteq> X \<and> length xs \<le> k})"
+  using assms
+proof (induction k)
+  case 0
+  then show ?case by auto
+next
+  case (Suc k)
+  moreover have "{xs | xs. List.set xs \<subseteq> X \<and> length xs \<le> k + 1} 
+    = {xs | xs. List.set xs \<subseteq> X \<and> length xs \<le> k} \<union> {xs | xs. List.set xs \<subseteq> X \<and> length xs = k + 1}"
+    by auto
+  ultimately show ?case 
+    using finite_lists_len_eq finite_Un by auto
+qed
 
 section \<open>Tuple Set Lemmas\<close>
 
