@@ -201,24 +201,33 @@ fun to_covering_vertex :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> na
         else if (i\<^sub>2 = 1 \<or> i\<^sub>2 = 2) then w\<^sub>2 
         else u)"
 | "to_covering_vertex G [] = undefined" 
+  \<comment> \<open>Given a part of tour \<open>x#T\<close> in the graph \<open>f G\<close> we compute a covering vertex for 
+  \<open>e \<in> g1.uedges G\<close> for which \<open>x \<in> g2.vertices (H\<^sub>e e)\<close>.\<close>
 
 fun hp_starting_at :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "hp_starting_at G ((e,w,i)#T) = (case rep1 e of uEdge u v \<Rightarrow> 
     if to_covering_vertex G ((e,w,i)#T) = u then hp_u1 e else hp_v1 e)"
 | "hp_starting_at G [] = undefined"
+  \<comment> \<open>Given a part of tour \<open>x#T\<close> in the graph \<open>f G\<close> we return a Hamiltonian path of \<open>H\<^sub>e e\<close> for 
+  \<open>e \<in> g1.uedges G\<close> for which \<open>x \<in> g2.vertices (H\<^sub>e e)\<close>.\<close>
 
 fun replace_hp :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "replace_hp G [] = []"
 | "replace_hp G (x#T) = hp_starting_at G (x#T) @ replace_hp G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T)"
+  \<comment> \<open>We recursively replace parts of a given tour \<open>x#T\<close> with Hamiltonian paths of \<open>H\<^sub>e e\<close> for each 
+  \<open>e \<in> g1.uedges G\<close>.\<close>
 
 fun shorten_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list" where
   "shorten_tour G T = (case rotate_tour (\<lambda>(e\<^sub>1,w\<^sub>1,i\<^sub>1) (e\<^sub>2,w\<^sub>2,i\<^sub>2). rep1 e\<^sub>1 \<noteq> rep1 e\<^sub>2) T of
       x#y#T' \<Rightarrow> last (hp_starting_at G (y#T'))#replace_hp G (filter (\<lambda>z. \<not> are_vertices_in_He G y z) T') @ hp_starting_at G (y#T'))"
+  \<comment> \<open>Given tour \<open>T\<close> in the graph \<open>f G\<close>, we construct a shorter tour that contains a Hamiltonian path 
+  of \<open>H\<^sub>e e\<close> for each \<open>e \<in> g1.uedges G\<close>.\<close>
 
 fun vc_of_tour :: "'g1 \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) list \<Rightarrow> 'v1set" where
   "vc_of_tour G [] = set_empty1"
 | "vc_of_tour G (x#T) = 
     insert1 (to_covering_vertex G (x#T)) (vc_of_tour G (filter (\<lambda>y. \<not> are_vertices_in_He G x y) T))"
+  \<comment> \<open>Given tour \<open>T\<close> in the graph \<open>f G\<close>, we recursively constrict a vertex cover of the graph \<open>G\<close>.\<close>
 
 end
 
@@ -808,7 +817,6 @@ proof (rule is_edge_in_He_intro)
     using assms by (subst He_rep_idem; subst neighborhood_He) auto 
   thus "rep2 (uEdge (rep1 e,w\<^sub>1,i\<^sub>1) (rep1 e,w\<^sub>2,i\<^sub>2)) \<in> g2.uedges (H\<^sub>e (rep1 e))"
     unfolding g2.uedges_def2 by blast
-  find_theorems "H\<^sub>e (rep1 ?e)"
 qed
 
 lemma is_edge_in_He_elim:
@@ -1531,36 +1539,6 @@ lemma covering_vertex_of_corner:
       and "(e,w,i) \<in> g2.vertices (H\<^sub>e e)" "i = 1 \<or> i = 2"
   shows "to_covering_vertex G ((e,w,i)#T) = w"
   using assms by (elim covering_vertex_cases) simp+
-
-(* lemma covering_vertex_of_corner:
-  assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" 
-      and "rep1 e = uEdge u v" "w \<in> {u,v}" "i = 1 \<or> i = 2"
-  shows "to_covering_vertex G ((e,w,i)#T) = w"
-proof -
-  have "isin2 (V\<^sub>H\<^sub>e e) (rep1 e,w,i)"
-    using assms isin_vertices_of_He_intro2 by auto
-  hence vert_ewi: "(e,w,i) \<in> g2.vertices (H\<^sub>e e)"
-    using assms invar_vertices_of_He vertices_of_He 
-    by (auto simp add: g1.rep_of_edge g2.set_specs simp del: He.simps)
-  show ?thesis
-    using assms(1-2) vert_ewi
-  proof (rule covering_vertex_cases)
-    fix w\<^sub>1 i\<^sub>1
-    assume "(e,w,i) = (e,w\<^sub>1,i\<^sub>1)"
-    thus ?thesis
-      using assms by auto
-  next
-    fix w\<^sub>1 i\<^sub>1
-    assume "(e,w,i) = (e,w\<^sub>1,i\<^sub>1)" "i\<^sub>1 \<noteq> 1 \<and> i\<^sub>1 \<noteq> 2"
-    thus ?thesis
-      using assms by auto
-  next
-    fix w\<^sub>1 i\<^sub>1
-    assume "(e,w,i) = (e,w\<^sub>1,i\<^sub>1)" "i\<^sub>1 \<noteq> 1 \<and> i\<^sub>1 \<noteq> 2"
-    thus ?thesis
-      using assms by auto
-  qed
-qed *)
 
 lemma covering_vertex_is_vertex:
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e)"
@@ -2438,7 +2416,7 @@ lemma c_tri_inequality:
       and "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)" "z \<in> g2.vertices (f G)"
   shows "c G x z \<le> c G x y + c G y z"
   \<comment> \<open>The cost function \<open>c\<close> for the graph \<open>f G\<close> satisfies the triangle-inequality.\<close>
-  sorry (* TODO *)
+  oops (* TODO *)
 
 lemma g_is_vc:
   assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1" and "g2.is_hc_Adj (f G) T"
@@ -3084,53 +3062,6 @@ proof (intro cost_rotate_tour)
     using assms by (elim g2.is_hc_AdjE) (auto simp add: g2.hd_path_betw g2.last_path_betw)
 qed auto
 
-find_theorems "c" "hp_starting_at" "hd"
-
-(* lemma cost_x_y_4_or_5:
-  defines "snd3 \<equiv> \<lambda>(_,v,_). v"
-  assumes "g1.ugraph_adj_map_invar G"
-      and "x \<in> g2.vertices (f G)" "y \<in> g2.vertices (f G)" "\<not> are_vertices_in_He G x y"
-  obtains "snd3 x = snd3 y" "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 4" 
-  | "snd3 x \<noteq> snd3 y" "c G (last (hp_starting_at x)) (hd (hp_starting_at y)) = 5"
-proof -
-  obtain e\<^sub>x w\<^sub>x i\<^sub>x e\<^sub>y w\<^sub>y i\<^sub>y where [simp]: "x = (e\<^sub>x,w\<^sub>x,i\<^sub>x)" and [simp]: "y = (e\<^sub>y,w\<^sub>y,i\<^sub>y)"
-    by (cases x; cases y)
-  hence vert_x: "x \<in> g2.vertices (H\<^sub>e e\<^sub>x)" "e\<^sub>x \<in> g1.uedges G" 
-    and vert_y: "y \<in> g2.vertices (H\<^sub>e e\<^sub>y)" "e\<^sub>y \<in> g1.uedges G"
-    using assms fst_of_vertex_is_edge by auto
-  hence rep_xy_neq: "rep1 e\<^sub>x \<noteq> rep1 e\<^sub>y" and rep_idem: "rep1 e\<^sub>x = e\<^sub>x" "rep1 e\<^sub>y = e\<^sub>y"
-    using assms vertices_in_He_rep_iff g1.rep_of_edge by auto
-
-  have "isin2 (V\<^sub>H\<^sub>e e\<^sub>x) x" and "isin2 (V\<^sub>H\<^sub>e e\<^sub>y) y"
-    using vert_x vert_y invar_vertices_of_He vertices_of_He by (auto simp add: g2.set_specs)
-  then obtain u\<^sub>x v\<^sub>x u\<^sub>y v\<^sub>y where "rep1 e\<^sub>x = uEdge u\<^sub>x v\<^sub>x" "w\<^sub>x \<in> {u\<^sub>x,v\<^sub>x}" and "rep1 e\<^sub>y = uEdge u\<^sub>y v\<^sub>y" "w\<^sub>y \<in> {u\<^sub>y,v\<^sub>y}"
-    by (elim isin_vertices_of_He_elim2) auto
-  hence last_x: "last (hp_starting_at x) = (e\<^sub>x,w\<^sub>x,2)" (is "_ = ?last") 
-    and hd_y: "hd (hp_starting_at y) = (e\<^sub>y,w\<^sub>y,1)" (is "_ = ?hd") 
-    using rep_idem last_hp_starting_at hd_hp_starting_at by auto
-  moreover hence "?last \<in> g2.vertices (H\<^sub>e e\<^sub>x)" and "?hd \<in> g2.vertices (H\<^sub>e e\<^sub>y)"
-    using assms vert_x vert_y hp_starting_at_non_nil set_hp_starting_at last_in_set hd_in_set by metis+
-  ultimately have no_vert_hdx_lasty: "\<not> are_vertices_in_He G ?last ?hd"
-    using assms vert_x vert_y rep_xy_neq vertices_in_He_rep_iff by auto
-  hence no_edge_hdx_lasty: "\<not> is_edge_in_He G (uEdge ?last ?hd)"
-    using assms edge_in_He_are_vertices by blast
-  
-  show ?thesis
-  proof cases
-    assume "snd3 x = snd3 y"
-    moreover hence "c G ?last ?hd = 4"
-      unfolding snd3_def using no_edge_hdx_lasty no_vert_hdx_lasty rep_xy_neq by auto
-    ultimately show ?thesis
-      using that last_x hd_y by auto
-  next
-    assume "snd3 x \<noteq> snd3 y"  
-    moreover hence "c G ?last ?hd = 5"
-      unfolding snd3_def using no_edge_hdx_lasty no_vert_hdx_lasty rep_xy_neq by auto
-    ultimately show ?thesis
-      using that last_x hd_y by auto
-  qed
-qed *)
-
 lemma cost_concat_map:
   defines "snd3 \<equiv> \<lambda>(_,v,_). v"
   assumes "g1.ugraph_adj_map_invar G" and "distinct xs" "set xs \<subseteq> g2.vertices (f G)" 
@@ -3432,7 +3363,8 @@ lemma cost_filter_leq_aux:
   assumes "g1.ugraph_adj_map_invar G" and "ys\<^sub>1 \<noteq> []" "xs\<^sub>1 \<noteq> []"
     and "distinct (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)" "set (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<subseteq> g2.vertices (f G)"
     and "\<And>z. z \<in> set ys\<^sub>1 \<Longrightarrow> h z" "\<And>z. z \<in> set xs\<^sub>1 \<Longrightarrow> \<not> h z" "ys\<^sub>2 \<noteq> [] \<Longrightarrow> h (hd ys\<^sub>2)"
-  shows "cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<ge> cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + 2"
+  shows "cost_of_path (c G) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2) \<ge> 
+    cost_of_path (c G) (filter h (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + length (filter (Not o h) (ys\<^sub>1 @ xs\<^sub>1 @ ys\<^sub>2)) + 2"
   using assms
 proof (induction h ys\<^sub>2 arbitrary: ys\<^sub>1 xs\<^sub>1 rule: dropWhile_induct)
   case Nil

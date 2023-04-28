@@ -149,6 +149,9 @@ lemma neighborhood_empty: "\<N> map_empty v = set_empty"
 lemma lookup_non_empty_neighborhood: "isin (\<N> M u) v \<Longrightarrow> lookup M u = Some (\<N> M u)"
   unfolding neighborhood_def by (metis invar_empty set_empty mem_not_empty set_isin the_default.elims)
 
+lemma isin_neighnorhood: "lookup M u = Some N \<Longrightarrow> isin N v \<Longrightarrow> isin (\<N> M u) v"
+  unfolding neighborhood_def by simp
+
 lemma neighborhood_update: "map_invar M \<Longrightarrow> \<N> (update v N\<^sub>v M) = (\<N> M)(v := N\<^sub>v)"
   unfolding neighborhood_def by (auto simp: map_specs)
 
@@ -224,7 +227,7 @@ qed
 
 inductive path_betw :: "'map \<Rightarrow> 'v \<Rightarrow> 'v list \<Rightarrow> 'v \<Rightarrow> bool" where
   singleton_path: "v \<in> vertices M \<Longrightarrow> path_betw M v [v] v"
-| prepend_path: "path_betw M u P v \<Longrightarrow> isin (\<N> M w) u \<Longrightarrow> path_betw M w (w#P) v" 
+| prepend_path: "path_betw M v P w \<Longrightarrow> isin (\<N> M u) v \<Longrightarrow> path_betw M u (u#P) w" 
   \<comment> \<open>Define predicate for paths on graphs that are represented by adjacency maps.\<close>
   (* TODO: connect with definition for set-set graph representation *)
 

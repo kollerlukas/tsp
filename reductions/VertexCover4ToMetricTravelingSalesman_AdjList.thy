@@ -3,10 +3,6 @@ theory VertexCover4ToMetricTravelingSalesman_AdjList
   imports VertexCover4ToMetricTravelingSalesman_Specs GraphAdjList
 begin  
 
-notation ugraph_adj_list.ugraph_adj_map_invar ("ugraph'_invar")
-notation ugraph_adj_list.rep ("rep'_uedge")
-notation ugraph_adj_list.neighborhood ("\<N>")
-
 context ugraph_adj_map_by_linorder 
 begin
 
@@ -69,7 +65,7 @@ lemma isin_edges_from_intro:
   using assms by fastforce
 
 lemma disjoint_edges_from: 
-  assumes "ugraph_invar G" "(u,Nu) \<in> set G" "(v,Nv) \<in> set G" "(u,Nu) \<noteq> (v,Nv)"
+  assumes "ugraph_adj_list_invar G" "(u,Nu) \<in> set G" "(v,Nv) \<in> set G" "(u,Nu) \<noteq> (v,Nv)"
   shows "set (edges_from (u,Nu)) \<inter> set (edges_from (v,Nv)) = {}"
 proof (rule ccontr)
   assume "set (edges_from (u,Nu)) \<inter> set (edges_from (v,Nv)) \<noteq> {}"
@@ -82,7 +78,7 @@ proof (rule ccontr)
 qed
 
 lemma distinct_uedges_adj_list: 
-  assumes "ugraph_invar G"
+  assumes "ugraph_adj_list_invar G"
   shows "distinct (uedges G)"
   apply (subst uedges.simps)
   apply (rule distinct_concat_map)
@@ -121,7 +117,7 @@ lemma uedges_rep_idem: "map rep_uedge (uedges G) = (uedges G)"
   by (induction G) (auto simp add: ugraph_adj_list.rep_idem simp del: ugraph_adj_list.rep.simps)
   
 lemma set_uedges:
-  assumes "ugraph_invar G"
+  assumes "ugraph_adj_list_invar G"
   shows "set (uedges G) = ugraph_adj_list.uedges G"
 proof
   show "set (uedges G) \<subseteq> ugraph_adj_list.uedges G"
@@ -185,7 +181,7 @@ fun fold_uedges where
   "fold_uedges f G = fold f (uedges G)"
 
 lemma fold_uedges:
-  assumes "ugraph_invar G"
+  assumes "ugraph_adj_list_invar G"
   obtains es where "distinct es" "map rep_uedge es = es" 
     "set es = ugraph_adj_list.uedges G" "fold_uedges f G a = fold f es a"
 proof (rule that)
@@ -256,20 +252,20 @@ thm lreduction.f.simps
 thm lreduction.c.simps
 thm lreduction.g.simps
 
-fun f_adjlist where
-  "f_adjlist G = (
+fun f_adj_list where
+  "f_adj_list G = (
     let V = fold_uedges (lset_union o lreduction.vertices_of_He) G lset_empty;
         n = \<lambda>x. (if lset_isin V x then lset_delete x V else lset_empty) in 
     fold_vset (\<lambda>v. lmap_update v (n v)) V lmap_empty)"
 
-lemma "f_adjlist = lreduction.f"
-  unfolding f_adjlist.simps Let_def lreduction.f.simps lreduction.complete_graph.simps 
+lemma "f_adj_list = lreduction.f"
+  unfolding f_adj_list.simps Let_def lreduction.f.simps lreduction.complete_graph.simps 
     lreduction.graph_of_vertices.simps lreduction.vertices_of_H.simps 
     lreduction.neighborhood_compl.simps by simp
 
 \<comment> \<open>Feasibility\<close>
 thm lreduction.f_is_complete
-thm lreduction.c_tri_inequality
+(* thm lreduction.c_tri_inequality *)
 thm lreduction.g_is_vc
 
 \<comment> \<open>Correctness\<close>

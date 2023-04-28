@@ -19,20 +19,23 @@ session "tsp" = HOL +
     "misc/Misc"
     "misc/Select"
 
+    "graphs/MultiGraph"
+
+    "adaptors/BergePrimAdaptor"
+
   theories
     "graphs/WeightedGraph"
     "graphs/CompleteGraph"
     "problems/MinWeightMatching"
     "problems/MinSpanningTree"
-    "adaptors/BergePrimAdaptor"
     "problems/EulerianTour"
     "problems/TravelingSalesman"
     "algorithms/DoubleTree"
     "algorithms/ChristofidesSerdyukov"
     "graphs/GraphAdjList"
     "graphs/GraphAdjMap_Specs"
-    "reductions/VertexCover4ToMetricTravelingSalesman_Specs"
-    "reductions/VertexCover4ToMetricTravelingSalesman_AdjList"
+    "reductions/VertexCover4ToMetricTravellingSalesman_Specs"
+    "reductions/VertexCover4ToMetricTravellingSalesman_AdjList"
 
   document_files
     "root.tex"

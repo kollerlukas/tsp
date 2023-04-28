@@ -1,9 +1,13 @@
 (* Author: Lukas Koller *)
 theory DoubleTree
-  imports Main tsp.MinSpanningTree tsp.TravelingSalesman tsp.EulerianTour "HOL-Hoare.Hoare_Logic"
+  imports Main 
+    tsp.MinSpanningTree 
+    tsp.TravelingSalesman 
+    tsp.EulerianTour 
+    "HOL-Hoare.Hoare_Logic"
 begin
 
-section \<open>\textsc{DoubleTree} Approximation Algorithm for \textsc{mTSP}\<close>
+section \<open>\textsc{DoubleTree} Approximation Algorithm for \textsc{Metric TSP}\<close>
 
 text \<open>Compute a Hamiltonian Cycle of an Eulerian Tour.\<close>
 fun comp_hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
@@ -140,8 +144,7 @@ qed auto
 
 locale hc_of_et = 
   metric_graph_abs E c + 
-  mst E c comp_mst + 
-  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
+  eulerian comp_et for E :: "'a set set" and c and comp_et :: "'a mgraph \<Rightarrow> 'a list"
 begin
 
 lemma hc_of_et_path:
@@ -228,9 +231,9 @@ lemma hc_of_et_reduces_cost:
 end
 
 locale double_tree_algo = 
-  metric_graph_abs E c + 
-  mst E c comp_mst + 
-  eulerian comp_et for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list"
+  hc_of_et E c comp_et + 
+  mst E c comp_mst 
+  for E c comp_et comp_mst
 begin
 
 definition double_tree where
@@ -262,9 +265,7 @@ end
 
 subsection \<open>Feasibility of \textsc{DoubleTree}\<close>
 
-locale double_tree_algo_feasibility =
-  hc_of_et +
-  double_tree_algo
+context double_tree_algo
 begin
 
 lemma dt_is_hc: "is_hc E (double_tree)"
@@ -414,10 +415,7 @@ qed
 
 end
 
-locale double_tree_algo_approx =
-  hc_of_et +
-  double_tree_algo +
-  mtsp_opt
+locale double_tree_algo_approx = double_tree_algo + mtsp_opt
 begin
 
 lemma cost_of_et:
@@ -484,65 +482,66 @@ qed
 
 end
 
-context metric_graph_abs
-begin
-
-abbreviation "double_tree \<equiv> double_tree_algo.double_tree E c"
-
 theorem dt_is_hc: 
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-    shows "is_hc E (double_tree comp_mst comp_et)"
-  using assms by (intro double_tree_algo_feasibility.dt_is_hc) unfold_locales
+  shows "is_hc E (double_tree_algo.double_tree E c comp_et comp_mst)"
+  using assms by (intro double_tree_algo.dt_is_hc) unfold_locales
 
 theorem dt_approx: 
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  defines "c' \<equiv> \<lambda>u v. c {u,v}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and opt: "is_tsp E c' OPT"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and "is_mtsp OPT"
-    shows "cost_of_path\<^sub>c (double_tree comp_mst comp_et) \<le> 2 * cost_of_path\<^sub>c OPT"
-  using assms 
-  by (intro double_tree_algo_approx.dt_approx) unfold_locales
-
-(* ----- refine Double-Tree algorithm with Hoare-Logic ----- *)
+  shows "cost_of_path c' (double_tree_algo.double_tree E c comp_et comp_mst) \<le> 2 * cost_of_path c' OPT"
+  unfolding c'_def using assms by (intro double_tree_algo_approx.dt_approx; unfold_locales) auto
 
 lemma refine_double_tree:
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
-    and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-    and "is_mtsp OPT"
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  defines "c' \<equiv> \<lambda>u v. c {u,v}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and opt: "is_tsp E c' OPT"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
   shows "VARS T T\<^sub>2\<^sub>x v P P' H { True }
-  T := comp_mst c E;
-  T\<^sub>2\<^sub>x := mset_set T + mset_set T;
-  P := comp_et T\<^sub>2\<^sub>x;
-  P' := P;
-  H := [];
-  WHILE P' \<noteq> [] 
-  INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et T\<^sub>2\<^sub>x \<and> T\<^sub>2\<^sub>x = mset_set T + mset_set T 
-    \<and> T = comp_mst c E }
-  DO
-    v := hd P';
-    P' := tl P';
-    IF v \<in> set H \<and> P' \<noteq> [] THEN
-      H := H
-    ELSE
-      H := v#H
-    FI
-  OD { is_hc E H \<and> cost_of_path\<^sub>c H \<le> 2 * cost_of_path\<^sub>c OPT }"
+    T := comp_mst c E;
+    T\<^sub>2\<^sub>x := mset_set T + mset_set T;
+    P := comp_et T\<^sub>2\<^sub>x;
+    P' := P;
+    H := [];
+    WHILE P' \<noteq> [] 
+    INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et T\<^sub>2\<^sub>x \<and> T\<^sub>2\<^sub>x = mset_set T + mset_set T 
+      \<and> T = comp_mst c E }
+    DO
+      v := hd P';
+      P' := tl P';
+      IF v \<in> set H \<and> P' \<noteq> [] THEN
+        H := H
+      ELSE
+        H := v#H
+      FI
+    OD { is_hc E H \<and> cost_of_path c' H \<le> 2 * cost_of_path c' OPT }"
 proof (vcg, goal_cases)
   case (1 T T\<^sub>2\<^sub>x v P P' H)
   then show ?case 
     by (auto simp: comp_hc_of_et_tl_simps)
 next
   case (2 T T\<^sub>2\<^sub>x v P P' H)
-  moreover hence "H = double_tree comp_mst comp_et"
+  moreover hence "H = double_tree_algo.double_tree E c comp_et comp_mst"
     using assms 2 
     apply (subst double_tree_algo.double_tree_def) (* TODO: why do I need subst here?! *)
     apply unfold_locales 
     apply (auto simp: Let_def)
     done
   ultimately show ?case 
-    using assms dt_is_hc dt_approx by auto
+    using assms dt_is_hc[of E c comp_mst comp_et] dt_approx[of E c OPT comp_mst comp_et] by auto
 qed
-
-end
 
 end

@@ -147,6 +147,10 @@ interpretation ugraph_adj_list: ugraph_adj_map_by_linorder
   lset_empty lset_insert lset_delete lset_isin lset_set lset_invar lset_union lset_inter lset_diff
   by unfold_locales
 
+notation ugraph_adj_list.ugraph_adj_map_invar ("ugraph'_adj'_list'_invar")
+notation ugraph_adj_list.rep ("rep'_uedge")
+notation ugraph_adj_list.neighborhood ("\<N>")
+
 lemma isin_lmap_lookup:
   assumes "lmap_invar G" 
   shows "lmap_lookup G u = Some Nu \<longleftrightarrow> (u,Nu) \<in> set G" 
@@ -158,8 +162,8 @@ proof (induction G rule: pair_list.induct)
 qed auto
 
 lemma isin_lmap_neighborhood:
-  assumes "ugraph_adj_list.ugraph_adj_map_invar G" "(u,Nu) \<in> set G" 
-  shows "ugraph_adj_list.neighborhood G u = Nu"
+  assumes "ugraph_adj_list_invar G" "(u,Nu) \<in> set G" 
+  shows "\<N> G u = Nu"
   unfolding ugraph_adj_list.neighborhood_def
   using assms by (auto simp add: iffD2[OF isin_lmap_lookup])
 

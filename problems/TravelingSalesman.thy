@@ -25,7 +25,7 @@ lemma is_tsp_nonnilE:
 context metric_graph_abs
 begin
 
-section \<open>Metric Traveling-Salesman (\textsc{mTSP})\<close>
+section \<open>Metric Traveling-Salesman (\textsc{Metric TSP})\<close>
 
 text \<open>Metric Traveling-Salesman is the Traveling-Salesman Problem on complete and metric graphs.\<close>
 abbreviation "is_mtsp P \<equiv> is_tsp E (\<lambda>u v. c {u,v}) P"

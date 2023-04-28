@@ -1,7 +1,7 @@
 (* Author: Lukas Koller *)
 theory BergePrimAdaptor
-  imports Main tsp.Misc "Prim_Dijkstra_Simple.Undirected_Graph" tsp.MinSpanningTree 
-    (* "Prim_Dijkstra_Simple.Prim_Impl" *)
+  imports Main tsp.Misc "Prim_Dijkstra_Simple.Undirected_Graph" "Prim_Dijkstra_Simple.Prim_Impl" 
+    tsp.MinSpanningTree 
 begin
 
 section \<open>From Berge to Prim\<close>
@@ -1037,10 +1037,16 @@ end
 
 (* TODO: use Prim_Dijkstra_Simple implementation *)
 
-fun prim_impl where
-  "prim_impl c E = undefined" (* translate params to prim_impl, or prim_list_impl_int *)
+(* fun prim_impl where
+  "prim_impl c E = prim_list_impl" (* translate params to prim_impl, or prim_list_impl_int *)
 
-(* interpretation mst E c prim_impl'
+thm berge_of_prim_def
+
+thm prim_of_berge_def
+
+thm prim_list_impl_correct
+
+interpretation mst E c prim_impl'
   sorry *)
 
 end

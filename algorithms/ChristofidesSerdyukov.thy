@@ -1,15 +1,14 @@
 (* Author: Lukas Koller *)
 theory ChristofidesSerdyukov
-  imports Main tsp.MinSpanningTree tsp.TravelingSalesman tsp.EulerianTour tsp.MinWeightMatching 
+  imports Main 
     tsp.DoubleTree
+    tsp.MinWeightMatching
 begin
 
 section \<open>\textsc{Christofides-Serdyukov} Approximation Algorithm for \textsc{mTSP}\<close>
 
 locale christofides_serdyukov_algo = 
-  metric_graph_abs E c + 
-  mst E c comp_mst + 
-  eulerian comp_et +
+  double_tree_algo E c comp_et comp_mst +
   min_weight_matching E c comp_match 
   for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list" and comp_match
 begin
@@ -154,7 +153,6 @@ lemmas christofides_serdyukov_correctness = eulerian_J Vs_J edges_J_subset
 end
 
 locale christofides_serdyukov_algo_feasibility =
-  hc_of_et E c comp_mst comp_et +
   christofides_serdyukov_algo E c comp_mst comp_et comp_match + 
   christofides_serdyukov_aux E c comp_mst comp_et comp_match
   for E :: "'a set set" and c comp_mst and comp_et :: "'a mgraph \<Rightarrow> 'a list" and comp_match
@@ -172,7 +170,6 @@ end
 subsection \<open>Approximation of \textsc{Christofides-Serdyukov}\<close>
 
 locale christofides_serdyukov_algo_approx =
-  hc_of_et E c comp_mst comp_et +
   christofides_serdyukov_algo E c comp_mst comp_et comp_match +
   christofides_serdyukov_aux E c comp_mst comp_et comp_match +
   mtsp_opt E c
@@ -498,5 +495,77 @@ next
 qed
 
 end
+
+theorem cs_is_hc: 
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+  shows "is_hc E (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match)"
+  using assms by (intro christofides_serdyukov_algo_feasibility.cs_is_hc) unfold_locales
+
+theorem cs_approx: 
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  defines "c' \<equiv> \<lambda>u v. c {u,v}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and opt: "is_tsp E c' OPT"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+  shows "2 * cost_of_path c' (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match) \<le> 3 * cost_of_path c' OPT"
+  unfolding c'_def using assms by (intro christofides_serdyukov_algo_approx.cs_approx; unfold_locales) auto
+
+(* ----- refine Christofides-Serdyukov algorithm with Hoare-Logic ----- *)
+
+lemma refine_christofides_serdyukov:
+  fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
+  defines "c' \<equiv> \<lambda>u v. c {u,v}"
+  assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
+      and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
+      and opt: "is_tsp E c' OPT"
+      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and "is_mtsp OPT"
+  shows "VARS T W M J v P P' H { True }
+    T := comp_mst c E;
+    W := {v \<in> Vs T. \<not> even' (degree T v)};
+    M := comp_match ({e \<in> E. e \<subseteq> W}) c;
+    J := mset_set T + mset_set M;
+    P := comp_et J;
+    P' := P;
+    H := [];
+    WHILE P' \<noteq> [] 
+    INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et J \<and> J = mset_set T + mset_set M 
+      \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
+      \<and> T = comp_mst c E }
+    DO
+      v := hd P';
+      P' := tl P';
+      IF v \<in> set H \<and> P' \<noteq> [] THEN
+        H := H
+      ELSE
+        H := v#H
+      FI
+    OD { is_hc E H \<and> 2 * cost_of_path c' H \<le> 3 * cost_of_path c' OPT }"
+proof (vcg, goal_cases)
+  case (1 T W M J v P P' H)
+  then show ?case 
+    by (auto simp: comp_hc_of_et_tl_simps)
+next
+  case (2 T W M J v P P' H)
+  moreover hence "H = christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match"
+    using assms 2 
+    apply (subst christofides_serdyukov_algo.christofides_serdyukov_def) (* TODO: why do I need subst here?! *)
+    apply unfold_locales 
+    apply (auto simp: Let_def)
+    done
+  ultimately show ?case 
+    using assms cs_is_hc[of E c comp_mst comp_et comp_match] 
+      cs_approx[of E c OPT comp_mst comp_et comp_match] by auto
+qed
 
 end
