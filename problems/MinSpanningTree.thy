@@ -322,14 +322,14 @@ qed
 
 end
 
-definition "is_acyclic E \<equiv> \<nexists>C. is_cycle E C"
+definition "is_acyclic E \<equiv> \<not> (\<exists>C. is_cycle E C)"
 
-lemma is_acyclicI: "(\<nexists>C. is_cycle E C) \<Longrightarrow> is_acyclic E"
+lemma is_acyclicI: "\<not> (\<exists>C. is_cycle E C) \<Longrightarrow> is_acyclic E"
   unfolding is_acyclic_def by auto
 
 lemma is_acyclicE:
   assumes "is_acyclic E"
-  shows "\<nexists>C. is_cycle E C"
+  shows "\<not> (\<exists>C. is_cycle E C)"
   using assms[unfolded is_acyclic_def] by auto
 
 lemma not_acyclicE:

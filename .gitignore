@@ -1,2 +1,4 @@
 *.thy~
 TSP_old.thy
+
+output/document/

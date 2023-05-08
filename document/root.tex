@@ -23,6 +23,53 @@
   %for \<onequarter>, \<onehalf>, \<threequarters>, \<degree>, \<cent>,
   %\<currency>
 
+\usepackage[inline]{enumitem}
+
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{scopes,calc,shapes.misc,bending,positioning,intersections,through,backgrounds}
+
+\newcommand{\HeWidth}{1.5}
+\newcommand{\HeHeight}{1}
+\newcommand{\HeMargin}{0.5}
+
+\colorlet{mygreen}{green!80!blue}
+\tikzset{
+  graphNode/.style={circle,fill,inner sep=0.05cm},
+  hpEndpoint/.style={circle,fill=mygreen,inner sep=0.05cm},
+  hpEdge/.style={draw=mygreen,very thick},
+  pics/He/.style n args={2}{code={
+    \node at (-0.25,0.5*\HeHeight) {{#1}};
+    \node at (0.25+\HeWidth,0.5*\HeHeight) {{#2}};
+    \node[graphNode] at (0,\HeHeight) (-u1) {};
+    \node[graphNode] at (0.5*\HeWidth,\HeHeight) (-u3) {};
+    \node[graphNode] at (\HeWidth,\HeHeight) (-v2) {};
+    \node[graphNode] at (0,0.66*\HeHeight) (-u4) {};
+    \node[graphNode] at (0.5*\HeWidth,0.66*\HeHeight) (-v6) {};
+    \node[graphNode] at (\HeWidth,0.66*\HeHeight) (-u5) {};
+    \node[graphNode] at (0,0.33*\HeHeight) (-v5) {};
+    \node[graphNode] at (0.5*\HeWidth,0.33*\HeHeight) (-u6) {};
+    \node[graphNode] at (\HeWidth,0.33*\HeHeight) (-v4) {};
+    \node[graphNode] at (0,0) (-u2) {};
+    \node[graphNode] at (0.5*\HeWidth,0) (-v3) {};
+    \node[graphNode] at (\HeWidth,0) (-v1) {};
+  
+    \path[-] (-u1) edge (-u3);
+    \path[-] (-u1) edge (-u4);
+    \path[-] (-u2) edge (-v3);
+    \path[-] (-u2) edge (-v5);
+    \path[-] (-u3) edge (-v2);
+    \path[-] (-u4) edge (-v5);
+    \path[-] (-u4) edge (-v6);
+    \path[-] (-u5) edge (-v2);
+    \path[-] (-u5) edge (-v4);
+    \path[-] (-u5) edge (-v6);
+    \path[-] (-u6) edge (-v4);
+    \path[-] (-u6) edge (-v5);
+    \path[-] (-v1) edge (-v3);
+    \path[-] (-v1) edge (-v4);}}
+}
+
 % this should be the last package used
 \usepackage{pdfsetup}
 
@@ -36,9 +83,14 @@
 
 \begin{document}
 
-\title{tsp}
-\author{lukas}
+\title{Formalizing Theory of Approximating the Traveling-Salesman Problem}
+\author{Lukas Koller}
 \maketitle
+
+\begin{abstract}
+  The \textsc{Traveling Salesman Problem} (\textsc{TSP}) is one of the most well-known \textsc{NP}-complete optimiation problems. There is no constant-factor approximation algorithm for \textsc{TSP}. The \textsc{Metric TSP} is a simlification of the \textsc{TSP} where it is assumed that the input graph is complete and the edge weights satisfy the triangle-inequality. This work is split into two parts. The first part describes the formalization and formal verification of two approximation algorithm for the \textsc{Metric TSP}: the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} algorithm. The \textsc{Christofides-Serdyukov} is the best known approxmiation algorithm for \textsc{Metric TSP} with an approximation ratio of $\frac{3}{2}$. 
+  In the second part of this work a L-Reduction from the \textsc{Minimum Vertex Cover Problem}, with maximum degree of 4 (\textsc{VCP4}), to the \textsc{Metric TSP} is presented. This L-reduction proves the \textsc{MaxSNP}-hardness of the \textsc{Metric TSP}.
+\end{abstract}
 
 \tableofcontents
 
@@ -49,8 +101,8 @@
 \input{session}
 
 % optional bibliography
-%\bibliographystyle{abbrv}
-%\bibliography{root}
+\bibliographystyle{abbrv}
+\bibliography{root}
 
 \end{document}
 

@@ -1,5 +1,5 @@
 session "tsp" = HOL +
-  options [document = pdf, document_output = "output"]
+  options[document=pdf, document_output="output"]
   sessions
     "HOL-Library"
     "HOL-Data_Structures"
@@ -15,15 +15,17 @@ session "tsp" = HOL +
     "problems"
     "reductions"
 
-  theories [document = false]
-    "misc/Misc"
-    "misc/Select"
-
+  theories[quick_and_dirty, document=false]
     "graphs/MultiGraph"
-
     "adaptors/BergePrimAdaptor"
+    
+    "reductions/VertexCover4ToMetricTravelingSalesman_Specs"
+    "reductions/FindHamiltonianPath"
 
-  theories
+  theories[document=false]
+    "misc/Misc"
+    "misc/Select"    
+
     "graphs/WeightedGraph"
     "graphs/CompleteGraph"
     "problems/MinWeightMatching"
@@ -34,8 +36,10 @@ session "tsp" = HOL +
     "algorithms/ChristofidesSerdyukov"
     "graphs/GraphAdjList"
     "graphs/GraphAdjMap_Specs"
-    "reductions/VertexCover4ToMetricTravellingSalesman_Specs"
-    "reductions/VertexCover4ToMetricTravellingSalesman_AdjList"
+    "reductions/VertexCover4ToMetricTravelingSalesman_AdjList"
+
+  theories
+    "Report"
 
   document_files
     "root.tex"

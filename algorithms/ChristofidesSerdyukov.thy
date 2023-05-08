@@ -5,7 +5,7 @@ theory ChristofidesSerdyukov
     tsp.MinWeightMatching
 begin
 
-section \<open>\textsc{Christofides-Serdyukov} Approximation Algorithm for \textsc{mTSP}\<close>
+section \<open>Christofides-Serdyukov Approximation Algorithm for Metric TSP\<close>
 
 locale christofides_serdyukov_algo = 
   double_tree_algo E c comp_et comp_mst +
@@ -24,7 +24,7 @@ definition christofides_serdyukov where
 
 end
 
-subsection \<open>Feasibility of \textsc{Christofides-Serdyukov}\<close>
+subsection \<open>Feasibility of the Christofides-Serdyukov Algorithm\<close>
 
 locale christofides_serdyukov_aux = 
   christofides_serdyukov_algo E c comp_mst comp_et comp_match
@@ -167,7 +167,7 @@ lemma cs_is_hc: "is_hc E (christofides_serdyukov)"
 
 end
 
-subsection \<open>Approximation of \textsc{Christofides-Serdyukov}\<close>
+subsection \<open>Approximation of the Christofides-Serdyukov Algorithm\<close>
 
 locale christofides_serdyukov_algo_approx =
   christofides_serdyukov_algo E c comp_mst comp_et comp_match +
@@ -433,13 +433,11 @@ end
 context metric_graph_abs
 begin
 
-abbreviation "christofides_serdyukov \<equiv> christofides_serdyukov_algo.christofides_serdyukov E c"
-
 theorem cs_is_hc: 
   assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
       and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
-  shows "is_hc E (christofides_serdyukov comp_mst comp_et comp_match)"
+  shows "is_hc E (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match)"
   using assms by (intro christofides_serdyukov_algo_feasibility.cs_is_hc) unfold_locales
 
 theorem cs_approx: 
@@ -447,7 +445,7 @@ theorem cs_approx:
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
       and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
       and "is_mtsp OPT"
-  shows "2 * cost_of_path\<^sub>c (christofides_serdyukov comp_mst comp_et comp_match) \<le> 3 * cost_of_path\<^sub>c OPT"
+  shows "2 * cost_of_path\<^sub>c (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match) \<le> 3 * cost_of_path\<^sub>c OPT"
   using assms by (intro christofides_serdyukov_algo_approx.cs_approx) unfold_locales
 
 (* ----- refine Christofides-Serdyukov algorithm with Hoare-Logic ----- *)
@@ -484,7 +482,7 @@ proof (vcg, goal_cases)
     by (auto simp: comp_hc_of_et_tl_simps)
 next
   case (2 T W M J v P P' H)
-  moreover hence "H = christofides_serdyukov comp_mst comp_et comp_match"
+  moreover hence "H = christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match"
     using assms 2 
     apply (subst christofides_serdyukov_algo.christofides_serdyukov_def) (* TODO: why do I need subst here?! *)
     apply unfold_locales 
@@ -529,7 +527,6 @@ lemma refine_christofides_serdyukov:
       and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
       and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
-      and "is_mtsp OPT"
   shows "VARS T W M J v P P' H { True }
     T := comp_mst c E;
     W := {v \<in> Vs T. \<not> even' (degree T v)};

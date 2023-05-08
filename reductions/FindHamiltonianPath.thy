@@ -138,40 +138,20 @@ next
   ultimately show ?case 
     by fastforce
 qed
-  
-
-(* abbreviation "He_lgraph \<equiv> [
-  ((''u'',1::nat),[(''u'',3::nat),(''u'',4::nat)]),
-  ((''u'',2::nat),[(''v'',3::nat),(''v'',5::nat)]),
-  ((''u'',3::nat),[(''u'',1::nat),(''v'',2::nat)]),
-  ((''u'',4::nat),[(''u'',1::nat),(''v'',5::nat),(''v'',6::nat)]),
-  ((''u'',5::nat),[(''v'',2::nat),(''v'',4::nat),(''v'',6::nat)]),
-  ((''u'',6::nat),[(''v'',4::nat),(''v'',5::nat)]),
-  ((''v'',1::nat),[(''v'',3::nat),(''v'',4::nat)]),
-  ((''v'',2::nat),[(''u'',3::nat),(''u'',5::nat)]),
-  ((''v'',3::nat),[(''v'',1::nat),(''u'',2::nat)]),
-  ((''v'',4::nat),[(''v'',1::nat),(''u'',5::nat),(''u'',6::nat)]),
-  ((''v'',5::nat),[(''u'',2::nat),(''u'',4::nat),(''u'',6::nat)]),
-  ((''v'',6::nat),[(''u'',4::nat),(''u'',5::nat)])
-]"
-
-abbreviation "He_vertices \<equiv> 
-  [(''u'',1::nat),(''u'',2::nat),(''u'',3::nat),(''u'',4::nat),(''u'',5::nat),(''u'',6::nat),
-  (''v'',1::nat),(''v'',2::nat),(''v'',3::nat),(''v'',4::nat),(''v'',5::nat),(''v'',6::nat)]" *)
 
 abbreviation "He_lgraph \<equiv> [
   (1::nat,[3::nat,4]), \<comment> \<open>1 \<mapsto> (e,u,1)\<close>
-  (2,[9,11]), \<comment> \<open>1 \<mapsto> (e,u,2)\<close>
-  (3,[1,8]), \<comment> \<open>1 \<mapsto> (e,u,3)\<close>
-  (4,[1,11,12]), \<comment> \<open>1 \<mapsto> (e,u,4)\<close>
-  (5,[8,10,12]), \<comment> \<open>1 \<mapsto> (e,u,5)\<close>
-  (6,[10,11]), \<comment> \<open>1 \<mapsto> (e,u,6)\<close>
-  (7,[9,10]), \<comment> \<open>1 \<mapsto> (e,v,1)\<close>
-  (8,[3,5]), \<comment> \<open>1 \<mapsto> (e,v,2)\<close>
-  (9,[7,2]), \<comment> \<open>1 \<mapsto> (e,v,3)\<close>
-  (10,[7,5,6]), \<comment> \<open>1 \<mapsto> (e,v,4)\<close>
-  (11,[2,4,6]), \<comment> \<open>1 \<mapsto> (e,v,5)\<close>
-  (12,[4,5]) \<comment> \<open>1 \<mapsto> (e,v,6)\<close>
+  (2,[9,11]), \<comment> \<open>2 \<mapsto> (e,u,2)\<close>
+  (3,[1,8]), \<comment> \<open>3 \<mapsto> (e,u,3)\<close>
+  (4,[1,11,12]), \<comment> \<open>4 \<mapsto> (e,u,4)\<close>
+  (5,[8,10,12]), \<comment> \<open>5 \<mapsto> (e,u,5)\<close>
+  (6,[10,11]), \<comment> \<open>6 \<mapsto> (e,u,6)\<close>
+  (7,[9,10]), \<comment> \<open>7 \<mapsto> (e,v,1)\<close>
+  (8,[3,5]), \<comment> \<open>8 \<mapsto> (e,v,2)\<close>
+  (9,[7,2]), \<comment> \<open>9 \<mapsto> (e,v,3)\<close>
+  (10,[7,5,6]), \<comment> \<open>10 \<mapsto> (e,v,4)\<close>
+  (11,[2,4,6]), \<comment> \<open>11 \<mapsto> (e,v,5)\<close>
+  (12,[4,5]) \<comment> \<open>12 \<mapsto> (e,v,6)\<close>
 ]"
 
 abbreviation "He_vertices \<equiv> map nat [1::nat..12]"

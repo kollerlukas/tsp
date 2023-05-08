@@ -7,7 +7,7 @@ theory DoubleTree
     "HOL-Hoare.Hoare_Logic"
 begin
 
-section \<open>\textsc{DoubleTree} Approximation Algorithm for \textsc{Metric TSP}\<close>
+section \<open>DoubleTree Approximation Algorithm for Metric TSP\<close>
 
 text \<open>Compute a Hamiltonian Cycle of an Eulerian Tour.\<close>
 fun comp_hc_of_et :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
@@ -263,7 +263,7 @@ lemmas dt_correctness = T2x_eulerian[OF mst] T2x_vs[OF mst] T2x_edges[OF mst]
 
 end
 
-subsection \<open>Feasibility of \textsc{DoubleTree}\<close>
+subsection \<open>Feasibility of the DoubleTree Algorithm\<close>
 
 context double_tree_algo
 begin
@@ -275,7 +275,7 @@ lemma dt_is_hc: "is_hc E (double_tree)"
 
 end
 
-subsection \<open>Approximation of \textsc{DoubleTree}\<close>
+subsection \<open>Approximation of the DoubleTree Algorithm\<close>
 
 locale mtsp_opt = 
   metric_graph_abs E c for E :: "'a set set" and c +
