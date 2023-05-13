@@ -1,6 +1,8 @@
 (* Author: Lukas Koller *)
 theory VertexCover4ToMetricTravelingSalesman_Specs
-  imports Main tsp.GraphAdjMap_Specs WeightedGraph
+  imports Main 
+    tsp.GraphAdjMap_Specs 
+    WeightedGraph
 begin
 
 locale VC4_To_mTSP = 
@@ -3622,6 +3624,56 @@ next
       using CCons path_zxs by cases auto
   qed
 qed
+
+(* lemma
+  assumes "g1.ugraph_adj_map_invar G" and "xs \<noteq> []" "distinct xs" and "set xs \<subseteq> g2.vertices (f G)"
+      and "cost_of_path (c G) xs = int (length xs) - 1"
+  obtains e where "e \<in> g1.uedges G" "set xs \<subseteq> g2.vertices (H\<^sub>e e)" 
+    and "g2.path_betw (H\<^sub>e e) (hd xs) xs (last xs)"
+  using assms
+proof (induction xs arbitrary: thesis rule: list012_induct)
+  case Nil
+  thus ?case 
+    by auto
+next
+  case (Singleton x)
+  moreover then obtain e where "e \<in> g1.uedges G" "x \<in> g2.vertices (H\<^sub>e e)"
+    using vertices_f by auto
+  ultimately show ?case 
+    by (auto intro: g2.path_betw.intros)
+next
+  case (CCons x y xs)
+  moreover hence dist_yxs: "distinct (y#xs)" and "x \<noteq> y"
+    by auto
+  ultimately have "c G x y \<ge> 1"
+    using c_geq1 by auto
+  hence "cost_of_path (c G) (y#xs) \<le> int (length (y#xs)) - 1"
+    using CCons by auto
+  moreover have "distinct_adj (y#xs)"
+    using dist_yxs distinct_distinct_adj by blast
+  moreover hence "cost_of_path (c G) (y#xs) \<ge> int (length (y#xs)) - 1"
+    using CCons cost_path_geq_len by blast
+  ultimately have "cost_of_path (c G) (y#xs) = int (length (y#xs)) - 1" and c_x_y: "c G x y = 1"
+    using CCons by auto
+  then obtain e where edge_e: "e \<in> g1.uedges G" and vert_yxs_He: "set (y#xs) \<subseteq> g2.vertices (H\<^sub>e e)" 
+    and path_yxs: "g2.path_betw (H\<^sub>e e) (hd (y#xs)) (y#xs) (last (y#xs))"
+    using CCons by auto
+  hence "y \<in> g2.vertices (H\<^sub>e e)"
+    by auto
+  moreover have "is_edge_in_He G (uEdge x y)" and vert_x_He: "x \<in> g2.vertices (H\<^sub>e e)"
+    using c_x_y sorry
+  hence "rep2 (uEdge x y) \<in> g2.uedges (H\<^sub>e e)"
+    thm is_edge_in_He_elim
+    sorry
+  hence "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"
+    using g2.rep_isin_uedges_elim[OF invar_He] by auto
+  hence "g2.path_betw (H\<^sub>e e) (hd (x#y#xs)) (x#y#xs) (last (x#y#xs))"
+    using path_yxs by (auto intro: g2.path_betw.intros)
+  moreover have "set (x#y#xs) \<subseteq> g2.vertices (H\<^sub>e e)"
+    using vert_yxs_He vert_x_He by auto
+  ultimately show ?case 
+    using CCons edge_e by blast
+qed *)
 
 lemma hamiltonian_paths_with_cost_11:
   assumes "g1.ugraph_adj_map_invar G" "e \<in> g1.uedges G" "rep1 e = uEdge u v" 

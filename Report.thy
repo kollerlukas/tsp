@@ -22,44 +22,46 @@ declare [[show_question_marks = false]]
 
 section \<open>Introduction\<close>
 
-text \<open>The \textsc{Traveling-Salesman Problem} (\textsc{TSP}) is one of the most studied 
-$\textsc{NP}$-complete optimization problems. \textsc{TSP} describes the 
-optimization problem of finding a Hamiltonian cycle with minimal total weight in a given 
-graph. A Hamiltonian cycle is a cycle in a graph that visits every vertex exactly once.
+text \<open>The \textsc{Traveling-Salesman Problem} (\textsc{TSP}) is a well known 
+optimization problem. The \textsc{TSP} describes the problem of finding a tour with minimum total 
+weight in a given weighted graph s.t. every vertex of the graph is visited exactly once. The 
+\textsc{TSP} has many applications in different areas, e.g. planning and scheduling @{cite "brumitt_stentz_1996"}, 
+logistics @{cite "ratliff_rosenthal_1983"}, designing printed circuit boards @{cite "groetschel_et_al_1991"}, etc..
 
-Unless $\textsc{P}=\textsc{NP}$, $\textsc{NP}$-hard cannot be solved in polynomial time. When 
-dealing with optimization problems, a typical strategy is to relax the optimality condition for 
-a solution and by accepting approximate solutions. An approximation algorithm is a polynomial time 
-algorithm that returns a bounded approximate solution. Ideally, the approximate solution can be 
-bounded by a constant factor.
+The \textsc{TSP} is \textsc{NP}-hard @{cite "korte_vygen_2018"}. This means, that unless 
+$\textsc{P}=\textsc{NP}$, the \textsc{TSP} cannot be solved in polynomial time. When 
+dealing with optimization problems, a typical strategy is to approximate the optimal solution with 
+an approximation algorithm. An approximation algorithm is a polynomial time algorithm that returns a 
+bounded approximate solution. An approximation algorithm essentially trades the optimality of the 
+returned solution for polynomial running time. Ideally, the distance between the approximate 
+solution and the optimal solution can be bounded by a constant factor.
+Unfortunately, there is no constant-factor approximation algorithm for the \textsc{TSP} @{cite "korte_vygen_2018"}. 
 
-What is a approximation algorithm?
+The \textsc{Metric TSP} is a simplifies the \textsc{TSP} by making the following two assumptions:
+\begin{enumerate*}[label=(\roman*)]
+  \item the given graph is complete and 
+  \item the edge-weights satisfy the triangle-inequality.
+\end{enumerate*}
+The \textsc{Metric TSP} is still \textsc{NP}-hard @{cite "korte_vygen_2018"}.
 
-See: Verified approximation algorithms @{cite "essmann_et_al_2020"}
-
-Unfortunately, there is no constant-factor-approximation algorithm for the general \textsc{TSP} 
-@{cite "korte_vygen_2018"}. 
-
-Therefore, a less general version of the \textsc{TSP} is considered. In this work we consider the 
-\textsc{Metric TSP}. The \textsc{Metric TSP} specializes the \textsc{TSP} by assuming that the given 
-graph is complete and the edge-weights satisfy the triangle-inequality. These assumption are 
-satisfies most of the time when solving real-world instances of \textsc{TSP}, e.g. finding the 
-shortest tour that connects certain cities on a map.
-
-I have formalized parts of the section 21.1, \textit{Approximation Algorithms for the TSP} from 
+This report describes the formalization of parts of the section 21.1, \textit{Approximation Algorithms for the TSP} from
 @{cite "korte_vygen_2018"}.
 \begin{enumerate}
   \item I have formalized and verified two approximation algorithms, \textsc{DoubleTree} and 
-    \textsc{Christofides-Serdyukov}, for \textsc{Metric TSP}.
+    \textsc{Christofides-Serdyukov}, for \textsc{Metric TSP}. The \textsc{Christofides-Serdyukov} 
+    @{cite "christofides_1976" and "serdyukov_1978"} algorithm is the best known approximation 
+    algorithm for the \textsc{Metric TSP} @{cite "korte_vygen_2018"}.
   \item I have formalized a L-reduction from the \textsc{Minimum Vertex Cover Problem} with maximum 
-    degree of 4 to the \textsc{Metric TSP}, which proves the $\textsc{MaxSNP}$-hardness of the 
+    degree of 4 to the \textsc{Metric TSP}, which proves the \textsc{MaxSNP}-hardness of the 
     \textsc{Metric TSP}.
 \end{enumerate}
 
-The \textsc{Christofides-Serdyukov} is the best known approximation algorithm for 
-\textsc{Metric TSP} @{cite "korte_vygen_2018"}.
-
-{\color{red} What is $\textsc{MaxSNP}$?}
+The \textsc{MaxSNP}-hardness of a problem proves the non-existence of an approximation scheme @{cite "papadimitriou_yannakakis_1991"}.
+An approximation scheme is an approximation algorithm that takes an additional parameter $\epsilon >0$ based on which the approximate solution is bounded.
+\textsc{MaxSNP} is a complexity class that contains graph-theoretical optimization problems. For any 
+problem in \textsc{MaxSNP} there is a constant-factor approximation algorithm @{cite "papadimitriou_yannakakis_1991"}.
+A linear reduction (L-reduction) is special type of reduction for optimization problems @{cite "papadimitriou_yannakakis_1991"}. 
+A problem is called \textsc{MaxSNP}-hard if every problem in \textsc{MaxSNP} L-reduces to it.
 \<close>
 
 (* ----- *)
@@ -67,10 +69,6 @@ The \textsc{Christofides-Serdyukov} is the best known approximation algorithm fo
 section \<open>Related Work\<close>
 
 text \<open>
-
-An approximation algorithm is a polynomial-time algorithm for an optimization problem that 
-returns an approximate solution. The \textit{approximation ratio} bounds the distance between the
-approximate solution and the optimal solution.
 
 @{cite essmann_et_al_2020} have formalized different approximation algorithms in Isabelle/HOL.
 
@@ -85,7 +83,7 @@ text \<open>I build on the exiting formalization of Berge's theorem by {\color{r
 Abdulaziz (citation?)}. An undirected graph is formalized as a finite set of edges, where each edge 
 is represented by a doubleton set. 
 
-@{const graph_invar}
+@{abbrev[display] graph_invar}
  
 The approximation algorithms and the L-reduction use many graph-related concepts that are not 
 defined in the formalization of Berge's theorem by {\color{red} Mohammad Abdulaziz (citation?)}, 
@@ -94,129 +92,161 @@ e.g. weighted edges, minimum spanning-tree, Hamiltonian cycle, etc..
 In this section, I will go the formalization of graph-related concepts that are the necessary for 
 the formalization of the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} approximation 
 algorithms as well as the L-reduction. Because most of the definitions are straightforward I will 
-only highlight specific important formalzation choices.
+only highlight specific important formalization choices.
 
-All of these definitions are in \texttt{.thy}-files, which are located in the @{path "./graphs"}- or @{path "./problems"}
--directory.\<close>
+All of these definitions are in \texttt{.thy}-files, which are located in the @{path "./graphs"}- 
+or @{path "./problems"}-directory.
+
+Many simple results and lemmas are formalized in the theory @{theory tsp.Misc} which is located in 
+the directory @{path "./misc"}.
+\<close>
 
 subsection \<open>Connected Graphs\<close>
 
-text \<open>A graph is connected if any pair of vertices is contained in the same connected component.\<close>
-thm is_connected_def
-            
-thm connected_bridge
+text \<open>A graph is connected if any pair of vertices is contained in the same connected component.
+
+@{thm[display] is_connected_def}
+\<close>
 
 subsection \<open>Weighted Graphs\<close>
 
-text \<open>Graph with edge weights. Locale @{const w_graph_abs}\<close>
+text \<open>The locale @{locale w_graph_abs} fixes an instance of a graph \<open>E\<close> and edge weights \<open>c\<close>.
 
-text \<open>Weighted graph with only positive edges weights. Locale @{const pos_w_graph_abs}\<close>
+The locale @{locale pos_w_graph_abs} assumes the edge weights \<open>c\<close> to be positive.
+\<close>
 
 subsection \<open>Complete Graphs\<close>
 
-text \<open>A graph is complete if there exists an edges for any pair of vertices that are not equal.\<close>
-thm is_complete_def
+text \<open>A graph is complete if there exists an edge for any pair of vertices that are not equal.
 
-text \<open>Complete graph locale @{const compl_graph_abs}\<close>
+@{thm[display] is_complete_def}
 
-text \<open>A locale that fixes a subgraph of a complete graph. Locale @{const restr_compl_graph_abs}\<close>
+The locale @{locale compl_graph_abs} fixes an instance of a complete graph \<open>E\<close>.
 
-text \<open>Complete graph with triangle inequality. @{const metric_graph_abs}\<close>
+In a complete graph, any sequence of vertices s.t. no two consecutive vertices are equal is a path.
 
-thm metric_graph_abs.cost_of_path_short_cut_tri_ineq
+@{thm[display] compl_graph_abs.path_complete_graph}
 
-text \<open>In a complete graph, any sequence of vertices s.t. no two consecutive vertices are equal 
-(@{const distinct_adj}) is a path.\<close>
-thm compl_graph_abs.path_complete_graph
+The locale @{const restr_compl_graph_abs} additionally fixes a subgraph of the instance \<open>E\<close>.
+
+The locale @{locale metric_graph_abs} fixes an instance of a complete graph \<open>E\<close> and assumes that the 
+edge weights \<open>c\<close> are positive and satisfy the triangle-inequality. A consequence of these assumption 
+is that any path can be short-cutted.
+
+@{thm[display] metric_graph_abs.cost_of_path_short_cut_tri_ineq}
+\<close>                             
 
 subsection \<open>Acyclic Graphs\<close>
 
-text \<open>A path is a simple if no edge is used twice.\<close>
-thm is_simple_def
+text \<open>A path is a simple if no edge is used twice.
 
+@{thm[display] is_simple_def}
 
-text \<open>I have defined a cycle in a graph to be a vertex-path where the first and last element are the same.\<close>
+A cycle in a graph is a vertex-path where the first and last element are the same.
 
-text \<open>A cycle is a path s.t. (i) it starts and ends at the same node, (ii) it is simple, and 
-(iii) it uses at least one edge.\<close>
-thm is_cycle_def
+A cycle is a vertex-path s.t. 
+\begin{enumerate*}[label=(\roman*)]
+  \item the first and last vertex are the same,
+  \item the path is simple, and
+  \item the path uses at least one edge.
+\end{enumerate*}
 
-text \<open>A vertex that is contained in a cycle has a degree greater-equal to 2.\<close>
-thm graph_abs.cycle_degree
+@{thm[display] is_cycle_def}
 
-text \<open>A graph is acyclic if no cycle is contained in the graph.\<close>
-thm is_acyclic_def
+A graph is acyclic if it does not contain a cycle.
+
+@{thm[display] is_acyclic_def}
+                     
+A vertex that is contained in a cycle has a degree greater-equal to 2.
+
+@{thm[display] graph_abs.cycle_degree}
+\<close>
 
 subsection \<open>Trees\<close>
 
-text \<open>A tree is a graph that is (i) connected and (ii) acyclic.\<close>
-thm is_tree_def
+text \<open>A tree is a graph that is 
+\begin{enumerate*}[label=(\roman*)]
+  \item connected,
+  \item acyclic.
+\end{enumerate*}
 
-subsection \<open>Spanning Trees\<close>
+@{thm[display] is_tree_def}
 
-text \<open>A spanning tree is a subgraph s.t. (i) it is a tree and (ii) it contains every vertex.\<close>
-thm is_st_def
+A spanning tree of a graph is a subgraph s.t.
+\begin{enumerate*}[label=(\roman*)]
+  \item it is a tree and
+  \item it contains every vertex.
+\end{enumerate*}
 
-subsection \<open>Minimum Spanning Trees\<close>
+@{thm[display] is_st_def}
 
-text \<open>A minimum spanning tree is a spanning tree with minimum weight.\<close>
-thm is_mst_def
+A minimum spanning tree is a spanning tree with minimum total weight.
 
-text \<open>A locale that a minimum spanning. Locale @{const mst}\<close>
+@{thm[display] is_mst_def}
+
+The locale @{locale mst} assumes the existence of an algorithm to compute a minimum spanning tree.
+\<close>
 
 subsection \<open>Hamiltonian Cycles\<close>
 
-thm is_hc_def
+text \<open>A Hamiltonian cycle is a tour in a graph that visits every vertex exactly once.
+
+@{thm[display] is_hc_def}
+
+With this formalization, a Hamiltonian cycle is not necessarily a cycle. If a graph only contains 
+one edge \<open>e={u,v}\<close> then \<open>[u,v,u]\<close> is a Hamiltonian cycle but not a cycle because it is not a simple 
+path. The edge \<open>e\<close> is used twice.
+\<close>
 
 subsection \<open>Traveling-Salesman Problem\<close>
 
-thm is_tsp_def
+text \<open>A solution to the \textsc{TSP} is a Hamiltonian cycle with minimum total weight.
 
-text \<open>For the \textsc{Metric TSP} a locale \<open>metric_graph_abs\<close> which assumes the necessary properties 
-about the input graph (completeness and trinagle-inequality) is used.\<close>
-
-term metric_graph_abs.is_mtsp
+@{thm[display] is_tsp_def}
+\<close>
 
 subsection \<open>Multi-Graphs\<close>
 
-(* TODO: finish encoding of a multi-graph in a regular graph. *)
+text \<open>I have started to formalize an encoding of a multi-graph with a regular graph. My attempts 
+be found in the theory @{theory tsp.MultiGraph}.\<close>
 
 subsection \<open>Eulerian Tours\<close>
 
-thm is_eulerian_def
+text \<open>A graph is eulerian if every vertex has even degree.
 
-text \<open>Locale that fixes an algorithm that computes a Eulerian tour for a given multi-graph.
-  Locale @{const eulerian}\<close>
+@{thm[display] is_eulerian_def}
 
-(* TODO: implement and verify an algorithm for Eulerian Tour *)
+A Eulerian tour is a path that uses every edge of a given graph exactly once.
 
-text \<open>Eulerian Tour on a Multi-Graph.\<close>
-thm is_et_def
+@{thm[display] is_et_def}
+
+The locale @{locale eulerian} fixes an algorithm to compute a Eulerian tour for a given multi-graph.
+\<close>
 
 subsection \<open>Perfect Matchings\<close>
 
-thm is_perf_match_def
+text \<open>The existing graph formalization {\color{red} by Mohammad Abdulaziz} already contains 
+formalization of matchings. A perfect matching is a matching that contains every vertex.
 
-subsection \<open>Minimum-Weight Perfect Matchings\<close>
+@{thm[display] is_perf_match_def} 
 
-thm is_min_match_def
+A minimum-weight perfect matching is a perfect matching with minimum total weight.
 
-text \<open>Locale that fixes an algorithm that computes a minimum-weight perfect matching for a given 
-graph. Locale @{const min_weight_matching}\<close>
+@{thm[display] is_min_match_def} 
 
-text \<open>Every complete graph with an even number of vertices has a perfect matching.\<close>
-thm compl_graph_abs.perf_match_exists
+The locale @{locale min_weight_matching} fixes an algorithm to compute a minimum-weight perfect 
+matching for a given graph. 
+\<close>
 
 (* ----- *)
 
 section \<open>Approximating the \textsc{Metric TSP}\<close>
 
-text \<open>In this section, I will go over my formalization of the \textsc{DoubleTree} and the 
-\textsc{Christofides-Serdyukov} approximation algorithms for \textsc{Metric TSP}. The 
-\textsc{Christofides-Serdyukov} @{cite "christofides_1976" and "serdyukov_1978"} algorithm is the 
-best known approximation algorithm for the \textsc{Metric TSP} @{cite "korte_vygen_2018"}. Both 
-algorithms, the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} algorithm, are quite similar 
+text \<open>This section describes the formalization of the \textsc{DoubleTree} and the 
+\textsc{Christofides-Serdyukov} approximation algorithms for \textsc{Metric TSP}. Both 
+algorithms are quite similar 
 and depend on the following proposition (Lemma 21.3 @{cite "korte_vygen_2018"}):
+
 Let the graph \<open>G\<close> with edge weights \<open>c\<close> be an instance of the \textsc{Metric TSP}. Given a connected 
 Eulerian graph \<open>G'\<close> that spans the vertices of the graph \<open>G\<close>, we can compute (in polynomial time) a 
 Hamiltonian cycle for \<open>G\<close> with total weight of at most the total of all edges 
@@ -279,7 +309,7 @@ Thus, the \textsc{DoubleTree} algorithm depends to two algorithms:
 For the formalization of the \textsc{DoubleTree} algorithm the existence of an algorithm for both of 
 these problems is assumed. The assumptions are both captured in the locale @{locale hc_of_et}.
 Further, to simplify matters the locale fixes a graph \<open>E\<close> with edge weights \<open>c\<close> and add the 
-assumptions for an instance of \textsc{Metric TSP} (@{locale metric_graph_abs}.
+assumptions for an instance of \textsc{Metric TSP} (@{locale metric_graph_abs}).
 Defining the \textsc{DoubleTree} algorithm in the locale @{locale double_tree_algo} is 
 straightforward.\<close>
 (*<*)
@@ -381,7 +411,7 @@ context VC4_To_mTSP
 begin
 (*>*)
 
-text \<open>In this section, I describe the formalization of a L-Reduction from the 
+text \<open>This section describes the formalization of a L-Reduction from the 
 \textsc{Minimum Vertex Cover Problem}, with maximum degree of 4 (\textsc{VCP4}), to the \textsc{Metric TSP}, which 
 is presented in @{cite "korte_vygen_2018"}.
 
@@ -505,17 +535,32 @@ executable functions on graphs.
 The L-reduction itself is formalized in the locale @{locale VC4_To_mTSP} that depends on two 
 executable adjacency-maps (@{locale ugraph_adj_map}), one for each of the graphs \<open>G\<close> and \<open>H\<close>. 
 The locale @{locale VC4_To_mTSP} additionally assumes appropriate \texttt{fold}-functions for the graphs.
+The necessary graph-related definitions are redefined for the adjencecy-map representation of graphs. 
+The definitions for the adjencecy-map representation of graphs are denoted by the postfix \<open>-Adj\<close>.
 
-The reduction functions \<open>f\<close> and \<open>g\<close> are defined in the @{locale VC4_To_mTSP} using the assumed 
-\texttt{fold}-functions and some auxiliary functions.
+The reduction functions \<open>f\<close> and \<open>g\<close> are defined in the locale @{locale VC4_To_mTSP} using the assumed 
+\texttt{fold}-functions and some auxiliary functions. The function \<open>f\<close> uses the auxiliary function 
+@{const[names_short] complete_graph} to construct the complete graph for a given set of vertices.
 
-@{thm[display] f.simps}
+@{thm[display,names_short] f.simps}
+
+The function \<open>c\<close> uses a couple of auxiliary functions to check different cases for the two given 
+vertices. The function @{const is_edge_in_He} checks if there is a substructure \<open>H\<^sub>e\<close> where the two 
+given vertices are connected by an edge. The function @{const are_vertices_in_He} checks if there is 
+a substructure \<open>H\<^sub>e\<close> that contains both given vertices. The function @{const min_dist_in_He} computes 
+the length of the shortest path in a substructure \<open>H\<^sub>e\<close> that connects the two given vertices. 
 
 @{thm[display] c.simps}
 
+The function \<open>g\<close> depends on two functions @{const shorten_tour} and @{const vc_of_tour}. The 
+function @{const shorten_tour} modifies a Hamiltonian cycle s.t. the resulting has less total weight 
+and the cycle contains a Hamiltonian path for every substructure \<open>H\<^sub>e\<close>. The function @{const vc_of_tour} 
+computes a vertex cover for \<open>G\<close> given a Hamiltonian cycle that contains a Hamiltonian path for every 
+substructure \<open>H\<^sub>e\<close>.
+
 @{thm[display] g.simps}
 
-Please note, that my definition of the function \<open>g\<close> is a little different compared to the definition 
+Please note, that this definition of the function \<open>g\<close> is a little different compared to the definition 
 by @{cite "korte_vygen_2018"}. In @{cite "korte_vygen_2018"}, the function \<open>g\<close> only inserts a 
 Hamiltonian path for a substructure \<open>H\<^sub>e\<close> if the current Hamiltonian cycle does not contain a 
 Hamiltonian path for \<open>H\<^sub>e\<close>. Thus, resulting Hamiltonian cycle may contain arbitrary 
@@ -524,6 +569,7 @@ that do not start or end at a corner. This makes identifying the covering vertex
 difficult. On the other hand, my definition of the function \<open>g\<close> makes sure that the resulting 
 Hamiltonian cycle only consists of Hamiltonian paths for the substructures \<open>H\<^sub>e\<close> that start and end 
 at the corners of the substructures \<open>H\<^sub>e\<close>. Therefore, identifying the covering vertex is simplified.
+Figure \ref{fig:Hamiltonian_paths_He} depicts the different types of Hamiltonian paths in the substructure \<open>H\<^sub>e\<close>.
 
 The locale @{locale VC4_To_mTSP} also contains the proofs for the feasibility of the reduction functions 
 and the linear inequalities required for a L-reduction.

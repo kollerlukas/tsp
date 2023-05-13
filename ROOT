@@ -42,4 +42,5 @@ session "tsp" = HOL +
     "Report"
 
   document_files
+    "root.bib"
     "root.tex"
