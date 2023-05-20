@@ -518,7 +518,7 @@ qed auto
 
 end
 
-abbreviation "cost_of_st c T \<equiv> sum c T"
+abbreviation (input) "cost_of_st c T \<equiv> sum c T"
 
 section \<open>Minimum Spanning Tree\<close>
 

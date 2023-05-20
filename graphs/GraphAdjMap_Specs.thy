@@ -939,7 +939,7 @@ lemma is_hc_equiv:
   oops (* TODO *)
 
 lemma is_tsp_equiv: 
-  assumes "ugraph_adj_map_invar G" "is_tsp_Adj G c T"
+  assumes "ugraph_adj_map_invar G" "is_tsp_Adj G (\<lambda>u v. c {u,v}) T"
   shows "is_tsp (set_of_uedge ` uedges G) c T"
   oops (* TODO *)
 

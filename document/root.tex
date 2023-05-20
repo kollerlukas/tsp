@@ -36,11 +36,13 @@
 \colorlet{mygreen}{green!80!blue}
 \tikzset{
   graphNode/.style={circle,fill,inner sep=0.05cm},
-  hpEndpoint/.style={circle,fill=mygreen,inner sep=0.05cm},
-  hpEdge/.style={draw=mygreen,very thick},
+  hpEndpoint/.style={circle,fill=mygreen,inner sep=0.075cm},
+  hpEdge/.style={draw=mygreen,ultra thick},
   pics/He/.style n args={2}{code={
-    \node at (-0.25,0.5*\HeHeight) {{#1}};
-    \node at (0.25+\HeWidth,0.5*\HeHeight) {{#2}};
+    \node at (-0.25,0) {{#1}};
+    \node at (-0.25,\HeHeight) {{#1}};
+    \node at (0.25+\HeWidth,0) {{#2}};
+    \node at (0.25+\HeWidth,\HeHeight) {{#2}};
     \node[graphNode] at (0,\HeHeight) (-u1) {};
     \node[graphNode] at (0.5*\HeWidth,\HeHeight) (-u3) {};
     \node[graphNode] at (\HeWidth,\HeHeight) (-v2) {};
@@ -67,7 +69,35 @@
     \path[-] (-u6) edge (-v4);
     \path[-] (-u6) edge (-v5);
     \path[-] (-v1) edge (-v3);
-    \path[-] (-v1) edge (-v4);}}
+    \path[-] (-v1) edge (-v4);}},
+  pics/He-labeled/.style n args={3}{code={
+      \node at (0,\HeHeight) (-u1) {$\mathstrut ({#1},{#2},1)$};
+      \node at (0.5*\HeWidth,\HeHeight) (-u3) {$\mathstrut ({#1},{#2},3)$};
+      \node at (\HeWidth,\HeHeight) (-v2) {$\mathstrut ({#1},{#3},2)$};
+      \node at (0,0.66*\HeHeight) (-u4) {$\mathstrut ({#1},{#2},4)$};
+      \node at (0.5*\HeWidth,0.66*\HeHeight) (-v6) {$\mathstrut ({#1},{#3},6)$};
+      \node at (\HeWidth,0.66*\HeHeight) (-u5) {$\mathstrut ({#1},{#2},5)$};
+      \node at (0,0.33*\HeHeight) (-v5) {$\mathstrut ({#1},{#3},5)$};
+      \node at (0.5*\HeWidth,0.33*\HeHeight) (-u6) {$\mathstrut ({#1},{#2},6)$};
+      \node at (\HeWidth,0.33*\HeHeight) (-v4) {$\mathstrut ({#1},{#3},4)$};
+      \node at (0,0) (-u2) {$\mathstrut ({#1},{#2},2)$};
+      \node at (0.5*\HeWidth,0) (-v3) {$\mathstrut ({#1},{#3},3)$};
+      \node at (\HeWidth,0) (-v1) {$\mathstrut ({#1},{#3},1)$};
+    
+      \path[-] (-u1) edge (-u3);
+      \path[-] (-u1) edge (-u4);
+      \path[-] (-u2) edge (-v3);
+      \path[-] (-u2) edge (-v5);
+      \path[-] (-u3) edge (-v2);
+      \path[-] (-u4) edge (-v5);
+      \path[-] (-u4) edge (-v6);
+      \path[-] (-u5) edge (-v2);
+      \path[-] (-u5) edge (-v4);
+      \path[-] (-u5) edge (-v6);
+      \path[-] (-u6) edge (-v4);
+      \path[-] (-u6) edge (-v5);
+      \path[-] (-v1) edge (-v3);
+      \path[-] (-v1) edge (-v4);}}
 }
 
 % this should be the last package used

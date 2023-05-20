@@ -509,7 +509,7 @@ theorem cs_approx:
   defines "c' \<equiv> \<lambda>u v. c {u,v}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and opt: "is_tsp E c' OPT"
+      and opt: "is_tsp E c OPT"
       and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
       and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
@@ -523,7 +523,7 @@ lemma refine_christofides_serdyukov:
   defines "c' \<equiv> \<lambda>u v. c {u,v}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and opt: "is_tsp E c' OPT"
+      and opt: "is_tsp E c OPT"
       and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
       and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
@@ -536,10 +536,13 @@ lemma refine_christofides_serdyukov:
     P' := P;
     H := [];
     WHILE P' \<noteq> [] 
-    INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et J \<and> J = mset_set T + mset_set M 
-      \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
-      \<and> T = comp_mst c E }
-    DO
+    INV { comp_hc_of_et P [] = comp_hc_of_et P' H 
+      \<and> P = comp_et J 
+      \<and> J = mset_set T + mset_set M 
+      \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c 
+      \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
+      \<and> T = comp_mst c E 
+    } DO
       v := hd P';
       P' := tl P';
       IF v \<in> set H \<and> P' \<noteq> [] THEN

@@ -161,7 +161,7 @@ lemma restr_perf_match_exists:
 
 end
 
-abbreviation "cost_of_match c M \<equiv> sum c M"
+abbreviation (input) "cost_of_match c M \<equiv> sum c M"
 
 context w_graph_abs
 begin

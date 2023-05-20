@@ -496,7 +496,7 @@ theorem dt_approx:
   defines "c' \<equiv> \<lambda>u v. c {u,v}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and opt: "is_tsp E c' OPT"
+      and opt: "is_tsp E c OPT"
       and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
   shows "cost_of_path c' (double_tree_algo.double_tree E c comp_et comp_mst) \<le> 2 * cost_of_path c' OPT"
@@ -507,7 +507,7 @@ lemma refine_double_tree:
   defines "c' \<equiv> \<lambda>u v. c {u,v}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and opt: "is_tsp E c' OPT"
+      and opt: "is_tsp E c OPT"
       and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
   shows "VARS T T\<^sub>2\<^sub>x v P P' H { True }
@@ -517,9 +517,11 @@ lemma refine_double_tree:
     P' := P;
     H := [];
     WHILE P' \<noteq> [] 
-    INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et T\<^sub>2\<^sub>x \<and> T\<^sub>2\<^sub>x = mset_set T + mset_set T 
-      \<and> T = comp_mst c E }
-    DO
+    INV { comp_hc_of_et P [] = comp_hc_of_et P' H 
+      \<and> P = comp_et T\<^sub>2\<^sub>x 
+      \<and> T\<^sub>2\<^sub>x = mset_set T + mset_set T 
+      \<and> T = comp_mst c E 
+    } DO
       v := hd P';
       P' := tl P';
       IF v \<in> set H \<and> P' \<noteq> [] THEN
