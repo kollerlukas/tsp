@@ -1,4 +1,5 @@
 *.thy~
+*.bib~
 TSP_old.thy
 
 output/document/

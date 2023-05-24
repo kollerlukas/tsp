@@ -5,7 +5,7 @@ theory VertexCover4ToMetricTravelingSalesman_Specs
     WeightedGraph
 begin
 
-locale VC4_To_mTSP = 
+locale VCP4_To_mTSP = 
   g1: ugraph_adj_map map_empty1 update1 map_delete1 lookup1 map_invar1 set_empty1 insert1
       set_delete1 isin1 set1 set_invar1 union1 inter1 diff1 rep1 
       \<comment> \<open>Adjacency map of the graph for VC4.\<close> +
@@ -155,7 +155,7 @@ end
 
 section \<open>Implementation of Auxiliary Functions\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 fun neighborhood_compl :: "'v2set \<Rightarrow> ('v1 uedge \<times> 'v1 \<times> nat) \<Rightarrow> 'v2set" ("\<N>\<^sup>C") where
@@ -235,7 +235,7 @@ end
 
 section \<open>Implementation of Reduction-Functions\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 fun vertices_of_H :: "'g1 \<Rightarrow> 'v2set" ("V\<^sub>H") where 
@@ -260,7 +260,7 @@ end
 
 section \<open>Properties of Auxiliary Functions\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma vertices_of_He_rep_idem: "V\<^sub>H\<^sub>e (rep1 e) = V\<^sub>H\<^sub>e e"
@@ -1412,7 +1412,7 @@ end
 
 section \<open>Properties of Reduction-Functions\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma vertices_f_eq_vertices_of_H:
@@ -2400,7 +2400,7 @@ end
 
 section \<open>Feasibility of the Reduction-Functions\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma f_is_complete: 
@@ -2484,7 +2484,7 @@ end
 
 section \<open>Constructing a Hamiltonian Cycle From a Vertex Cover\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma hp_for_neighborhood_empty: "set_invar1 P \<Longrightarrow> set1 P = {} \<Longrightarrow> hp_for_neighborhood u P = []"
@@ -3052,7 +3052,7 @@ end
 
 section \<open>Constructing a Vertex Cover From a Hamiltonian Cycle\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma cost_rotate_tour_eq:
@@ -4515,7 +4515,7 @@ end
 
 section \<open>Reduction Proof\<close>
 
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 
 lemma hp_of_vc:

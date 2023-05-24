@@ -26,6 +26,8 @@
 \usepackage[inline]{enumitem}
 
 \usepackage{caption}
+\usepackage{subcaption}
+
 \usepackage{tikz}
 \usetikzlibrary{scopes,calc,shapes.misc,bending,positioning,intersections,through,backgrounds}
 
@@ -118,8 +120,7 @@
 \maketitle
 
 \begin{abstract}
-  The \textsc{Traveling Salesman Problem} (\textsc{TSP}) is one of the most well-known \textsc{NP}-complete optimization problems. There is no constant-factor approximation algorithm for \textsc{TSP}. The \textsc{Metric TSP} is a simlification of the \textsc{TSP} where it is assumed that the input graph is complete and the edge weights satisfy the triangle-inequality. This work is split into two parts. The first part describes the formalization and formal verification of two approximation algorithm for the \textsc{Metric TSP}: the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} algorithm. The \textsc{Christofides-Serdyukov} is the best known approxmiation algorithm for \textsc{Metric TSP} with an approximation ratio of $\frac{3}{2}$. 
-  The second part describe the formalization of an linear-reduction (L-Reduction) from the \textsc{Minimum Vertex Cover Problem}, with maximum degree of 4 (\textsc{VCP4}), to the \textsc{Metric TSP}. The L-reduction proves the \textsc{MaxSNP}-hardness of the \textsc{Metric TSP}.
+  The \textsc{Traveling Salesman Problem} (\textsc{TSP}) is a well-known \textsc{NP}-complete optimization problems. The \textsc{Metric TSP} is a simplification of the \textsc{TSP} where it is assumed that the input graph is complete and the edge weights satisfy the triangle-inequality. In this report, I present my formalization and formal verification of two approximation algorithm for the \textsc{Metric TSP}: the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} algorithm. I also describe the formalization of an linear-reduction (L-Reduction) from the \textsc{Minimum Vertex Cover Problem}, with maximum degree of 4 (\textsc{VCP4}), to the \textsc{Metric TSP}. The L-reduction proves the \textsc{MaxSNP}-hardness of the \textsc{Metric TSP}. 
 \end{abstract}
 
 \tableofcontents

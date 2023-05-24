@@ -22,71 +22,82 @@ declare [[show_question_marks = false]]
 
 section \<open>Introduction\<close>
 
-text \<open>The \textsc{Traveling-Salesman Problem} (\textsc{TSP}) is a well known 
-optimization problem. The \textsc{TSP} describes the problem of finding a tour with minimum total 
-weight in a given weighted graph s.t. every vertex of the graph is visited exactly once. The 
-\textsc{TSP} has many applications in different areas, e.g. planning and scheduling @{cite "brumitt_stentz_1996"}, 
-logistics @{cite "ratliff_rosenthal_1983"}, designing printed circuit boards @{cite "groetschel_et_al_1991"}, etc..
+text \<open>The \textsc{Traveling-Salesman Problem} (\textsc{TSP}) is a well known optimization problem. 
+The \textsc{TSP} describes the problem of finding a tour with minimum total weight in a given 
+weighted undirected graph s.t. every vertex of the graph is visited exactly once. The \textsc{TSP} 
+has many applications in different areas, such as planning and scheduling @{cite "brumitt_stentz_1996"}, 
+logistics @{cite "ratliff_rosenthal_1983"}, and designing printed circuit boards @{cite "groetschel_et_al_1991"}.
 
 The \textsc{TSP} is \textsc{NP}-hard @{cite "korte_vygen_2018"}. This means, that unless 
-$\textsc{P}=\textsc{NP}$, the \textsc{TSP} cannot be solved in polynomial time. When 
-dealing with optimization problems, a typical strategy is to approximate the optimal solution with 
-an approximation algorithm. An approximation algorithm is a polynomial time algorithm that returns a 
-bounded approximate solution. An approximation algorithm essentially trades the optimality of the 
-returned solution for polynomial running time. Ideally, the distance between the approximate 
-solution and the optimal solution can be bounded by a constant factor.
-Unfortunately, there is no constant-factor approximation algorithm for the \textsc{TSP} @{cite "korte_vygen_2018"}. 
+$\textsc{P}=\textsc{NP}$, the \textsc{TSP} cannot be solved in polynomial time. When dealing with 
+\textsc{NP}-hard optimization problems, a typical strategy is to approximate the optimal solution with 
+an approximation algorithm @{cite "vazirani_2010"}. An approximation algorithm is a polynomial time 
+algorithm that returns a bounded approximate solution. The approximation ratio gives a bound on the 
+distance between the approximate solution and the optimal solution. Ideally, the approximation ratio 
+is a constant factor. An approximation algorithm essentially trades the optimality of the returned 
+solution for a polynomial running time. 
+Unfortunately, there are bad news for the \textsc{TSP}: there is no constant-factor approximation 
+algorithm for the \textsc{TSP} @{cite "sahni_gonzalez_1976"}. 
 
 The \textsc{Metric TSP} is a simplifies the \textsc{TSP} by making the following two assumptions:
 \begin{enumerate*}[label=(\roman*)]
   \item the given graph is complete and 
   \item the edge-weights satisfy the triangle-inequality.
 \end{enumerate*}
-The \textsc{Metric TSP} is still \textsc{NP}-hard @{cite "korte_vygen_2018"}.
+The \textsc{Metric TSP} is still \textsc{NP}-hard @{cite "sahni_gonzalez_1976"}.
 
-This report describes the formalization of parts of the section 21.1, \textit{Approximation Algorithms for the TSP} from
-@{cite "korte_vygen_2018"}.
+This report describes the formalization of parts of the section 21.1, \textit{Approximation Algorithms 
+for the TSP} from @{cite "korte_vygen_2018"}.
 \begin{enumerate}
   \item I have formalized and verified two approximation algorithms, \textsc{DoubleTree} and 
-    \textsc{Christofides-Serdyukov}, for \textsc{Metric TSP}. The \textsc{Christofides-Serdyukov} 
-    @{cite "christofides_1976" and "serdyukov_1978"} algorithm is the best known approximation 
-    algorithm for the \textsc{Metric TSP} @{cite "korte_vygen_2018"}.
-  \item I have formalized a L-reduction from the \textsc{Minimum Vertex Cover Problem} with maximum 
-    degree of 4 to the \textsc{Metric TSP}, which proves the \textsc{MaxSNP}-hardness of the 
-    \textsc{Metric TSP}.
+    \textsc{Christofides-Serdyukov}, for \textsc{Metric TSP}.
+  \item I have formalized an L-reduction from the \textsc{Minimum Vertex Cover Problem} with maximum 
+    degree of 4 (\textsc{VCP4}) to the \textsc{Metric TSP}, which proves the \textsc{MaxSNP}-hardness 
+    of the \textsc{Metric TSP}.
 \end{enumerate}
 
 The \textsc{MaxSNP}-hardness of a problem proves the non-existence of an approximation scheme @{cite "papadimitriou_yannakakis_1991"}.
-An approximation scheme is an approximation algorithm that takes an additional parameter $\epsilon >0$ based on which the approximate solution is bounded.
+An approximation scheme is an approximation algorithm that takes an additional parameter \<open>\<epsilon> > 0\<close>
+and has an approximation ratio of \<open>1 + \<epsilon>\<close> for minimization and \<open>1 - \<epsilon>\<close> for maximization problems. 
 \textsc{MaxSNP} is a complexity class that contains graph-theoretical optimization problems. For any 
 problem in \textsc{MaxSNP} there is a constant-factor approximation algorithm @{cite "papadimitriou_yannakakis_1991"}.
-A linear reduction (L-reduction) is special type of reduction for optimization problems @{cite "papadimitriou_yannakakis_1991"}. 
-A problem is called \textsc{MaxSNP}-hard if every problem in \textsc{MaxSNP} L-reduces to it.
-\<close>
+A linear reduction (L-reduction) is special type of reduction for optimization problems @{cite "papadimitriou_yannakakis_1991"}, 
+that is used to prove the \textsc{MaxSNP}-hardness of problems. A problem is called 
+\textsc{MaxSNP}-hard if every problem in \textsc{MaxSNP} L-reduces to it.
+
+All of my formalizations are done within the interactive theorem prover Isabelle/HOL @{cite "nipkow_wenzel_paulson_2002"}.
+My formalizations can be found on GitHub: \url{https://github.com/kollerlukas/tsp}.\<close>
 
 (* ----- *)
 
 section \<open>Related Work\<close>
 
-text \<open>
+text \<open>With an approximation ratio of $\frac{3}{2}$, the \textsc{Christofides-Serdyukov} algorithm 
+@{cite "christofides_1976" and "serdyukov_1978"} is the best known approximation algorithm for the 
+\textsc{Metric TSP} @{cite "korte_vygen_2018"}. Recently, @{cite "karlin_et_al_2021"} have developed a 
+randomized approximation algorithm for the \textsc{Metric TSP} which (in expectation) achieves a 
+slightly better approximation ratio than the \textsc{Christofides-Serdyukov} algorithm.
 
-@{cite essmann_et_al_2020} have formalized different approximation algorithms in Isabelle/HOL.
+In @{cite "essmann_et_al_2020"} 6 different approximation algorithms are formalized and verified in 
+Isabelle/HOL. I have followed their formalization approaches and formalized the \textsc{DoubleTree} 
+and the \textsc{Christofides-Serdyukov} algorithm in similar fashion.
 
-{\color{red} Reductions in Isabelle?}
-
-{\color{red} Refinement to IMP-.}\<close>
+In @{cite "wimmer_2021"} polynomial time reductions are formalized in Isabelle/HOL. To formally reason 
+about running times of functions a computational model for the programming language is required. 
+Therefore, @{cite "wimmer_2021"} have developed the imperative language \texttt{IMP-} which provides 
+a computational model to reason about the running times of function implemented in \texttt{IMP-}.\<close>
 
 section \<open>Fundamentals and Definitions\<close>
 
-text \<open>I build on the exiting formalization of Berge's theorem by {\color{red} Mohammad 
-Abdulaziz (citation?)}. An undirected graph is formalized as a finite set of edges. An edge is 
-represented by a doubleton set. 
+text \<open>I build on the formalization of graphs by @{cite "abdulaziz_2020"}, which is developed for a 
+formalization of Berge's theorem @{cite "berge_1954"}. 
+An undirected graph is formalized as a finite set of edges. An edge is represented by a doubleton set. 
 
 @{abbrev[display] graph_invar}
 
 The locale @{locale graph_abs} fixes an instance \<open>E\<close> of a graph that satisfies the invariant 
-@{const graph_invar}. The graph formalization by {\color{red} Mohammad Abdulaziz (citation?)} 
-provides definitions for the following concepts.
+@{const graph_invar}. The graph formalization by @{cite "abdulaziz_2020"} provides definitions for 
+the following concepts.
 \begin{itemize}
   \item Vertices of a graph: @{const Vs}
   \item Paths: @{const path}, @{const walk_betw}, and @{const edges_of_path}
@@ -96,19 +107,17 @@ provides definitions for the following concepts.
 \end{itemize}
  
 The approximation algorithms and the L-reduction use many graph-related concepts that are not 
-defined in the formalization of Berge's theorem by {\color{red} Mohammad Abdulaziz (citation?)}, 
-e.g. weighted edges, minimum spanning-tree, Hamiltonian cycle, etc..
+defined in @{cite "abdulaziz_2020"}, such as weighted graphs, minimum spanning-tree, or 
+Hamiltonian cycle. This section describes the formalization of graph-related concepts that are the 
+necessary for the formalization of the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} 
+approximation algorithms as well as the L-reduction. Most of the definitions are straightforward, 
+therefore only important formalization choices are highlighted.
 
-This section describes the formalization of graph-related concepts that are the necessary for 
-the formalization of the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} approximation 
-algorithms as well as the L-reduction. Most of the definitions are straightforward, thus only 
-important formalization choices are highlighted.
+All of the graph-related definitions are defined in theories which are located in the 
+@{path "./graphs"}- or @{path "./problems"}-directory.
 
-All of the graph-related definitions are defined in theories which are located in 
-the @{path "./graphs"}- or @{path "./problems"}-directory.
-
-Many simple results and lemmas are formalized in the theory @{file "./misc/Misc.thy"} which is located in 
-the directory @{path "./misc"}.\<close>
+Many simple results and lemmas are formalized in the theory @{file "./misc/Misc.thy"} which is 
+located in the directory @{path "./misc"}.\<close>
 
 subsection \<open>Connected Graphs\<close>
 
@@ -297,6 +306,27 @@ end
 text \<open>The locale @{locale min_weight_matching} fixes an algorithm (denoted by \<open>comp_match\<close>) to 
 compute a minimum-weight perfect matching for a given graph.\<close>
 
+subsection \<open>Vertex Cover\<close>
+
+text \<open>A vertex cover is a subset of edges that contains at least one endpoint of every edge.
+
+@{thm[display] is_vc_def}
+
+A minimum vertex cover is a vertex cover with minimum cardinality.
+
+@{thm[display] is_min_vc_def}\<close>
+(*<*)
+context graph_abs
+begin
+(*>*)
+text \<open>If the degree of every vertex in a graph \<open>E\<close> is bounded by a constant \<open>k\<close>, then the number of 
+edges in \<open>E\<close> is upper-bounded by \<open>k\<close>-times the cardinality of a vertex cover.
+
+@{thm[display] card_E_leq_max_degree_card_vc}\<close>
+(*<*)
+end
+(*>*)
+
 (* ----- *)
 
 section \<open>Approximating the \textsc{Metric TSP}\<close>
@@ -304,7 +334,7 @@ section \<open>Approximating the \textsc{Metric TSP}\<close>
 text \<open>This section describes the formalization of the \textsc{DoubleTree} and the 
 \textsc{Christofides-Serdyukov} approximation algorithms for \textsc{Metric TSP}. Both 
 algorithms are quite similar 
-and depend on the following proposition (Lemma 21.3, @{cite "korte_vygen_2018"}):
+and depend on the following proposition @{cite \<open>Lemma 21.3\<close> "korte_vygen_2018"}:
 
 Let the graph \<open>E\<close> with edge weights \<open>c\<close> be an instance of the \textsc{Metric TSP}. Given a connected 
 Eulerian graph \<open>E'\<close> that spans the vertices of the graph \<open>E\<close>, we can compute (in polynomial time) a 
@@ -340,7 +370,7 @@ The following lemma shows that the total weight of the Hamiltonian cycle returne
 end
 (*>*)
 
-text \<open>With the proposition (Lemma 21.3 @{cite "korte_vygen_2018"}) the task of approximating 
+text \<open>With the proposition @{cite \<open>Lemma 21.3\<close> "korte_vygen_2018"} the task of approximating 
 \textsc{Metric TSP} boils down to constructing a Eulerian graph that spans the vertices of the graph \<open>E\<close>. 
 The total weight of the edges of the Eulerian graph directly bounds the total weight of the approximate 
 solution, and thus directly influcences the approximation-ratio.
@@ -360,7 +390,10 @@ On the other hand, the \textsc{Christofides-Serdyukov} algorithm computes a mini
 \<open>M\<close> between the vertices that have odd-degree in \<open>T\<close>. The union of \<open>M\<close> and the MST \<open>T\<close> is a 
 Eulerian graph. The total weight of \<open>M\<close> is at most half the total weight of the optimal Hamiltonian 
 cycle. Therefore, the \textsc{Christofides-Serdyukov} algorithm is a $\frac{3}{2}$-approximation 
-algorithm for the \textsc{Metric TSP}.\<close>
+algorithm for the \textsc{Metric TSP}.
+
+The polynomial running time of both the \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} are 
+easy to see and thus explicit proofs are omitted.\<close>
 
 subsection \<open>Formalizing the \textsc{DoubleTree} Algorithm\<close>
 
@@ -390,7 +423,7 @@ text \<open>@{lemma[display,source] "double_tree = (
         P = comp_et T\<^sub>2\<^sub>x in
         comp_hc_of_et P [])" by (rule double_tree_def)}
 
-For the defined \textsc{DoubleTree} algorithm we prove two properties:
+For the defined \textsc{DoubleTree} algorithm two properties need to be proven:
 \begin{enumerate*}[label=(\roman*)]
   \item the feasibility, and
   \item the approximation ratio.
@@ -602,72 +635,70 @@ end
 section \<open>L-Reduction from \textsc{VCP4} to \textsc{Metric TSP}\<close>
 
 (*<*)
-context VC4_To_mTSP
+context VCP4_To_mTSP
 begin
 (*>*)
 
 text \<open>This section describes the formalization of an L-Reduction from the 
 \textsc{Minimum Vertex Cover Problem}, with maximum degree of 4 (\textsc{VCP4}), to the \textsc{Metric TSP}. 
-The formalization is based of an L-reduction proof that is presented in @{cite "korte_vygen_2018"} 
-(Theorem 21.1).
+The formalization is based of an L-reduction proof by @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.
 
 The \textsc{Minimum Vertex Cover Problem} describes the optimization problem of finding
 a vertex-cover with minimum cardinality for a given graph. A vertex-cover is subset of vertices 
 that contains at least one end-point of every edge. The \textsc{VCP4} is the restriction of the 
-\textsc{Minimum Vertex Cover Problem} to input graphs where every vertex has a degree of at most 4.
-The bounded degree is only needed to prove the linear inequalities required by the L-reduction.
+\textsc{Minimum Vertex Cover Problem} to input graphs where the degree of every vertex is bounded by 4.
+The bounded degree is only needed to prove the linear inequalities that are required for the L-reduction. 
+The \textsc{VCP4} is known to be \textsc{MaxSNP}-hard @{cite \<open>Theorem 16.46\<close> "korte_vygen_2018"}.
 
-We now define what an L-reduction is.
+First, I define what an L-reduction is.
 Let \<open>A\<close> and \<open>B\<close> be optimization problems with cost functions \<open>c\<^sub>A\<close> and \<open>c\<^sub>B\<close>. The cost of the optimal
 solution for an instance of an optimization problem is denoted by \<open>OPT(\<cdot>)\<close>.
-An L-reduction (linear reduction) consists of a pair of functions \<open>f\<close> and \<open>g\<close> and two constants
+An L-reduction (linear reduction) consists of a pair of functions \<open>f\<close> and \<open>g\<close> and two positive constants
 \<open>\<alpha>,\<beta> > 0\<close> s.t for every instance \<open>x\<^sub>A\<close> of \<open>A\<close>
 \begin{enumerate}[label=(\roman*)]
-  \item \<open>f x\<^sub>A\<close> is an instance of \<open>B\<close> and \<open>OPT(f x\<^sub>A) \<le> \<alpha>OPT(x\<^sub>A)\<close>, and 
+  \item \<open>f x\<^sub>A\<close> is an instance of \<open>B\<close> and \<open>OPT (f x\<^sub>A) \<le> \<alpha>(OPT x\<^sub>A)\<close>, and 
   \item for any feasible solution \<open>y\<^sub>B\<close> of \<open>f x\<^sub>A\<close>, \<open>g x\<^sub>A y\<^sub>B\<close> is a feasible solution of \<open>x\<^sub>A\<close> s.t.
-    \<open>|(c\<^sub>A x\<^sub>A (g x\<^sub>A y\<^sub>B)) - OPT(x\<^sub>A)| \<le> | (c\<^sub>A (f x\<^sub>A) y\<^sub>B) - OPT(f x\<^sub>A)|\<close>.
+    \<open>\<bar>((c\<^sub>A x\<^sub>A (g x\<^sub>A y\<^sub>B)) - OPT x\<^sub>A\<bar> \<le> \<bar>(c\<^sub>A (f x\<^sub>A) y\<^sub>B) - OPT (f x\<^sub>A)\<bar>\<close>.
 \end{enumerate}
 
-The second linear inequality essentially ensures the following: given an optimal solution for \<open>f x\<^sub>A\<close> 
-the function \<open>g\<close> has to construct an optimal solution for \<open>x\<^sub>A\<close>. 
+The second linear inequality essentially ensures the following: given an optimal solution for \<open>f x\<^sub>A\<close>
+the function \<open>g\<close> has to construct an optimal solution for \<open>x\<^sub>A\<close>.
 
 We L-reduce the \textsc{VCP4} to the \textsc{Metric TSP} by defining the functions \<open>f\<close> and \<open>g\<close> and 
 proving their required properties.
 The function \<open>f\<close> maps an instance of the \textsc{VCP4} to an instance of the \textsc{Metric TSP}. 
 An instance of the \textsc{VCP4} consists of a  graph where the degree of every vertex is at most 4.
-To construct an instance of the 
-\textsc{Metric TSP} we need to construct a complete graph with edge weights s.t. the edge weights 
-satisfy the triangle-inequality.
-
-We describe the function \<open>f\<close> with the following construction.
-Let \<open>G\<close> be an instance of the \textsc{VCP4}, and we denote the constructed graph with \<open>H:=f G\<close>.
-For each edge \<open>e\<close> of \<open>G\<close> we add a subgraph \<open>H\<^sub>e\<close> to \<open>H\<close> (see figure~\ref{fig:He}). The graph \<open>H\<close> 
-is the complete graph over all the vertices of the subgraphs \<open>H\<^sub>e\<close> (one for every edge \<open>e\<close> of the graph \<open>G\<close>). 
-The subgraph \<open>H\<^sub>e\<close> consists of 12 vertices that are arranged in a 4-by-3 lattice structure. 
-Each corner vertex of each subgraph \<open>H\<^sub>e\<close> corresponds to an endpoint of the edge \<open>e\<close>.
+To construct an instance of the \textsc{Metric TSP}, we need to construct a complete graph with edge 
+weights s.t. the edge weights satisfy the triangle-inequality.
 
 \begin{figure}
   \centering
   \begin{tikzpicture}
     \pic[scale=2.0] (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
   \end{tikzpicture}
-  \caption{Subgraph \<open>H\<^sub>e\<close> for an edge \<open>e:={u,v}\<close>. For each corner vertex the corresponding endpoint is labeled.}\label{fig:He}
+  \caption{Subgraph \<open>H\<^sub>e\<close> for an edge \<open>e:={u,v}\<close>. Each corner vertex of \<open>H\<^sub>e\<close> corresponds to an endpoint of \<open>e\<close>.}\label{fig:He}
 \end{figure}
 
-Each subgraph \<open>H\<^sub>e\<close> has the special property that there is no Hamiltonian path 
-for \<open>H\<^sub>e\<close> that starts and ends at corner vertices of \<open>H\<^sub>e\<close> that correspond to different 
-endpoints of the edge \<open>e\<close>. Therefore, the start- and end-vertex of a Hamiltonian path for a 
-subgraph \<open>H\<^sub>e\<close> can only correspond to the same endpoint of the edge \<open>e\<close>. This property is used to 
-encode a vertex cover of \<open>G\<close> in a Hamiltonian cycle of \<open>H\<close>.
-
-The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths (see figure~\ref{fig:Hamiltonian-paths-He}).
+The function \<open>f\<close> is defined by the following construction.
+Let \<open>G\<close> be an instance of the \textsc{VCP4}, and let \<open>H:=f G\<close> denote the graph that is construct from 
+\<open>G\<close> by the function \<open>f\<close>. For each edge \<open>e\<close> of \<open>G\<close>, a subgraph \<open>H\<^sub>e\<close> is added to \<open>H\<close> (see Figure~\ref{fig:He}). 
+The function \<open>f\<close> computes the complete graph over all the subgraphs \<open>H\<^sub>e\<close> (one for every edge \<open>e\<close> of the graph \<open>G\<close>). 
+The subgraph \<open>H\<^sub>e\<close> consists of 12 vertices that are arranged in a 4-by-3 lattice structure. 
+Each corner vertex of subgraph \<open>H\<^sub>e\<close> corresponds to an endpoint of the edge \<open>e\<close>. The subgraph \<open>H\<^sub>e\<close> 
+has the special property that there is no Hamiltonian path for \<open>H\<^sub>e\<close> that starts and ends at corner 
+vertices of \<open>H\<^sub>e\<close> that correspond to different endpoints of the edge \<open>e\<close>. E.g. there is no Hamiltonian 
+path for the subgraph \<open>H\<^sub>e\<close> that starts at the top-left corner vertex and ends at the bottom-right 
+corner vertex. Therefore, the start- and end-vertex of a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> can 
+only correspond to the one endpoint of the edge \<open>e\<close>. This property is used to encode a vertex cover 
+of \<open>G\<close> in a Hamiltonian cycle of \<open>H\<close>. The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths 
+(see Figure~\ref{fig:Hamiltonian-paths-He}). 
 
 \begin{figure}
   \centering
-  \begin{minipage}{.3\textwidth}
+  \begin{subfigure}[b]{0.3\textwidth}
     \centering
-    \begin{tikzpicture}[transform shape,scale=1.0]
-      \pic (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
+    \begin{tikzpicture}
+      \pic[scale=1.5] (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
 
       \draw[hpEdge] 
         (uv-u1) -- (uv-u3) -- (uv-v2) -- (uv-u5) -- (uv-v6) 
@@ -677,12 +708,13 @@ The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths (see f
       \node[hpEndpoint] at (uv-u1) {};
       \node[hpEndpoint] at (uv-u2) {};
     \end{tikzpicture}
-    \caption{}\label{fig:Hamiltonian-paths-He1}
-  \end{minipage}%
-  \begin{minipage}{.3\textwidth}
+    \caption{}\label{fig:Hamiltonian-paths-He1}         
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.3\textwidth}
     \centering
-    \begin{tikzpicture}[transform shape,scale=1.0]
-      \pic (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
+    \begin{tikzpicture}
+      \pic[scale=1.5] (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
 
       \draw[hpEdge] 
         (uv-u1) -- (uv-u3) -- (uv-v2) -- (uv-u5) -- (uv-v6) 
@@ -693,11 +725,12 @@ The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths (see f
       \node[hpEndpoint] at (uv-u6) {};
     \end{tikzpicture}
     \caption{}\label{fig:Hamiltonian-paths-He2}
-  \end{minipage}%
-  \begin{minipage}{.3\textwidth}
-    \centering
-    \begin{tikzpicture}[transform shape,scale=1.0]
-      \pic (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.3\textwidth}
+  \centering
+    \begin{tikzpicture}
+      \pic[scale=1.5] (uv) at (0,0) {He={$\mathstrut u$}{$\mathstrut v$}};
 
       \draw[hpEdge] 
         (uv-v6) -- (uv-u5)-- (uv-v2) -- (uv-u3) -- (uv-u1) 
@@ -708,80 +741,98 @@ The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths (see f
       \node[hpEndpoint] at (uv-u6) {};
     \end{tikzpicture}
     \caption{}\label{fig:Hamiltonian-paths-He3}
-  \end{minipage}
+  \end{subfigure}
   \caption{This figure shows the different types Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close> for an 
     edge \<open>e:={u,v}\<close>.}\label{fig:Hamiltonian-paths-He}
 \end{figure}
 
-Next, we describe the edge weights of the graph \<open>H\<close>. The graph \<open>H\<close> is complete, thus we have edges 
+Next, I describe the edge weights of the graph \<open>H\<close>. The graph \<open>H\<close> is complete, thus there is an edge 
 between every pair of vertices of \<open>H\<close>. Every vertex of \<open>H\<close> belongs to a subgraph \<open>H\<^sub>e\<close>. We distinguish 
-3 types of edges to describe the edge weights:
-\begin{enumerate*}[label=(\roman*)]
-  \item an edge that connects two vertices which both belong to the same subgraph \<open>H\<^sub>e\<close> has the weight 
-    equal to the distance of the vertices in the subgraph \<open>H\<^sub>e\<close>,
-  \item an edge that connects two corner vertices of different subgraphs \<open>H\<^sub>e\<close> and \<open>H\<^sub>f\<close> (\<open>e \<noteq> f\<close>) but 
-    both vertices correspond to the same endpoint has the weight of 4,
-  \item all remaining edges have the weight of 5.
-\end{enumerate*}
+between 3 types of edges.
+\begin{enumerate}[label=(\roman*)]
+  \item An edge that connects two vertices which both belong to the same subgraph \<open>H\<^sub>e\<close> has the weight 
+    equal to the distance of the vertices in the subgraph \<open>H\<^sub>e\<close>.
+  \item An edge that connects two corner vertices of different subgraphs \<open>H\<^sub>e\<close> and \<open>H\<^sub>f\<close> (\<open>e \<noteq> f\<close>) but 
+    both vertices correspond to the same endpoint has the weight of 4.
+  \item All remaining edges have the weight of 5.
+\end{enumerate} 
+The proof that the edge weights satisfy the traingle-inequality requires a long and tedious case 
+distinction and thus is omitted.
 
-The proof that the edge weights satisfy the traingle-inequality is omitted.
-
-Next, we describe the definition of the function \<open>g\<close>.
+Next, I describe the definition of the function \<open>g\<close>.
 The function \<open>g\<close> maps a Hamiltonian cycle \<open>T\<close> in \<open>H\<close> to a vertex cover \<open>X\<close> of \<open>G\<close>. 
 By the construction of \<open>H\<close>, the Hamiltonian cycle \<open>T\<close> may be 
 composed of only Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close>. In this case, for each edge \<open>e\<close> of \<open>G\<close> 
-we identify the covering vertex of \<open>e\<close> by looking at the Hamiltonian path of the subgraph \<open>H\<^sub>e\<close> 
+the covering vertex of \<open>e\<close> is identified by looking at the Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> 
 that is contained in \<open>T\<close>. The Hamiltonian path of the subgraph \<open>H\<^sub>e\<close> can only 
 correspond to one endpoint of the edge \<open>e\<close>. This endpoint is selected as the covering vertex for 
 the edge \<open>e\<close>. If the Hamiltonian cycle \<open>T\<close> does not contain a Hamiltonian path for every subgraph \<open>H\<^sub>e\<close>, 
-we construct a Hamiltonian cycle \<open>T'\<close> for \<open>H\<close> s.t. \<open>T'\<close> contains a Hamiltonian path for every \<open>H\<^sub>e\<close> 
-and the cost of \<open>T'\<close> is at most the cost of \<open>T\<close>. The Hamiltonian cycle \<open>T'\<close> is constructed by 
-iteratively replacing parts of the Hamiltonian cycle \<open>T\<close> with a Hamiltonian path for a 
-subgraph \<open>H\<^sub>e\<close>.
+a Hamiltonian cycle \<open>T'\<close> for \<open>H\<close> is constructed. The Hamiltonian cycle \<open>T'\<close> contains a Hamiltonian 
+path for every subgraph \<open>H\<^sub>e\<close> and the total cost of \<open>T'\<close> is at most the total cost of \<open>T\<close>. The 
+Hamiltonian cycle \<open>T'\<close> is constructed by carefully replacing parts of \<open>T\<close> with a Hamiltonian path 
+for a subgraph \<open>H\<^sub>e\<close>.\<close>
 
-The functions \<open>f\<close> and \<open>g\<close> have to be computable (in polynomial time) functions. Therefore, the locale 
-@{locale ugraph_adj_map} provides an abstract adjacency map, which can be instantiated to obtain 
-executable functions on graphs.
+subsection \<open>Formalizing the L-Reduction\<close>
 
-The L-reduction itself is formalized in the locale @{locale VC4_To_mTSP} that depends on two 
-executable adjacency-maps (@{locale ugraph_adj_map}), one for each of the graphs \<open>G\<close> and \<open>H\<close> (denoted by \<open>g1\<close> and \<open>g2\<close>). 
-The locale @{locale VC4_To_mTSP} also assumes appropriate \texttt{fold}-functions for the graphs.
-The necessary graph-related definitions are redefined for the adjencecy-map representation of graphs. 
-The definitions for the adjencecy-map representation of graphs are denoted by the postfix \<open>-Adj\<close>.
+text \<open>The functions \<open>f\<close> and \<open>g\<close> are required to be computable in polynomial time. The locale 
+@{locale ugraph_adj_map} provides an abstract adjacency map which serves as a graph representation 
+that allows for the implementation of executable function on graphs. The locale @{locale ugraph_adj_map} 
+can be instantiated with an implementation for sets (locale @{locale Set2}) and maps (locale @{locale Map}) 
+to obtain executable functions on graphs. The necessary graph-related definitions are redefined for 
+the adjencecy-map representation of graphs (see theory @{file "./graphs/GraphAdjMap_Specs.thy"}). 
+The definitions for the adjencecy-map representation of graphs are denoted by the postfix \<open>-Adj\<close>.\<close>
+(*<*)
+end
+context ugraph_adj_map
+begin
+(*>*)
+text \<open>The set of undirected edges of a graph which is represented by an adjacency map is returned 
+by the function @{const[names_short] uedges}. A linear order on the vertices is used to identify 
+different instances of the same undirected edge.\<close>
+(*<*)
+end
+context VCP4_To_mTSP
+begin
+(*>*)
+text \<open>The L-reduction itself is formalized in the locale @{locale VCP4_To_mTSP} that depends on two 
+executable adjacency-maps (locale @{locale ugraph_adj_map}), one for each of the graphs \<open>G\<close> and \<open>H\<close> 
+which are denoted by \<open>g1\<close> and \<open>g2\<close>. The locale @{locale VCP4_To_mTSP} also assumes functions that 
+provide \texttt{fold}-operations for the graphs. The reduction functions \<open>f\<close> and \<open>g\<close> are defined in 
+the locale @{locale VCP4_To_mTSP} using the assumed \texttt{fold}-operations and some auxiliary functions. 
+The theory @{file "reductions/VertexCover4ToMetricTravelingSalesman_AdjList.thy"} instantiates the 
+locale @{locale VCP4_To_mTSP} with an implementation of an adjacency list to obtain executable functions.
 
-The reduction functions \<open>f\<close> and \<open>g\<close> are defined in the locale @{locale VC4_To_mTSP} using the assumed 
-\texttt{fold}-functions and some auxiliary functions. The function \<open>f\<close> uses the auxiliary function 
-@{const[names_short] complete_graph} to construct the complete graph for a given set of vertices. 
-The function @{const[names_short] vertices_of_H} computes all the vertices of the graph \<open>H\<close>. The 
-vertices of the subgraphs \<open>H\<^sub>e\<close> are represented by a tuple \<open>(e,u,i)\<close> where \<open>u\<close> is an endpoint of the 
-edge \<open>e\<close> and \<open>i \<in> {1..6}\<close> is an index. 
+The vertices of the subgraphs \<open>H\<^sub>e\<close> are represented by a tuple \<open>(e,u,i)\<close> where \<open>u\<close> is an endpoint of 
+the edge \<open>e\<close> and \<open>i \<in> {1..6}\<close> is an index. The Figure~\ref{fig:He-formalization} shows the 
+formalization of a subgraph \<open>H\<^sub>e\<close>. The vertices of the subgraph \<open>H\<^sub>e\<close> have to be named such that the 
+subgraph is symmetric (\<open>H\<^sub>{\<^sub>u\<^sub>,\<^sub>v\<^sub>}=H\<^sub>{\<^sub>v\<^sub>,\<^sub>u\<^sub>}\<close>). 
 
 \begin{figure}
   \centering
   \begin{tikzpicture}
     \pic[scale=2.5] (uv) at (0,0) {He-labeled={e}{u}{v}};
   \end{tikzpicture}
-  \caption{Formalization of the subgraph \<open>H\<^sub>e\<close> for an edge \<open>e:={u,v}\<close>.}\label{fig:He}
+  \caption{Formalization of the subgraph \<open>H\<^sub>e\<close> for an edge \<open>e:={u,v}\<close>.}\label{fig:He-formalization}
 \end{figure}
 
-The naming of the vertices of the subgraph \<open>H\<^sub>e\<close> has to be symmetric s.t. \<open>H\<^sub>{\<^sub>u\<^sub>,\<^sub>v\<^sub>}=H\<^sub>{\<^sub>v\<^sub>,\<^sub>u\<^sub>}\<close>. I attempted to encode more information with the naming, but I failed.
-
-@{thm[display,names_short] vertices_of_H.simps}
+The function \<open>f\<close> uses the auxiliary function @{const[names_short] complete_graph} which constructs 
+the complete graph for a given set of vertices. The function @{const[names_short] vertices_of_H} 
+computes all the vertices of the graph \<open>H\<close>.
 
 @{thm[display,names_short] f.simps}
 
 The edge weights are formalized by the function \<open>c\<close>, which maps two vertices to an integer. 
-The definition of the function \<open>c\<close> uses a couple of auxiliary functions to identify the different cases. 
-To simplify things, the case for two vertices that are neighbours in subgraph \<open>H\<^sub>e\<close> (weight 1). 
+The definition of the function \<open>c\<close> uses a couple of auxiliary functions to distinguish different cases of edges. 
+To simplify things, the case for two vertices that are neighbours in subgraph \<open>H\<^sub>e\<close> (weight 1) is handled separately. 
 The function @{const is_edge_in_He} checks if there is a subgraph \<open>H\<^sub>e\<close> in \<open>H\<close> where the two 
 given vertices are connected by an edge. The function @{const are_vertices_in_He} checks if there is 
 a subgraph \<open>H\<^sub>e\<close> in \<open>H\<close> that contains both given vertices. The function @{const min_dist_in_He} computes 
-the distance between two vertices in a subgraph \<open>H\<^sub>e\<close>. 
+the distance between two vertices in a subgraph \<open>H\<^sub>e\<close>. The function \<open>rep1\<close> is required to compare the undirected edges.
 
 @{thm[display,mode=IfThen] c.simps}
 
 The function \<open>g\<close> depends on two functions @{const shorten_tour} and @{const vc_of_tour}. The 
-function @{const shorten_tour} modifies a Hamiltonian cycle s.t. the resulting has less total weight 
+function @{const shorten_tour} modifies a Hamiltonian cycle s.t. the resulting tour has less total weight 
 and the cycle contains a Hamiltonian path for every subgraph \<open>H\<^sub>e\<close>. The function @{const vc_of_tour} 
 computes a vertex cover for \<open>G\<close> given a Hamiltonian cycle that contains a Hamiltonian path for every 
 subgraph \<open>H\<^sub>e\<close>.
@@ -791,66 +842,202 @@ subgraph \<open>H\<^sub>e\<close>.
 Given a tour \<open>T\<close> of \<open>H\<close>, the function @{const shorten_tour} iteratively (for each edge \<open>e\<close> of \<open>G\<close>) 
 removes all vertices of the subgraph \<open>H\<^sub>e\<close> from the tour \<open>T\<close> and appends a Hamiltonian path for the 
 subgraph \<open>H\<^sub>e\<close>. This replacement is done regardless of whether the tour \<open>T\<close> already contains a 
-Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. The appended Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> is 
-carefully chosen such that the resulting tour has less total weight. On the other hand, the function 
-\<open>g\<close> descibed by @{cite "korte_vygen_2018"} only inserts a Hamiltonian paths when the tour \<open>T\<close> does 
-not already contain a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. 
+Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. This simplifies definitions and proofs by avoiding extra case 
+distinctions. The appended Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> is carefully chosen such that the 
+resulting tour has less total weight. The function @{const shorten_tour} formalizes property (b) from 
+the L-reduction proof in @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.
 
-The main reason for this decision is that, by always inserting a Hamiltonian path we make sure that 
-the resulting tour only contains Hamiltonian paths that start and end at a corner vertex of a subgraph \<open>H\<^sub>e\<close>. 
-This simplifies the formalization. The resulting tour is represented with a sequence of starting-vertices 
-instead of a path in the graph \<open>H\<close>. This simplifies the definitions and proofs, e.g. definition for @{const vc_of_tour}.
-Furthermore, all the cases for the different possible Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close> 
-(see figure~\ref{fig:Hamiltonian-paths-He}) are handled explicitly. The cases where the tour \<open>T\<close> 
-contains a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> of type \ref{fig:Hamiltonian-paths-He2} or \ref{fig:Hamiltonian-paths-He3} from figure~\ref{fig:Hamiltonian-paths-He} 
-are not covered by the proof of @{cite "korte_vygen_2018"}.
+Contrary, the function \<open>g\<close> described by @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} only replaces parts 
+of the tour \<open>T\<close> with a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> when the tour \<open>T\<close> does not already contain 
+a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. Thus, the resulting tour may contain Hamiltonian paths for 
+the subgraphs \<open>H\<^sub>e\<close> that do not start or end at corner vertices of the subgraph \<open>H\<^sub>e\<close>. Therefore, the 
+construction of the vertex cover for \<open>G\<close> from the modified tour \<open>T'\<close> requires an extra case 
+distinction to handle the different types of Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close> (see Figure~\ref{fig:Hamiltonian-paths-He}). 
+@{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} does not make the required case distinction in the 
+definition of the function \<open>g\<close>. The types \ref{fig:Hamiltonian-paths-He2} and \ref{fig:Hamiltonian-paths-He3} 
+of Hamiltonian paths for the subgraph \<open>H\<^sub>e\<close> from Figure~\ref{fig:Hamiltonian-paths-He} are not covered.
+On the other hand, the function @{const shorten_tour} explicitly handles these cases.\<close>
 
-The locale @{locale VC4_To_mTSP} also contains the proofs for the feasibility of the reduction functions 
-and the linear inequalities required for a L-reduction.
+subsection \<open>Proofs for the L-Reduction\<close>
 
-@{thm[display] f_is_complete}
+text \<open>The locale @{locale VCP4_To_mTSP} contains the proofs for the feasibility of the reduction 
+functions and the linear inequalities required for a L-reduction.\<close>
+(*<*)
+end
+locale fixed_adj_map_G = VCP4_To_mTSP +
+  fixes G OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4 X
+  assumes G_assms: "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1"
+  and opt_mtsp: "g2.is_tsp_Adj (f G) (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P"
+  and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4" "set_invar1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4" "card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4 > 1"
+  and max_degree: "\<And>v. v \<in> g1.vertices G \<Longrightarrow> g1.degree_Adj G v \<le> enat 4"
+  and invar_X: "card1 X > 1" "set_invar1 X"
+begin
+lemma f_is_complete_display: "g2.is_complete_Adj (f G)"
+  using G_assms(1) by (rule f_is_complete)
 
-@{thm[display] g_is_vc}
+lemma g_is_vc_display: "g2.is_hc_Adj (f G) T \<Longrightarrow> g1.is_vc_Adj G (g G T)"
+  using G_assms by (rule g_is_vc)
 
-@{thm[display] l_reduction1}
+(*>*)
+text \<open>The function \<open>f\<close> constructs a complete graph.
 
-@{thm[display] l_reduction2}
+@{thm[display] f_is_complete_display}
+                             
+Given Hamiltonian cycle \<open>T\<close>, the function \<open>g\<close> selects, for each edge \<open>e\<close> of \<open>G\<close>, an endpoint
+to be included in the result. Thus, the function \<open>g\<close> computes a vertex cover for \<open>G\<close> given a 
+Hamiltonian cycle for \<open>H\<close>.
 
-{\color{red} proof intuition}
+@{thm[display] g_is_vc_display}\<close>
+(*<*)
+end
+context fixed_adj_map_G
+begin
 
-The following lemmas are important lemmas when proving the linear inequalities.
+lemma hp_of_vc_display:
+  shows "g1.is_vc_Adj G X \<Longrightarrow> 
+    \<exists>T. g2.is_hc_Adj (f G) T \<and> cost_of_path (c G) T \<le> 15 * int (card (g1.uedges G)) + card1 X"
+  using invar_X hp_of_vc[OF G_assms] by blast
 
-@{thm[display] cost_of_opt_mTSP}
+(*>*)
+text \<open>Next, I describe the proofs for the linear inequalities that are required for the L-reduction. 
+The following two lemmas formalize two important properties that are needed for the proofs of the 
+linear inequalities.
 
-@{thm[display] card_g_leq_k}
+We prove an upper-bound for the total cost of the optimal Hamiltonian cycle for the graph \<open>H\<close>. This 
+lemma corresponds to the property (a) that is used by the L-reduction proof in @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}. 
+Let \<open>OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P\<close> be an optimal Hamiltonian cycle for \<open>H\<close> and let \<open>OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4\<close> be an optimal vertex cover for \<open>G\<close>.
 
-The following lemma describes a case distinction on the different possible Hamiltonian paths that 
-are admitted by the substructures \<open>H\<^sub>e\<close>. 
+@{thm[display] (concl) cost_of_opt_mTSP[where OPT\<^sub>V\<^sub>C="OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4"]}
 
-@{thm[display] hamiltonian_paths_with_cost_11}
+Intuitively, using the optimal vertex cover \<open>OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4\<close> for \<open>G\<close>, a Hamiltonian cycle \<open>T\<close> for \<open>H\<close> is constructed. 
+The total cost of \<open>T\<close> is at least the total cost of the optimal Hamiltonian cycle \<open>OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P\<close>. The 
+Hamiltonian cycle \<open>T\<close> traverses each subgraph \<open>H\<^sub>e\<close> with the Hamiltonian path that starts and ends at 
+the corner vertices that correspond to the covering vertex of \<open>e\<close> in the vertex cover \<open>OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4\<close>. Each 
+Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> has a total cost of 11. We now need to add @{term "card (g1.uedges G)"} many
+edges to connect the start- and end-vertices of the Hamiltonian paths to form a Hamiltonian cycle for \<open>H\<close>. 
+We pick as many edges with weight 4 ("cheaper" edges) as possible. For the remaining connections we 
+use "expensive" edges with weight 5. It turns out we can select at most @{term "(card (g1.uedges G) - card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4)"} 
+many edges of weight 4. Thus, the total weight of the constructed Hamiltonian cycle \<open>T\<close> is at most 
+@{term "11 * card (g1.uedges G) + 4 * (card (g1.uedges G) - card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4) + 5 * card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4 = 15 * card (g1.uedges G) + card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4"}.
+Essentially, the number of "expensive" edges in the Hamiltonian cycle \<open>T\<close> for \<open>H\<close> corresponds to the 
+cardinality of the vertex cover for \<open>G\<close>. The generalization of this construction for an arbitrary 
+vertex cover is formalized by the following lemma. 
 
-This lemma is not proven in my formalization because I am unsure about the best way to prove this 
-lemma. In the theory @{file "./reductions/FindHamiltonianPath.thy"} I have started to prove this lemma for an 
-instantiation of the graph representations. This result needs to be transfered into the reduction 
-proof. At the moment I am not sure what the best and way to do this is. 
-\<close>
+@{thm[display] hp_of_vc_display}\<close>
+(*<*)
+end
+context fixed_adj_map_G
+begin
 
-text \<open>The L-reduction proof that is presented in @{cite "korte_vygen_2018"} is incomplete. 
+lemma card_g_leq_k_display: 
+  "g2.is_hc_Adj (f G) T \<Longrightarrow> \<exists>k. card1 (g G T) \<le> k \<and> 15 * int (card (g1.uedges G)) + k \<le> cost_of_path (c G) T"
+  using card_g_leq_k[OF G_assms opt_vc] by blast
+(*>*)
+text \<open>Another property that is required for the proof of the linear inequalities of the L-reduction 
+is an upper-bound for the cardinality of the vertex cover that is constructed by the function \<open>g\<close>.
+This lemma corresponds to the property (c) that is used by the L-reduction proof in @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.
+
+@{thm[display] card_g_leq_k_display}
+
+The cardinality of the vertex cover that is constructed by the function \<open>g\<close> can be at most 
+the number "expensive" edges in a Hamiltonian cycle \<open>T\<close> of \<open>H\<close>. This follows from the fact that any 
+two edges \<open>e\<close> and \<open>f\<close> in \<open>G\<close> (\<open>e \<noteq> f\<close>), where the subgraphs \<open>H\<^sub>e\<close> and \<open>H\<^sub>f\<close> are connected by a "cheap" 
+edge in \<open>T\<close>, are covered by the same endpoint. Thus, there can only be distinct covering vertices if 
+two subgraphs are connected by an "expensive" edge.\<close>
+(*<*)
+lemma l_reduction1_display: "cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> 61 * card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4"
+  using G_assms opt_vc(3) max_degree opt_vc(1,2) opt_mtsp by (rule l_reduction1)
+
+lemma l_reduction2_display:
+  "g2.is_hc_Adj (f G) T \<Longrightarrow> 
+    \<bar> card1 (g G T) - card1 OPT\<^sub>V\<^sub>C\<^sub>P\<^sub>4 \<bar> \<le> 1 * \<bar> cost_of_path (c G) T - cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<bar>" 
+  using G_assms opt_vc opt_mtsp by (rule l_reduction2)
+(*>*)
+text \<open>With the lemmas proved above, we prove the linear inequalities required for the L-reduction. 
+The first linear inequality is formalized by the following lemma.
+
+@{thm[display] l_reduction1_display}
+
+By assumption, the degree of every vertex in \<open>G\<close> is at most 4. Thus, the number of edges of \<open>G\<close> is 
+bounded by 4-times the cardinality of any vertex cover of \<open>G\<close>. The first inequality is a consequence 
+of the upper-bound on the total cost of the optimal Hamiltonian cycle \<open>OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P\<close> for \<open>H\<close> and the 
+upper-bound of the number of edges of \<open>G\<close>.
+
+The following lemma formalizes the second linear inequality for the L-reduction.
+
+@{thm[display] l_reduction2_display}
+
+The second inequality follows from the upper-bound for the cardinality of the vertex cover that is 
+constructed by the function \<open>g\<close> and the upper-bound for the total cost of the optimal Hamiltonian 
+cycle \<open>OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P\<close>.\<close>
+(*<*)
+end
+context VCP4_To_mTSP
+begin
+(*>*)
+
+subsection \<open>Flaws and Unfinished Business\<close>
+
+text \<open>In this section, I describe two flaws in the L-reduction proof by @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} 
+that I discovered during the formalization. I also go over the parts of my formalization that are not 
+finished.
+
+The L-reduction proof that is presented in @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} is incomplete. 
+During the formalization of the L-reduction I have discovered two flaws in the proof by @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.
 \begin{enumerate}[label=(\roman*)]
-  \item {The proof fails if the optimal vertex cover of \<open>G\<close> has a cardinality of 1. In this case, 
-    some of the auxiliary lemmas used in @{cite "korte_vygen_2018"} do not hold. The construction of 
-    the L-reduction still works in this case, but for the proof this case needs to be considered 
-    separately. For now I have only excluded this case through assumptions.}
-  \item {The proof is missing multiple cases, when identifying the covering vertices. There are 
-    different Hamiltonian paths for the substructures \<open>H\<^sub>e\<close> that do not start or end at corners of 
-    the substructures \<open>H\<^sub>e\<close>. @{cite "korte_vygen_2018"} only describe how to identify a covering 
-    vertex if the Hamiltonian path starts and ends at a corner of the substructures \<open>H\<^sub>e\<close>. For some 
-    Hamiltonian path that do not start or end at corners of the substructures \<open>H\<^sub>e\<close>, it is not 
+  \item {The proof by @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} fails if the optimal vertex cover 
+    of \<open>G\<close> has a cardinality of 1. In this case, some of the auxiliary lemmas used in @{cite "korte_vygen_2018"} 
+    do not hold. In particular the upper-bound for optimal Hamiltonian cycle for \<open>H\<close> does not hold. 
+    The construction for the L-reduction still works in this case, but the proofs for this case need 
+    to be considered separately. I circumvent this problem by explicitly excluding this case through 
+    an additional assumption. Formalizing the proof for this case should be straightforward and just 
+    a matter of adapting the necessary lemmas.}
+  \item {The proof for @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} does not cover every case, when 
+    identifying the covering vertices for \<open>G\<close> from a Hamiltonian cycle \<open>T\<close> for \<open>H\<close>. There are 
+    different types Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close> that do not start or end at corner 
+    vertices of the subgraph \<open>H\<^sub>e\<close>. @{cite "korte_vygen_2018"} only describe how to identify a covering 
+    vertex if the Hamiltonian path starts and ends at a corner vertex of the subgraph \<open>H\<^sub>e\<close>. For some 
+    Hamiltonian paths that do not start or end at corners of the subgraph \<open>H\<^sub>e\<close>, it is not 
     immediately clear which covering vertex to choose. I have solved this issue by extending the 
-    definition of the function \<open>g\<close>. {\color{red} compare to @{cite "papadimitriou_yannakakis_1993"}}}
-\end{enumerate}
-\<close>
+    definition of the function \<open>g\<close>. The definition of the function \<open>g\<close> described in @{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"} 
+    only replaces parts of the tour \<open>T\<close> with a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> when the tour \<open>T\<close> 
+    does not already contain a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. Thus, the resulting tour may 
+    contain Hamiltonian paths for the subgraphs \<open>H\<^sub>e\<close> that do not start or end at corner vertices of 
+    the subgraph \<open>H\<^sub>e\<close>. Therefore, the construction of the vertex cover for \<open>G\<close> from the modified tour 
+    \<open>T'\<close> would require an extra case distinction to handle the different types of Hamiltonian paths 
+    for the subgraphs \<open>H\<^sub>e\<close> (see Figure~\ref{fig:Hamiltonian-paths-He}). @{cite"korte_vygen_2018"} 
+    does not make the required case distinction in the definition of the function \<open>g\<close>. The types of 
+    Hamiltonian paths for the subgraph \<open>H\<^sub>e\<close> depicted in the Figures~\ref{fig:Hamiltonian-paths-He2} 
+    and \ref{fig:Hamiltonian-paths-He3} are not covered. 
+    
+    @{cite"korte_vygen_2018"} cite a proof by @{cite "papadimitriou_yannakakis_1993"}. The proof by 
+    @{cite "papadimitriou_yannakakis_1993"} use a similar construction to prove the \textsc{MaxSNP}-harness 
+    of a restricted version of the \textsc{Metric TSP}, where the values of the edge weights are 
+    restricted to only 1 or 2. Because of the restricted edge weights the proof by @{cite "papadimitriou_yannakakis_1993"}
+    does not have this issue.
 
+    On the other hand, I defined the function \<open>g\<close> using the function @{const shorten_tour} which 
+    explicitly handles these cases.}
+\end{enumerate}
+
+There are two aspects that make my formalization of the L-reduction incomplete. Firstly, I have not 
+finished the proof that the subgraph \<open>H\<^sub>e\<close> only admits three types of Hamiltonian paths 
+(see Figure~\ref{fig:Hamiltonian-paths-He}). The lemma is stated in the theory @{file "reductions/VertexCover4ToMetricTravelingSalesman_Specs.thy"}.
+The theory @{file "./reductions/FindHamiltonianPath.thy"} contains an instantiation this lemma for 
+with an executable graph representation. By exhaustive search, the instantiated lemma is proven. This 
+result needs to be transferred to the reduction proof. At the moment I am not sure what the best and 
+way to do this is. I have also attempted another way to prove this. I tried, by coming up with a 
+clever naming of the vertices of the subgraph \<open>H\<^sub>e\<close> to prove that there is no Hamiltonian path that 
+start and ends at vertices on opposing sides of the subgraph. Unfortunately, I did not have success 
+with this approch.
+
+Secondly, I have not formally proven the polynomial running times of the functions \<open>f\<close> and \<open>g\<close>. To 
+formally reason about running times a formal computational model is required. The imperative language 
+\texttt{IMP-} provides such a computational model. \texttt{IMP-} was developed as part of a formalization 
+of polynomial time reduction @{cite "wimmer_2021"}. A possible approach to prove the polynomial 
+running times of the functions \<open>f\<close> and \<open>g\<close>, is to refine instantiations of their definitions (with 
+implementations for the locales @{locale Map} and @{locale Set2}) to \texttt{IMP-}. With the computational 
+model provided by \texttt{IMP-}, we can prove the running times of the refined reduction functions.\<close>
 (*<*)
 end
 (*>*)
@@ -859,40 +1046,42 @@ end
  
 section \<open>Future Work and Conclusion\<close>
 
-text \<open>For my Interdisciplinary Project, I have formalized parts of the section 21.1, 
+text \<open>In this work, I describe my formalization of parts of the section 21.1, 
 \textit{Approximation Algorithms for the TSP} from @{cite "korte_vygen_2018"}.
 \begin{itemize}
-  \item I have formally verified two approximation algorithms for \textsc{Metric TSP}: the 
+  \item I have formalized and formally verified two approximation algorithms for \textsc{Metric TSP}: the 
     \textsc{DoubleTree} and the \textsc{Christofides-Serdyukov} algorithm.
-  \item I have formalized a L-reduction to \textsc{Metric TSP}, which proves the 
+  \item I have formalized an L-reduction from \textsc{VCP4} to \textsc{Metric TSP}, which proves the 
     \textsc{MaxSNP}-hardness of \textsc{Metric TSP}.
 \end{itemize}
 
-Future work includes:
+I have formalized a significant amount of graph-related concepts.
 
-\begin{itemize}
-  \item The Eulerian graphs that are constructed for the \textsc{DoubleTree} and 
-    \textsc{Christofides-Serdyukov} algorithm might be multi-graphs. In the theory 
-      @{file "./graphs/MultiGraph.thy"}, I have started formalizing an encoding of multi-graphs with simple 
-      graphs. This formalization needs to be finished.
-  \item Prove the existence of the necessary algorithms for the \textsc{DoubleTree} and 
-    \textsc{Christofides-Serdyukov} algorithm.
-    \begin{itemize}
-      \item Write an adapter to the existing formalization of Prim's algorithm @{cite "lammich_nipkow_2019"}.
-      \item Formalize and verify algorithms for minimum perfect matching @{cite "edmonds_1965"} and Eulerian tour @{cite "korte_vygen_2018"}.
-    \end{itemize}
-  \item Prove the polynomial running time of reduction functions $f$ and $g$.
-    \begin{itemize}
-      \item To prove the running time one needs to assume a computational model. \texttt{IMP-} 
-        provides a computational model. Thus, a way to prove the polynomial time-complexity of the 
-        functions \<open>f\<close> and \<open>g\<close> it to refine the functions to \texttt{IMP-} and prove the running 
-        time of the refined definitions.
-      \end{itemize}
-\end{itemize}
+I present an approach to formalize of the L-reductions in Isabelle/HOL. 
+
+With the formalization and formal verification of the \textsc{DoubleTree} and the 
+\textsc{Christofides-Serdyukov} algorithm I have continued the work of @{cite "essmann_et_al_2020"} 
+in formalizing approximation algorithms in Isabelle/HOL.
+
+Future work includes proving the existence of the necessary algorithms for the \textsc{DoubleTree} 
+and \textsc{Christofides-Serdyukov} algorithm. Algorithms for the following problems is need to be 
+formalized: MST, minimum perfect matching, and Eulerian tour. There is already 
+an existing formalization of Prim's algorithm @{cite "lammich_nipkow_2019"}, an algorithm that 
+computes a MST. In the theory @{file "./adaptors/BergePrimAdaptor.thy"}, I have started (but not 
+finished) to implement an adaptor to formalization by @{cite "lammich_nipkow_2019"}. Suitable 
+algorithms for the other problems are e.g. Edmonds' Blossom algorithm @{cite "edmonds_1965"} for 
+minimum perfect matching and Euler's algorithm @{cite "korte_vygen_2018"} for Eulerian tour.
+
+Furthermore, the Eulerian graphs that are constructed for the \textsc{DoubleTree} and 
+\textsc{Christofides-Serdyukov} algorithm might be multigraphs. Therefore, the formalization of 
+multigraphs is required. In the theory @{file "./graphs/MultiGraph.thy"}, I have started (but not 
+finished) to formalize an encoding of multigraphs with simple graphs.
+
+For the L-reduction it is required to prove the polynomial running time of reduction functions \<open>f\<close> 
+and \<open>g\<close>. Moreover, the proof that the subgraph \<open>H\<^sub>e\<close> only admits certain Hamiltonian paths has to be 
+finished.
 \<close>
 
 (*<*)
-
 end
-
 (*>*)

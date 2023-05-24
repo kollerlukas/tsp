@@ -226,7 +226,7 @@ interpretation fold_vset: ugraph_adj_map_fold_vset
   apply auto
   done
 
-interpretation lreduction: VC4_To_mTSP
+interpretation lreduction: VCP4_To_mTSP
   (* graph representation 1 *) lmap_empty lmap_update lmap_delete lmap_lookup lmap_invar lset_empty 
   lset_insert lset_delete lset_isin lset_set lset_invar lset_union lset_inter lset_diff rep_uedge
   (* graph representation 2 *) lmap_empty lmap_update lmap_delete lmap_lookup lmap_invar lset_empty 
