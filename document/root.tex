@@ -6,10 +6,15 @@
 % isabellesym.sty), use only when needed
 
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{amssymb}
   %for \<leadsto>, \<box>, \<diamond>, \<sqsupset>, \<mho>, \<Join>,
   %\<lhd>, \<lesssim>, \<greatersim>, \<lessapprox>, \<greaterapprox>,
   %\<triangleq>, \<yen>, \<lozenge>
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}{Proposition}[theorem]
 
 %\usepackage{eurosym}
   %for \<euro>
