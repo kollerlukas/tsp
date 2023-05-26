@@ -1,4 +1,4 @@
-# Formalising Theory of Approximating the Travelling-Salesman Problem
+# Formalizing Theory of Approximating the Traveling-Salesman Problem
 
 This repository contains the formalizations for my Interdisipliary Project at TU Munich.
 
