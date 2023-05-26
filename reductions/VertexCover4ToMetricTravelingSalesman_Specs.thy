@@ -4565,11 +4565,9 @@ proof -
 qed
 
 lemma cost_of_opt_mTSP:
-  assumes "g1.ugraph_adj_map_invar G"
-      and "card (g1.uedges G) > 1" "card1 OPT\<^sub>V\<^sub>C > 1" (* TODO: How to deal with these assumptions? *)
-      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C"
+  assumes "g1.ugraph_adj_map_invar G" "card (g1.uedges G) > 1"
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1"
       and opt_mtsp: "g2.is_tsp_Adj (f G) (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P"
-      and "card (g1.uedges G) > 1" "card1 OPT\<^sub>V\<^sub>C > 1"
   shows "cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> 15 * int (card (g1.uedges G)) + card1 OPT\<^sub>V\<^sub>C"
   \<comment> \<open>The cost of the optimal Hamiltonian cycle in the graph \<open>f G\<close> is bounded.\<close>
 proof -
@@ -4588,9 +4586,9 @@ qed
 (* ----- 1st condition for a L-reduction ----- *)
 
 lemma l_reduction1:
-  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1" "card1 OPT\<^sub>V\<^sub>C > 1"
+  assumes "g1.ugraph_adj_map_invar G" and "card (g1.uedges G) > 1"
       and max_degree: "\<And>v. v \<in> g1.vertices G \<Longrightarrow> g1.degree_Adj G v \<le> enat 4"
-      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C"
+      and opt_vc: "g1.is_min_vc_Adj G OPT\<^sub>V\<^sub>C" "set_invar1 OPT\<^sub>V\<^sub>C" "card1 OPT\<^sub>V\<^sub>C > 1"
       and opt_mtsp: "g2.is_tsp_Adj (f G) (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P"
   shows "cost_of_path (c G) OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> 61 * card1 OPT\<^sub>V\<^sub>C" (is "?c' OPT\<^sub>m\<^sub>T\<^sub>S\<^sub>P \<le> ?\<alpha> * ?\<tau>_G")
   \<comment> \<open>First condition for a L-Reduction.\<close>
