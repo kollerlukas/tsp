@@ -197,24 +197,24 @@ lemma is_min_matchE2:
   using is_min_matchE[OF assms] is_perf_matchE[of E M] by auto 
 
 locale min_weight_matching =
-  w_graph_abs E c for E :: "'a set set" and c +
-  fixes comp_match
-  assumes match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+  w_graph_abs E c for E :: "'a set set" and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}" +
+  fixes comp_match :: "'a set set \<Rightarrow> ('a set \<Rightarrow> 'b) \<Rightarrow> 'a set set" 
+  assumes match: "\<And>E c. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
 
 section \<open>Equivalence to Maximum-Matching\<close>
 
 subsection \<open>Reductions\<close>
 
 text \<open>A problem is defined by a function that characterizes correct solutions to the problem.\<close>
-datatype ('a,'b) prob = P (p: "'a \<Rightarrow> 'b \<Rightarrow> bool")
+datatype ('a,'b) prob = Prob (is_sol: "'a \<Rightarrow> 'b \<Rightarrow> bool")
 
 text \<open>A function \<open>f\<close> solves a problem \<open>P p\<close>, if for all inputs the function \<open>f\<close> gives a correct result.\<close>
-definition "solves P\<^sub>i f \<longleftrightarrow> (\<forall>a. (p P\<^sub>i) a (f a))"
+definition "solves P\<^sub>i f \<longleftrightarrow> (\<forall>a. (is_sol P\<^sub>i) a (f a))"
 
-lemma solvesI: "(\<And>a. p P\<^sub>i a (f a)) \<Longrightarrow> solves P\<^sub>i f"
+lemma solvesI: "(\<And>a. is_sol P\<^sub>i a (f a)) \<Longrightarrow> solves P\<^sub>i f"
   unfolding solves_def by auto
 
-lemma solvesE: "solves P\<^sub>i f \<Longrightarrow> (\<And>a. p P\<^sub>i a (f a))"
+lemma solvesE: "solves P\<^sub>i f \<Longrightarrow> (\<And>a. is_sol P\<^sub>i a (f a))"
   unfolding solves_def by auto
 
 definition less_eq_prob :: "('a,'b) prob \<Rightarrow> ('c,'d) prob \<Rightarrow> bool" (infix "\<le>\<^sub>R" 80) where
@@ -241,13 +241,13 @@ abbreviation "matching_in \<equiv> \<lambda>E M. M \<subseteq> E \<and> matching
 
 definition "is_max_match E c M \<equiv> matching_in E M \<and> (\<forall>M'. matching_in E M' \<longrightarrow> (\<Sum>e\<in>M'. c e) \<le> (\<Sum>e\<in>M. c e))"
                                                                                                                       
-abbreviation "P\<^sub>m\<^sub>a\<^sub>x \<equiv> P (\<lambda>(E,c) M. graph_invar E \<longrightarrow> is_max_match E c M)"
+abbreviation "P\<^sub>m\<^sub>a\<^sub>x \<equiv> Prob (\<lambda>(E,c) M. graph_invar E \<longrightarrow> is_max_match E c M)"
 
 subsection \<open>Maximum Cardinality Matching\<close>
 
 definition "is_max_card_match E M \<equiv> matching_in E M \<and> (\<forall>M'. matching_in E M' \<longrightarrow> card M' \<le> card M)"
                                                                                                                       
-abbreviation "P\<^sub>c\<^sub>a\<^sub>r\<^sub>d \<equiv> P (\<lambda>E M. graph_invar E \<longrightarrow> is_max_card_match E M)"
+abbreviation "P\<^sub>c\<^sub>a\<^sub>r\<^sub>d \<equiv> Prob (\<lambda>E M. graph_invar E \<longrightarrow> is_max_card_match E M)"
 
 section \<open>Minimum Perfect Weight Matching\<close>
 
@@ -257,7 +257,7 @@ fun min_weight_perfect_matching :: "'a set set * ('a set \<Rightarrow> int) \<Ri
   "min_weight_perfect_matching (G,c) M = (perfect_matching (G,c) M 
     \<and> (\<forall>M'. perfect_matching (G,c) M' \<longrightarrow> (\<Sum>e\<in>M. c e) \<le> (\<Sum>e\<in>M'. c e)))" *)
 
-abbreviation "P\<^sub>m\<^sub>i\<^sub>n \<equiv> P (\<lambda>(E,c) M. graph_invar E \<longrightarrow> (case M of 
+abbreviation "P\<^sub>m\<^sub>i\<^sub>n \<equiv> Prob (\<lambda>(E,c) M. graph_invar E \<longrightarrow> (case M of 
     Some M \<Rightarrow> is_min_match E c M 
   | None \<Rightarrow> \<nexists>M. is_perf_match E M))"
 
@@ -416,14 +416,14 @@ corollary P\<^sub>m\<^sub>a\<^sub>x_leq_P\<^sub>m\<^sub>i\<^sub>n:
   shows "solves P\<^sub>m\<^sub>i\<^sub>n (f\<^sub>1 g)"
 proof (rule solvesI)
   fix a
-  show "p P\<^sub>m\<^sub>i\<^sub>n a (f\<^sub>1 g a)"
+  show "is_sol P\<^sub>m\<^sub>i\<^sub>n a (f\<^sub>1 g a)"
   proof (cases a)
     case (Pair E c)
     then have [simp]: "a = (E,c)" . 
     let ?K="1 + (\<Sum>e\<in>E. \<bar>c e\<bar>)"
     have "0 < ?K"
       by (auto simp: le_imp_0_less)
-    let ?c'="\<lambda>e. ?K - c e"
+    let ?c\<^sub>H="\<lambda>e. ?K - c e"
     show ?thesis
     proof (cases "graph_invar E")
       case False
@@ -435,11 +435,11 @@ proof (rule solvesI)
       then have "finite E"
         using graph_abs.finite_E by auto
 
-      let ?M="g (E,?c')"
-      have M_max: "is_max_match E ?c' ?M" and "?M \<subseteq> E"
+      let ?M="g (E,?c\<^sub>H)"
+      have M_max: "is_max_match E ?c\<^sub>H ?M" and "?M \<subseteq> E"
         using \<open>graph_invar E\<close> \<open>solves P\<^sub>m\<^sub>a\<^sub>x g\<close> by (auto simp: solves_def is_max_match_def)
 
-      text \<open>A maximum weight matching \<open>M\<close> in \<open>(E,c')\<close> is maximum cardinality matching in \<open>(E,c')\<close>.\<close>
+      text \<open>A maximum weight matching \<open>M\<close> in \<open>(E,c\<^sub>H)\<close> is maximum cardinality matching in \<open>(E,c\<^sub>H)\<close>.\<close>
       moreover have "\<forall>M'. matching_in E M' \<longrightarrow> card M' \<le> card ?M"
       proof (rule ccontr)
         assume "\<not>(\<forall>M'. matching_in E M' \<longrightarrow> card M' \<le> card ?M)"
@@ -507,16 +507,16 @@ proof (rule solvesI)
         then have "card ?M * ?K + ?K \<le> card M' * ?K"
           by (auto simp: algebra_simps)
 
-        have "(\<Sum>e\<in>?M. ?c' e) = card ?M * ?K + (\<Sum>e\<in>?M. -c e)"
+        have "(\<Sum>e\<in>?M. ?c\<^sub>H e) = card ?M * ?K + (\<Sum>e\<in>?M. -c e)"
           using sum.distrib[where g="\<lambda>e. ?K" and h="\<lambda>e. -c e"] by auto
         also have "... < card ?M * ?K + ?K - (\<Sum>e\<in>M'. c e)"
           using \<open>(\<Sum>e\<in>?M. -c e) + (\<Sum>e\<in>M'. c e) < ?K\<close> by auto
         also have "... \<le> card M' * ?K - (\<Sum>e\<in>M'. c e)"
           using \<open>card ?M * ?K + ?K \<le> card M' * ?K\<close> by simp
-        also have "... = (\<Sum>e\<in>M'. ?c' e)"
+        also have "... = (\<Sum>e\<in>M'. ?c\<^sub>H e)"
           using sum.distrib[where g="\<lambda>e. ?K" and h="\<lambda>e. -c e"] by (auto simp: sum_negf)
-        finally have "(\<Sum>e\<in>?M. ?c' e) < (\<Sum>e\<in>M'. ?c' e)" .
-        moreover have "(\<Sum>e\<in>M'. ?c' e) \<le> (\<Sum>e\<in>?M. ?c' e)"
+        finally have "(\<Sum>e\<in>?M. ?c\<^sub>H e) < (\<Sum>e\<in>M'. ?c\<^sub>H e)" .
+        moreover have "(\<Sum>e\<in>M'. ?c\<^sub>H e) \<le> (\<Sum>e\<in>?M. ?c\<^sub>H e)"
           using M_max \<open>matching_in E M'\<close> by (auto simp add: is_max_match_def)
         ultimately show "False" by simp
       qed
@@ -551,7 +551,7 @@ proof (rule solvesI)
         case (Some M)
         have "Vs M = Vs E" and [simp]: "M = ?M"
           using Some by (auto simp: f\<^sub>1_def Let_def split: if_splits)
-        then have "is_perf_match E M" and M_max: "is_max_match E ?c' M"
+        then have "is_perf_match E M" and M_max: "is_max_match E ?c\<^sub>H M"
           using \<open>graph_invar E\<close> \<open>solves P\<^sub>m\<^sub>a\<^sub>x g\<close> by (auto simp: solves_def is_perf_match_def is_max_match_def)
         then have "matching_in E M" 
           by (auto simp add: is_perf_match_def)
@@ -577,7 +577,7 @@ proof (rule solvesI)
             
           have "matching_in E M'"
             using \<open>is_perf_match E M'\<close>[unfolded is_perf_match_def] by auto
-          then have "(\<Sum>e\<in>M'. ?c' e) \<le> (\<Sum>e\<in>M. ?c' e)"
+          then have "(\<Sum>e\<in>M'. ?c\<^sub>H e) \<le> (\<Sum>e\<in>M. ?c\<^sub>H e)"
             using M_max[unfolded is_max_match_def] by auto
           then have "(\<Sum>e\<in>M'. ?K) + (\<Sum>e\<in>M'. -c e) \<le> (\<Sum>e\<in>M. ?K) + (\<Sum>e\<in>M. -c e)"
             using sum.distrib[where g="\<lambda>e. ?K" and h="\<lambda>e. -c e"] by auto
@@ -760,18 +760,18 @@ qed
 
 lemma VsH: 
   fixes E
-  defines "H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{1::nat,2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "H \<equiv> ?H1 \<union> ?H2")
+  defines "E\<^sub>H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{1::nat,2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "E\<^sub>H \<equiv> ?H1 \<union> ?H2")
   assumes "graph_invar E"
-  shows "Vs H = {(v,i)|v i. v\<in>Vs E \<and> i\<in>{1::nat,2}}" (is "Vs H = ?VsH")
+  shows "Vs E\<^sub>H = {(v,i)|v i. v\<in>Vs E \<and> i\<in>{1::nat,2}}" (is "Vs E\<^sub>H = ?VsH")
 proof
-  show "Vs H \<subseteq> ?VsH"
+  show "Vs E\<^sub>H \<subseteq> ?VsH"
   proof
     fix x
-    assume "x\<in>Vs H"
-    then have "\<exists>e\<in>H. x\<in>e"
+    assume "x\<in>Vs E\<^sub>H"
+    then have "\<exists>e\<in>E\<^sub>H. x\<in>e"
       unfolding Vs_def by auto
     then have "(\<exists>e\<in>?H1. x\<in>e) \<or> (\<exists>e\<in>?H2. x\<in>e)"
-      unfolding H_def using assms by (meson UnE)
+      unfolding E\<^sub>H_def using assms by (meson UnE)
     then show "x\<in>?VsH"
     proof
       assume "\<exists>e\<in>?H1. x\<in>e"
@@ -794,7 +794,7 @@ proof
     qed
   qed
 next
-  show "?VsH \<subseteq> Vs H"
+  show "?VsH \<subseteq> Vs E\<^sub>H"
   proof
     fix x
     assume "x\<in>?VsH"
@@ -810,21 +810,21 @@ next
       by auto
     then have "{x,(w,i)}\<in>?H1"
       using \<open>x=(v,i)\<close> \<open>i\<in>{1::nat,2}\<close> by auto
-    then show "x\<in>Vs H"
+    then show "x\<in>Vs E\<^sub>H"
       using assms unfolding Vs_def by auto
   qed
 qed
 
 lemma graph_invar_H:
   fixes E
-  defines "H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "H \<equiv> ?H1 \<union> ?H2")
+  defines "E\<^sub>H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "E\<^sub>H \<equiv> ?H1 \<union> ?H2")
   assumes "graph_invar E"
-  shows "graph_invar H"
+  shows "graph_invar E\<^sub>H"
 proof
-  show "\<forall>e\<in>H. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
+  show "\<forall>e\<in>E\<^sub>H. \<exists>u v. e = {u,v} \<and> u \<noteq> v"
   proof
     fix e
-    assume "e\<in>H"
+    assume "e\<in>E\<^sub>H"
     then have "e\<in>?H1 \<or> e\<in>?H2"
       using assms by auto
     then show "\<exists>u v. e = {u, v} \<and> u \<noteq> v"
@@ -849,16 +849,16 @@ proof
     qed
   qed
 
-  show "finite (Vs H)"
+  show "finite (Vs E\<^sub>H)"
     using assms VsH[of E] by auto
 qed
 
 lemma matching_to_perfect_matching:
   fixes E M
-  defines "H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{1::nat,2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "H \<equiv> ?H1 \<union> ?H2")
+  defines "E\<^sub>H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{1::nat,2}} \<union> {{(v,1::nat),(v,2)} |v. v\<in>Vs E}" (is "E\<^sub>H \<equiv> ?H1 \<union> ?H2")
       and "M' \<equiv> {{(v,i),(w,i)}|v w i. {v,w}\<in>M \<and> i\<in>{1::nat,2}} \<union> {{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M)}" (is "M' \<equiv> ?M1' \<union> ?M2'")
   assumes "graph_invar E" "matching_in E M" 
-  shows "is_perf_match H M'"
+  shows "is_perf_match E\<^sub>H M'"
 proof (intro is_perf_matchI)
   have "\<forall>e\<in>M. \<exists>v w. e={v,w} \<and> v\<noteq>w" "finite {1::nat,2}" "{1::nat,2} \<noteq> {}"
     using assms by auto
@@ -880,7 +880,7 @@ proof (intro is_perf_matchI)
       by simp
   qed
   
-  have "graph_invar H"
+  have "graph_invar E\<^sub>H"
     using assms graph_invar_H[OF \<open>graph_invar E\<close>] by auto
 
   have "Vs ?M1' \<inter> Vs ?M2' = {}"
@@ -912,23 +912,23 @@ proof (intro is_perf_matchI)
       using \<open>x\<in>{(v1,i),(w1,i)} \<inter> {(v2,1::nat),(v2,2)}\<close> by blast
   qed
 
-  have "Vs H = {(v,i)|v i. v\<in>Vs E \<and> i\<in>{1::nat,2}}" (is "Vs H = ?VsH")
+  have "Vs E\<^sub>H = {(v,i)|v i. v\<in>Vs E \<and> i\<in>{1::nat,2}}" (is "Vs E\<^sub>H = ?VsH")
     using assms VsH[of E] by auto
 
-  show "M' \<subseteq> H"
+  show "M' \<subseteq> E\<^sub>H"
   proof
     fix e
     assume "e\<in>M'"
     then have "(\<exists>v w i. {v,w}\<in>M \<and> i\<in>{1::nat,2} \<and> e={(v,i),(w,i)}) \<or> (\<exists>v. v\<in>(Vs E)-(Vs M) \<and> e={(v,1::nat),(v,2)})"
       using assms by auto
-    then show "e\<in>H"
+    then show "e\<in>E\<^sub>H"
     proof 
       assume "\<exists>v w i. {v,w}\<in>M \<and> i\<in>{1::nat,2} \<and> e={(v,i),(w,i)}"
-      then show "e\<in>H"
-        unfolding H_def using assms by fast
+      then show "e\<in>E\<^sub>H"
+        unfolding E\<^sub>H_def using assms by fast
     next
       assume "\<exists>v. v\<in>(Vs E)-(Vs M) \<and> e={(v,1::nat),(v,2)}"
-      then show "e\<in>H"
+      then show "e\<in>E\<^sub>H"
         using assms by blast
     qed
   qed
@@ -939,14 +939,14 @@ proof (intro is_perf_matchI)
     then show "matching M'"
       using assms by simp 
   qed
-  ultimately have "matching_in H M'"
+  ultimately have "matching_in E\<^sub>H M'"
     by auto
-  thus "Vs M' = Vs H"
+  thus "Vs M' = Vs E\<^sub>H"
   proof -
     have "Vs M' = ?VsH"
     proof
       show "Vs M' \<subseteq> ?VsH"
-        using \<open>M' \<subseteq> H\<close> \<open>Vs H = ?VsH\<close> Vs_subset[of M' H] by auto
+        using \<open>M' \<subseteq> E\<^sub>H\<close> \<open>Vs E\<^sub>H = ?VsH\<close> Vs_subset[of M' E\<^sub>H] by auto
     next
       show "?VsH \<subseteq> Vs M'"
       proof
@@ -998,16 +998,16 @@ proof (intro is_perf_matchI)
         qed
       qed
     qed
-    then show "Vs M' = Vs H"
-      using \<open>Vs H = ?VsH\<close> by auto
+    then show "Vs M' = Vs E\<^sub>H"
+      using \<open>Vs E\<^sub>H = ?VsH\<close> by auto
   qed
 qed
 
 lemma perfect_matching_to_matching:
   fixes E M'
-  defines "H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,(1::nat)),(v,2)} |v. v\<in>Vs E}"
+  defines "E\<^sub>H \<equiv> {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,(1::nat)),(v,2)} |v. v\<in>Vs E}"
       and "M \<equiv> {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M'}"
-  assumes "graph_invar E" "is_perf_match H M'"
+  assumes "graph_invar E" "is_perf_match E\<^sub>H M'"
   shows "matching_in E M"
 proof -
   have "M \<subseteq> E"
@@ -1020,7 +1020,7 @@ proof -
       by auto
     then have "(\<exists>v'. {(v,(1::nat)),(w,1)} = {(v',(1::nat)),(v',2)}) 
           \<or> (\<exists>v' w' i. {(v,(1::nat)),(w,1)} = {(v',i),(w',i)} \<and> {v',w'}\<in>E \<and> i\<in>{(1::nat),2})"
-      using assms[unfolded is_perf_match_def H_def] by blast
+      using assms[unfolded is_perf_match_def E\<^sub>H_def] by blast
     then have "\<exists>v' w' i. {(v,(1::nat)),(w,1)} = {(v',i),(w',i)} \<and> {v',w'}\<in>E"
     proof 
       assume "\<exists>v'. {(v,(1::nat)),(w,1)} = {(v',(1::nat)),(v',2)}"
@@ -1082,81 +1082,81 @@ qed
 lemma sum_union: "finite A \<Longrightarrow> finite B \<Longrightarrow> A \<inter> B = {} \<Longrightarrow> (\<Sum>e\<in>A. f e) + (\<Sum>e\<in>B. f e) = (\<Sum>e\<in>A\<union>B. f e)"
   by (simp add: sum.union_disjoint)
 
-text \<open>We construct a new graph \<open>H\<close>, that contains two copies of the graph \<open>G\<close>. The two copies are 
+text \<open>We construct a new graph \<open>H\<close>, that contains two copies of the graph \<open>E\<close>. The two copies are 
   connected at each vertex.\<close>
-definition "H \<equiv> \<lambda>E. {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,(1::nat)),(v,2)} |v. v\<in>Vs E}"
+definition "E\<^sub>H \<equiv> \<lambda>E. {{(v,i),(w,i)} |v w i. {v,w}\<in>E \<and> i\<in>{(1::nat),2}} \<union> {{(v,(1::nat)),(v,2)} |v. v\<in>Vs E}"
 
 text \<open>We map edges of the graph \<open>H\<close>. \<open>{(v,i),(w,i)} \<in> E(H)\<close> to edges in the graph 
-  \<open>E\<close>. \<open>{v,w} \<in> EE\<close> with the expression \<open>fst ` e\<close>.\<close>
-definition "c' \<equiv> \<lambda>(E,c) e. if fst ` e \<in> E \<and> snd ` e = {1} then -c (fst ` e) else (0::int)"
+  \<open>E\<close>. \<open>{v,w} \<in> E\<close> with the expression \<open>fst ` e\<close>.\<close>
+definition "c\<^sub>H \<equiv> \<lambda>(E,c) e. if fst ` e \<in> E \<and> snd ` e = {1} then -c (fst ` e) else (0::int)"
 
 text \<open>To compute a solution to \<open>?P\<^sub>m\<^sub>a\<^sub>x\<close> we first compute the minimum perfect weight matching 
-  \<open>M\<close> in \<open>(?H,?c')\<close>. The solution to \<open>?P\<^sub>m\<^sub>a\<^sub>x\<close> is obtained by taking the edge \<open>{v,w}\<close> for every 
+  \<open>M\<close> in \<open>(?H,?c\<^sub>H)\<close>. The solution to \<open>?P\<^sub>m\<^sub>a\<^sub>x\<close> is obtained by taking the edge \<open>{v,w}\<close> for every 
   edge \<open>{(v,1),(w,1)}\<in>M\<close> \<close>
 definition f\<^sub>2 :: "(('a \<times> nat) set set \<times> (('a \<times> nat) set \<Rightarrow> int) \<Rightarrow> ('a \<times> nat) set set option) \<Rightarrow> 'a set set \<times> ('a set \<Rightarrow> int) \<Rightarrow> 'a set set" 
   where "f\<^sub>2 \<equiv> \<lambda>g (E,c). 
-    case g (H E,c' (E,c)) of Some M \<Rightarrow> {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M}"
+    case g (E\<^sub>H E,c\<^sub>H (E,c)) of Some M \<Rightarrow> {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M}"
 
 corollary P\<^sub>m\<^sub>i\<^sub>n_leq_P\<^sub>m\<^sub>a\<^sub>x: 
   assumes "solves P\<^sub>m\<^sub>i\<^sub>n g"
   shows "solves P\<^sub>m\<^sub>a\<^sub>x (f\<^sub>2 g)"
 proof (rule solvesI)
   fix a
-  show "p P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)"
+  show "is_sol P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)"
   proof (cases a)
     case (Pair E c)
     then have [simp]: "a = (E,c)" . 
-    let ?M="g (H E,c' (E,c))"
+    let ?M="g (E\<^sub>H E,c\<^sub>H (E,c))"
         
     text \<open>We first show there is a perfect matching in \<open>H\<close>.\<close>
     let ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t="{{(v,(1::nat)),(v,2)} |v. v\<in>Vs E}"
-    have "matching_in (H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t"
-      unfolding matching_def by (auto simp add: H_def)
-    moreover have "Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t = Vs (H E)"
+    have "matching_in (E\<^sub>H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t"
+      unfolding matching_def by (auto simp add: E\<^sub>H_def)
+    moreover have "Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t = Vs (E\<^sub>H E)"
     proof
-      have "?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t \<subseteq> H E"
-        using \<open>matching_in (H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t\<close> by (auto simp add: H_def)
-      then show "Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t \<subseteq> Vs (H E)"
-        using Vs_subset[of ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t "H E"] by (auto simp add: H_def)
+      have "?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t \<subseteq> E\<^sub>H E"
+        using \<open>matching_in (E\<^sub>H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t\<close> by (auto simp add: E\<^sub>H_def)
+      then show "Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t \<subseteq> Vs (E\<^sub>H E)"
+        using Vs_subset[of ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t "E\<^sub>H E"] by (auto simp add: E\<^sub>H_def)
     next
-      show "Vs (H E) \<subseteq> Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t"
+      show "Vs (E\<^sub>H E) \<subseteq> Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t"
       proof 
         fix x
-        assume "x\<in>Vs (H E)"
+        assume "x\<in>Vs (E\<^sub>H E)"
         then have "\<exists>v\<in>Vs E. \<exists>i\<in>{1,2}. x=(v,i)"
-          unfolding H_def Vs_def by blast
+          unfolding E\<^sub>H_def Vs_def by blast
         then show "x\<in>Vs ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t"
           by blast
       qed
     qed
-    ultimately have M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t_is_perfect: "is_perf_match (H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t" 
-      unfolding is_perf_match_def by (auto simp add: H_def)
-    hence min_matching_ex: "\<exists>M. is_perf_match (H E) M"
+    ultimately have M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t_is_perfect: "is_perf_match (E\<^sub>H E) ?M\<^sub>p\<^sub>e\<^sub>r\<^sub>f\<^sub>e\<^sub>c\<^sub>t" 
+      unfolding is_perf_match_def by (auto simp add: E\<^sub>H_def)
+    hence min_matching_ex: "\<exists>M. is_perf_match (E\<^sub>H E) M"
       by auto
 
     text \<open>We split cases whether the input graph \<open>E\<close> satisfies the graph invariant.\<close>
-    show "p P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)"
+    show "is_sol P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)"
     proof (cases "graph_invar E")
       case False
       then show ?thesis by auto
     next
       case True
 
-      text \<open>If the graph \<open>E\<close> satisfies the graph invariant, so does the constructed graph \<open>H E\<close>.\<close>
-      have "graph_invar (H E)"
-        using graph_invar_H[OF \<open>graph_invar E\<close>] by (auto simp add: H_def)
+      text \<open>If the graph \<open>E\<close> satisfies the graph invariant, so does the constructed graph \<open>E\<^sub>H E\<close>.\<close>
+      have "graph_invar (E\<^sub>H E)"
+        using graph_invar_H[OF \<open>graph_invar E\<close>] by (auto simp add: E\<^sub>H_def)
 
       text \<open>We know there is a perfect matching in \<open>?H (G,c)\<close>, thus there also is a minimum 
         perfect weight matching. Therefore the output of \<open>g\<close> cannot be \<open>None\<close>.\<close>
       have "\<not>?M = None"
       proof
         assume [simp]: "?M = None"
-        have "p P\<^sub>m\<^sub>i\<^sub>n (H E,c' (E,c)) ?M"
-          using assms[unfolded solves_def] by (auto simp add: H_def)
-        then have "p P\<^sub>m\<^sub>i\<^sub>n (H E,c' (E,c)) None"
+        have "is_sol P\<^sub>m\<^sub>i\<^sub>n (E\<^sub>H E,c\<^sub>H (E,c)) ?M"
+          using assms[unfolded solves_def] by (auto simp add: E\<^sub>H_def)
+        then have "is_sol P\<^sub>m\<^sub>i\<^sub>n (E\<^sub>H E,c\<^sub>H (E,c)) None"
           by (simp only: \<open>?M = None\<close>)
-        then have "\<nexists>M. is_perf_match (H E) M"
-          using \<open>graph_invar (H E)\<close> by auto
+        then have "\<nexists>M. is_perf_match (E\<^sub>H E) M"
+          using \<open>graph_invar (E\<^sub>H E)\<close> by auto
         then show "False"
           using min_matching_ex by blast
       qed
@@ -1166,27 +1166,27 @@ proof (rule solvesI)
         by auto
 
       text \<open>We obtain the facts that the output of \<open>g\<close> is a matching.\<close>
-      have "p P\<^sub>m\<^sub>i\<^sub>n (H E,c' (E,c)) ?M"
-        using assms[unfolded solves_def] by (auto simp add: H_def)
-      then have "p P\<^sub>m\<^sub>i\<^sub>n (H E,c' (E,c)) (Some M)"
+      have "is_sol P\<^sub>m\<^sub>i\<^sub>n (E\<^sub>H E,c\<^sub>H (E,c)) ?M"
+        using assms[unfolded solves_def] by (auto simp add: E\<^sub>H_def)
+      then have "is_sol P\<^sub>m\<^sub>i\<^sub>n (E\<^sub>H E,c\<^sub>H (E,c)) (Some M)"
         by (simp only: \<open>?M = Some M\<close>)
-      then have "is_min_match (H E) (c' (E,c)) M"
-        using \<open>graph_invar (H E)\<close> by (auto simp add: H_def)
-      then have "is_perf_match (H E) M"
+      then have "is_min_match (E\<^sub>H E) (c\<^sub>H (E,c)) M"
+        using \<open>graph_invar (E\<^sub>H E)\<close> by (auto simp add: E\<^sub>H_def)
+      then have "is_perf_match (E\<^sub>H E) M"
         by (auto simp add: is_min_match_def)
-      then have "matching_in (H E) M"
+      then have "matching_in (E\<^sub>H E) M"
         unfolding is_perf_match_def by simp
-      then have "matching M" "M \<subseteq> H E"
+      then have "matching M" "M \<subseteq> E\<^sub>H E"
         by auto
       then have "finite M"
-        using \<open>graph_invar (H E)\<close> edges_finite[of "H E"] finite_subset[of M "H E"] by auto
+        using \<open>graph_invar (E\<^sub>H E)\<close> edges_finite[of "E\<^sub>H E"] finite_subset[of M "E\<^sub>H E"] by auto
 
       let ?M'="(f\<^sub>2 g) (E,c)"
       have "?M' = {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M}"
         using \<open>?M = Some M\<close> by (auto simp add: f\<^sub>2_def)
       have "matching_in E ?M'"
-        using \<open>is_perf_match (H E) M\<close> \<open>?M' = {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M}\<close> 
-          perfect_matching_to_matching[OF \<open>graph_invar E\<close>] by (auto simp add: H_def)
+        using \<open>is_perf_match (E\<^sub>H E) M\<close> \<open>?M' = {{v,w} |v w. {(v,(1::nat)),(w,1)}\<in>M}\<close> 
+          perfect_matching_to_matching[OF \<open>graph_invar E\<close>] by (auto simp add: E\<^sub>H_def)
       text \<open>We show the output of \<open>?f g\<close> is a maximum matching.\<close>
       moreover have "\<forall>M'. matching_in E M' \<longrightarrow> (\<Sum>e\<in>M'. c e) \<le> (\<Sum>e\<in>?M'. c e)"
       proof (rule allI impI)+
@@ -1238,27 +1238,27 @@ proof (rule solvesI)
         ultimately have "finite ?M2''"
           by auto
 
-        have "is_perf_match (H E) ?M''"
-          using \<open>matching_in E M'\<close> matching_to_perfect_matching[OF \<open>graph_invar E\<close>] by (auto simp add: H_def)
-        then have "(\<Sum>e\<in>M. (c' (E,c)) e) \<le> (\<Sum>e\<in>?M''. (c' (E,c)) e)"
-          using \<open>is_min_match (H E) (c' (E,c)) M\<close> by (auto simp add: H_def is_min_match_def)
-        then have "-(\<Sum>e\<in>?M''. (c' (E,c)) e) \<le> -(\<Sum>e\<in>M. (c' (E,c)) e)"
+        have "is_perf_match (E\<^sub>H E) ?M''"
+          using \<open>matching_in E M'\<close> matching_to_perfect_matching[OF \<open>graph_invar E\<close>] by (auto simp add: E\<^sub>H_def)
+        then have "(\<Sum>e\<in>M. (c\<^sub>H (E,c)) e) \<le> (\<Sum>e\<in>?M''. (c\<^sub>H (E,c)) e)"
+          using \<open>is_min_match (E\<^sub>H E) (c\<^sub>H (E,c)) M\<close> by (auto simp add: E\<^sub>H_def is_min_match_def)
+        then have "-(\<Sum>e\<in>?M''. (c\<^sub>H (E,c)) e) \<le> -(\<Sum>e\<in>M. (c\<^sub>H (E,c)) e)"
           by auto
 
-        have "\<forall>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c' (E,c)) e = 0"
-          by (auto simp add: c'_def)
-        then have "(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c' (E,c)) e) = 0"
+        have "\<forall>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c\<^sub>H (E,c)) e = 0"
+          by (auto simp add: c\<^sub>H_def)
+        then have "(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c\<^sub>H (E,c)) e) = 0"
           by auto
 
         have "\<forall>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. fst ` e\<in>E \<and> snd ` e = {1}"
           using \<open>M' \<subseteq> E\<close> by auto
-        then have "\<forall>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c' (E,c)) e = -c (fst ` e)"
-          by (auto simp add: c'_def)
+        then have "\<forall>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e = -c (fst ` e)"
+          by (auto simp add: c\<^sub>H_def)
 
         have "\<forall>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. fst ` e\<in>E \<and> snd ` e = {2}"
           using \<open>M' \<subseteq> E\<close> by auto
-        then have "\<forall>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c' (E,c)) e = 0"
-          by (auto simp add: c'_def)
+        then have "\<forall>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e = 0"
+          by (auto simp add: c\<^sub>H_def)
 
         have "{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'} \<union> {{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'} = {{(v,i),(w,i)}|v w i. {v,w}\<in>M' \<and> i\<in>{1::nat,2}}"
           by blast
@@ -1278,7 +1278,7 @@ proof (rule solvesI)
           fix e
           assume "e\<in>M" "snd ` e = {1::nat}"
           then have "e\<in>{{(v,i), (w,i)} |v w i. {v,w} \<in> E \<and> i\<in>{1::nat,2}} \<or> e\<in>{{(v,1::nat),(v,2)} |v. v \<in> Vs E}"
-            using \<open>M \<subseteq> H E\<close> by (auto simp add: H_def)
+            using \<open>M \<subseteq> E\<^sub>H E\<close> by (auto simp add: E\<^sub>H_def)
           then show "fst ` e\<in>E"
           proof (rule disjE)
             assume "e\<in>{{(v,i), (w,i)} |v w i. {v,w} \<in> E \<and> i\<in>{1::nat,2}}"
@@ -1298,8 +1298,8 @@ proof (rule solvesI)
         have "{e |e. e\<in>M \<and> snd ` e = {1::nat}} \<union> {e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}} = M"
           by auto
 
-        have "\<forall>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. -(c' (E,c)) e = c (fst ` e)"
-          using \<open>\<forall>e\<in>M. snd ` e = {1::nat} \<longrightarrow> fst ` e\<in>E\<close> by (auto simp add: c'_def)
+        have "\<forall>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. -(c\<^sub>H (E,c)) e = c (fst ` e)"
+          using \<open>\<forall>e\<in>M. snd ` e = {1::nat} \<longrightarrow> fst ` e\<in>E\<close> by (auto simp add: c\<^sub>H_def)
 
         have "{e |e. e\<in>M \<and> snd ` e={1::nat}} = {{(v,(1::nat)),(w,1)} |v w. {(v,(1::nat)),(w,1)}\<in>M}"
         proof
@@ -1308,7 +1308,7 @@ proof (rule solvesI)
             fix e
             assume "e\<in>?A"
             then obtain v w where "e={(v,1::nat),(w,1)}" "e\<in>M"
-              using \<open>M \<subseteq> H E\<close> \<open>graph_invar (H E)\<close> by (auto simp add: H_def)
+              using \<open>M \<subseteq> E\<^sub>H E\<close> \<open>graph_invar (E\<^sub>H E)\<close> by (auto simp add: E\<^sub>H_def)
             then show "e\<in>?B"
               by auto
           qed
@@ -1368,32 +1368,32 @@ proof (rule solvesI)
           using \<open>(\<lambda>e. fst ` e) ` {{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'} = M'\<close> by auto
         also have "... = -(\<Sum>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. -c (fst ` e))"
          using \<open>inj_on ((`) fst) {{(v,1::nat),(w,1)} |v w. {v,w}\<in>M'}\<close> by (subst sum.reindex) auto
-        also have "... = -(\<Sum>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c' (E,c)) e)"
-          using \<open>\<forall>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c' (E,c)) e = -c (fst ` e)\<close> by (auto simp add: c'_def)
-        also have "... = -(\<Sum>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c' (E,c)) e)+ 
-          -(\<Sum>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c' (E,c)) e) + 
-          -(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c' (E,c)) e)"
-          using \<open>\<forall>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c' (E,c)) e = 0\<close> \<open>(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c' (E,c)) e) = 0\<close> by auto 
-        also have "... = -(\<Sum>e\<in>{{(v,i),(w,i)}|v w i. {v,w}\<in>M' \<and> i\<in>{1::nat,2}}. (c' (E,c)) e)+ 
-          -(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c' (E,c)) e)"
+        also have "... = -(\<Sum>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e)"
+          using \<open>\<forall>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e = -c (fst ` e)\<close> by (auto simp add: c\<^sub>H_def)
+        also have "... = -(\<Sum>e\<in>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e)+ 
+          -(\<Sum>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e) + 
+          -(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c\<^sub>H (E,c)) e)"
+          using \<open>\<forall>e\<in>{{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}. (c\<^sub>H (E,c)) e = 0\<close> \<open>(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c\<^sub>H (E,c)) e) = 0\<close> by auto 
+        also have "... = -(\<Sum>e\<in>{{(v,i),(w,i)}|v w i. {v,w}\<in>M' \<and> i\<in>{1::nat,2}}. (c\<^sub>H (E,c)) e)+ 
+          -(\<Sum>e\<in>{{(v,1::nat),(v,2)}|v. v\<in>(Vs E)-(Vs M')}. (c\<^sub>H (E,c)) e)"
           using \<open>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'} \<union> {{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'} = {{(v,i),(w,i)}|v w i. {v,w}\<in>M' \<and> i\<in>{1::nat,2}}\<close> 
             sum.union_disjoint[OF \<open>finite {{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'}\<close> \<open>finite {{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'}\<close> 
-              \<open>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'} \<inter> {{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'} = {}\<close>, of "c' (E,c)"] by auto
-        also have "... = -(\<Sum>e\<in>?M''. (c' (E,c)) e)"
-          using sum.union_disjoint[OF \<open>finite ?M1''\<close> \<open>finite ?M2''\<close> \<open>?M1'' \<inter> ?M2'' = {}\<close>, of "c' (E,c)"] by auto
-        also have "... \<le> -(\<Sum>e\<in>M. (c' (E,c)) e)"
-          using \<open>is_perf_match (H E) ?M''\<close> \<open>is_min_match (H E) (c' (E,c)) M\<close> by (auto simp add: is_min_match_def)
-        also have "... \<le> (\<Sum>e\<in>M. -(c' (E,c)) e)"
+              \<open>{{(v,1::nat),(w,1)}|v w. {v,w}\<in>M'} \<inter> {{(v,2::nat),(w,2)}|v w. {v,w}\<in>M'} = {}\<close>, of "c\<^sub>H (E,c)"] by auto
+        also have "... = -(\<Sum>e\<in>?M''. (c\<^sub>H (E,c)) e)"
+          using sum.union_disjoint[OF \<open>finite ?M1''\<close> \<open>finite ?M2''\<close> \<open>?M1'' \<inter> ?M2'' = {}\<close>, of "c\<^sub>H (E,c)"] by auto
+        also have "... \<le> -(\<Sum>e\<in>M. (c\<^sub>H (E,c)) e)"
+          using \<open>is_perf_match (E\<^sub>H E) ?M''\<close> \<open>is_min_match (E\<^sub>H E) (c\<^sub>H (E,c)) M\<close> by (auto simp add: is_min_match_def)
+        also have "... \<le> (\<Sum>e\<in>M. -(c\<^sub>H (E,c)) e)"
           by (simp add: sum_negf)
-        also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e = {1::nat}}\<union>{e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}}. -(c' (E,c)) e)"
+        also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e = {1::nat}}\<union>{e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}}. -(c\<^sub>H (E,c)) e)"
           using \<open>{e |e. e\<in>M \<and> snd ` e = {1::nat}} \<union> {e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}} = M\<close> by auto
-        also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. -(c' (E,c)) e) + (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e\<noteq>{1::nat}}. -(c' (E,c)) e)"
+        also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. -(c\<^sub>H (E,c)) e) + (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e\<noteq>{1::nat}}. -(c\<^sub>H (E,c)) e)"
           using sum.union_disjoint[OF \<open>finite {e |e. e\<in>M \<and> snd ` e = {1::nat}}\<close> 
               \<open>finite {e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}}\<close> 
-                \<open>{e |e. e\<in>M \<and> snd ` e = {1::nat}} \<inter> {e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}} = {}\<close>, of "-(c' (E,c))"]
+                \<open>{e |e. e\<in>M \<and> snd ` e = {1::nat}} \<inter> {e |e. e\<in>M \<and> snd ` e \<noteq> {1::nat}} = {}\<close>, of "-(c\<^sub>H (E,c))"]
           by auto
         also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. c (fst ` e)) + (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e\<noteq>{1::nat}}. 0)"
-          using \<open>\<forall>e\<in>M. snd ` e = {1::nat} \<longrightarrow> fst ` e\<in>E\<close> by (auto simp add: c'_def)
+          using \<open>\<forall>e\<in>M. snd ` e = {1::nat} \<longrightarrow> fst ` e\<in>E\<close> by (auto simp add: c\<^sub>H_def)
         also have "... = (\<Sum>e\<in>{e |e. e\<in>M \<and> snd ` e={1::nat}}. c (fst ` e))"
           by auto
         also have "... = (\<Sum>e\<in>{{(v,(1::nat)),(w,1)} |v w. {(v,(1::nat)),(w,1)}\<in>M}. c (fst ` e))"
@@ -1408,7 +1408,7 @@ proof (rule solvesI)
       qed
       ultimately have "is_max_match E c ?M'"
         unfolding is_max_match_def by auto
-      then show "p P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)" 
+      then show "is_sol P\<^sub>m\<^sub>a\<^sub>x a (f\<^sub>2 g a)" 
         using \<open>graph_invar E\<close> by auto
     qed
   qed

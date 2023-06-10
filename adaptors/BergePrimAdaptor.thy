@@ -1035,18 +1035,23 @@ qed
 
 end
 
-(* TODO: use Prim_Dijkstra_Simple implementation *)
+(* use Prim_Dijkstra_Simple implementation *)
 
-(* fun prim_impl where
-  "prim_impl c E = prim_list_impl" (* translate params to prim_impl, or prim_list_impl_int *)
+definition "prim_list_of_berge E c \<equiv> SOME l. set l = {((u,v),c {u,v}) | u v. {u,v} \<in> E}"
+
+thm prim_list_impl_correct
+
+fun prim where
+  "prim c E = (let v = SOME v. v \<in> Vs E in
+    berge_of_prim (P.\<alpha>_MST v (the (prim_list_impl_int (prim_list_of_berge E c) v))))"
+
+lemma prim_correct:
+  assumes "is_connected E"
+  shows "is_mst E c (prim c E)"
+  sorry
 
 thm berge_of_prim_def
 
 thm prim_of_berge_def
-
-thm prim_list_impl_correct
-
-interpretation mst E c prim_impl'
-  sorry *)
 
 end

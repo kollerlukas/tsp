@@ -101,17 +101,57 @@ definition "is_simple P \<equiv> distinct (edges_of_path P)"
 lemma is_simpleI: "distinct (edges_of_path P) \<Longrightarrow> is_simple P"
   unfolding is_simple_def by auto
 
-lemma is_simpleE: "is_simple P \<Longrightarrow> distinct (edges_of_path P)"
-  unfolding is_simple_def by auto
-
 lemma is_simpleI2: "distinct P \<Longrightarrow> is_simple P"
   using distinct_edges_of_vpath by (auto intro: is_simpleI) 
 
+lemma is_simpleE: "is_simple P \<Longrightarrow> distinct (edges_of_path P)"
+  unfolding is_simple_def by auto
+
+(* definition "is_simple P \<equiv> distinct (tl P) \<and> distinct (butlast P)"
+
+lemma is_simpleI: "distinct (tl P) \<Longrightarrow> distinct (butlast P) \<Longrightarrow> is_simple P"
+  unfolding is_simple_def by auto
+
+lemma is_simpleE: "is_simple P \<Longrightarrow> distinct (tl P) \<and> distinct (butlast P)"
+  unfolding is_simple_def by auto *)
+
 lemma simple_path_rev: "is_simple P \<Longrightarrow> is_simple (rev P)"
+  (* unfolding is_simple_def by (metis butlast_rev distinct_rev rev_rev_ident) *)
   using edges_of_path_rev[of P] distinct_rev[of "edges_of_path P"] by (auto simp: is_simple_def)
 
 lemma simple_path_cons: "is_simple (v#P) \<Longrightarrow> is_simple P"
+  (* unfolding is_simple_def by (simp add: distinct_butlast distinct_tl) *)
   unfolding is_simple_def using distinct_edges_of_paths_cons[of v P] by auto
+
+(* lemma is_simple_first_last_edge_neq:
+  assumes "is_simple P" "length P \<ge> 4"
+  shows "last (edges_of_path P) \<noteq> hd (edges_of_path P)"
+  using assms
+proof (induction P rule: list01234.induct)
+  case (5 u v w x P)
+  have "distinct (tl (u#v#w#x#P))" "distinct (butlast (u#v#w#x#P))"
+    using 5 unfolding is_simple_def by auto
+  hence "v \<noteq> last (x#P)" "v \<noteq> last (butlast (u#v#w#x#P))"
+    by auto
+  moreover have "last (edges_of_path (u#v#w#x#P)) = {last (u#v#w#x#P),last (butlast (u#v#w#x#P))}"
+    by (rule last_edge_of_path)  
+  ultimately show ?case
+    by auto
+qed auto
+
+lemma is_simple_rev_neq:
+  assumes "is_simple P" "length P \<ge> 4"
+  shows "P \<noteq> rev P"
+proof -
+  have "edges_of_path P \<noteq> []"
+    using assms edges_of_path_length[of P] by auto
+  hence "edges_of_path P \<noteq> rev (edges_of_path P)"
+    using is_simple_first_last_edge_neq[OF assms] rev_hd_last_eq by auto
+  hence "edges_of_path P \<noteq> edges_of_path (rev P)"
+    by (auto simp add: edges_of_path_rev)
+  thus "P \<noteq> rev P"
+    by auto
+qed *)
 
 lemma is_simple_rev_neq:
   assumes "is_simple P" "length P > 2"
@@ -133,6 +173,15 @@ qed auto
 lemma is_simple_rotate:
   assumes "is_simple (u#P\<^sub>1 @ v#P\<^sub>2 @ [u])" (is "is_simple ?P")
   shows "is_simple (v#P\<^sub>2 @ u#P\<^sub>1 @ [v])" (is "is_simple ?P'")
+(* proof (rule is_simpleI) 
+  have "distinct (tl ?P)" "distinct (butlast ?P)"
+    using assms[unfolded is_simple_def] by auto
+  moreover thus "distinct (tl ?P')"
+    by auto
+  ultimately have "distinct (v#P\<^sub>2 @ u#P\<^sub>1)"
+    by auto
+  thus "distinct (butlast ?P')"
+    by (metis append.assoc append_Cons snoc_eq_iff_butlast) *)
 proof (rule is_simpleI; rule card_distinct) 
   have "card (set (edges_of_path ?P')) = card (set (edges_of_path ?P))"
     by (auto simp: edges_of_path_rotate)
@@ -149,7 +198,8 @@ section \<open>Acyclic Graphs\<close>
 text \<open>Definition for a cycle in a graph. A cycle is a vertex-path, thus a cycle needs to contain 
 at least one edge, otherwise the singleton path \<open>[v]\<close> is a cycle. Therefore, no graph would be 
 acyclic.\<close>
-definition "is_cycle E C \<equiv> (\<exists>v. walk_betw E v C v) \<and> is_simple C \<and> length (edges_of_path C) > 0"
+
+definition "is_cycle E C \<equiv> (\<exists>v. walk_betw E v C v) \<and> is_simple C \<and> length (edges_of_path C) > 0" 
 
 lemma is_cycleI:
   "is_simple C \<Longrightarrow> length (edges_of_path C) > 0 \<Longrightarrow> walk_betw E v C v \<Longrightarrow> is_cycle E C"
@@ -160,11 +210,22 @@ lemma is_cycleE:
   obtains v where "is_simple C" "length (edges_of_path C) > 0" "walk_betw E v C v"
   using assms[unfolded is_cycle_def] by auto
 
+(* definition "is_cycle E C \<equiv> (\<exists>v. walk_betw E v C v) \<and> is_simple C \<and> length (edges_of_path C) \<ge> 3"
+
+lemma is_cycleI:
+  "is_simple C \<Longrightarrow> length (edges_of_path C) \<ge> 3 \<Longrightarrow> walk_betw E v C v \<Longrightarrow> is_cycle E C"
+  unfolding is_cycle_def by auto
+
+lemma is_cycleE:
+  assumes "is_cycle E C"
+  obtains v where "is_simple C" "length (edges_of_path C) \<ge> 3" "walk_betw E v C v"
+  using assms[unfolded is_cycle_def] by auto *)
+
 lemma is_cycleE_hd:
   assumes "is_cycle E C"
   shows "is_simple C" "length (edges_of_path C) > 0" "walk_betw E (hd C) C (hd C)"
 proof -
-  show "is_simple C" "0 < length (edges_of_path C)"
+  show "is_simple C" "length (edges_of_path C) > 0"
     using assms by (auto elim: is_cycleE)
   obtain v where "walk_betw E v C v"
     using assms by (auto elim: is_cycleE)
@@ -219,15 +280,39 @@ proof (induction C rule: list0123.induct)
     using graph by auto
 qed (auto elim: is_cycleE)
 
+(* lemma cycle_length: "is_cycle E C \<Longrightarrow> length C > 2"
+  using edges_of_path_length[of C] by (auto elim!: is_cycleE) *)
+
 lemma cycle_edge_length:
   assumes "is_cycle E C"
   shows "length (edges_of_path C) > 1"
   using edges_of_path_length[of C] cycle_length[OF assms] by auto
 
+(* lemma cycle_edge_length: "is_cycle E C \<Longrightarrow> length (edges_of_path C) \<ge> 3"
+  by (elim is_cycleE) *)
+
+(* lemma cycle_edges_hd_last_neq:
+  assumes "is_cycle E C"
+  shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)"
+  using assms cycle_length[OF assms]
+proof (induction C rule: list01234.induct)
+  case (5 u v w x P)
+  hence "is_simple (u#v#w#x#P)"
+    by (auto elim: is_cycleE)
+  hence "distinct (tl (u#v#w#x#P))" "distinct (butlast (u#v#w#x#P))"
+    unfolding is_simple_def by auto
+  hence "v \<noteq> last (u#v#w#x#P)" "v \<noteq> last (butlast (u#v#w#x#P))"
+    by auto
+  moreover have "last (edges_of_path (u#v#w#x#P)) = {last (u#v#w#x#P),last (butlast (u#v#w#x#P))}"
+    by (rule last_edge_of_path)  
+  ultimately show ?case  
+    by auto
+qed auto *)
+
 lemma cycle_edges_hd_last_neq:
   assumes "is_cycle E C"
-  shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)" (is "?e\<^sub>1 \<noteq> ?e\<^sub>2")
-  using assms cycle_edge_length distinct_hd_last_neq[OF is_simpleE] by (auto elim: is_cycleE)
+  shows "hd (edges_of_path C) \<noteq> last (edges_of_path C)"
+  using assms cycle_edge_length distinct_hd_last_neq[OF is_simpleE, of C] by (auto elim: is_cycleE)
 
 lemma cycle_path_split:
   assumes "is_cycle E C" "v \<in> set C" "v \<noteq> hd C"
@@ -261,7 +346,7 @@ next
     using assms by (elim cycle_path_split) auto
   let ?C'="v#P\<^sub>2 @ u#P\<^sub>1 @ [v]"
   have "path E C" "is_simple C" "length (edges_of_path C) > 0"
-    using assms by (auto elim: is_cycleE walk_between_nonempty_path)
+    using assms by (auto elim: is_cycleE)
   moreover hence "walk_betw E v ?C' v"
     using path_rotate by (fastforce intro: nonempty_path_walk_between)+
   moreover have "is_simple ?C'" "length (edges_of_path ?C') > 0"
@@ -559,7 +644,7 @@ end
 locale mst = 
   w_graph_abs E c for E :: "'a set set" and c +
   fixes comp_mst :: "('a set \<Rightarrow> 'b) \<Rightarrow> 'a set set \<Rightarrow> 'a set set"
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  assumes mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
 begin
 
 end

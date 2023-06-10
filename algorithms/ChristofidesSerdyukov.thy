@@ -38,10 +38,10 @@ locale christofides_serdyukov_aux =
 begin
 
 lemma subset_T: "T \<subseteq> E"
-  unfolding T_def using mst[OF is_connected] by (auto simp: is_mstE2)
+  unfolding T_def using mst[OF is_connected, of c] by (auto simp: is_mstE2)
 
 lemma Vs_T: "Vs T = Vs E"
-  unfolding T_def using mst[OF is_connected] by (auto simp: is_mstE2)
+  unfolding T_def using mst[OF is_connected, of c] by (auto simp: is_mstE2)
 
 lemma graph_T: "graph_invar T"
   using graph subset_T finite_subset[OF Vs_subset] by blast
@@ -103,7 +103,7 @@ proof -
   also have "... = Vs T \<union> Vs M"
     using finite_T finite_M by (auto simp: mVs_mset_set)
   also have "... = Vs E \<union> Vs M"
-    using mst[OF is_connected] by (auto simp: T_def is_mstE2)
+    using mst[OF is_connected, of c] by (auto simp: T_def is_mstE2)
   also have "... = Vs E"
     using Vs_subset[OF subset_M] by (auto simp: sup_absorb1)
   finally show ?thesis .
@@ -420,7 +420,7 @@ proof -
   also have "... = 2 * cost_of_st\<^sub>c T + 2 * cost_of_match\<^sub>c M"
     by (auto simp: mult_2)
   also have "... \<le> 2 * cost_of_path\<^sub>c OPT + 2 * cost_of_match\<^sub>c M"
-    using mst[OF is_connected] mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
+    using mst[OF is_connected, of c] mst_mtsp_approx add_right_mono[OF mult_2_mono] by auto    
   also have "... \<le> 2 * cost_of_path\<^sub>c OPT + cost_of_path\<^sub>c OPT"
     using min_match_leq_half_OPT add_left_mono by auto
   also have "... = 3 * cost_of_path\<^sub>c OPT"
@@ -434,16 +434,16 @@ context metric_graph_abs
 begin
 
 theorem cs_is_hc: 
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  assumes mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and min_match: "\<And>E c. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
   shows "is_hc E (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match)"
   using assms by (intro christofides_serdyukov_algo_feasibility.cs_is_hc) unfold_locales
 
 theorem cs_approx: 
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  assumes mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and min_match: "\<And>E c. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
       and "is_mtsp OPT"
   shows "2 * cost_of_path\<^sub>c (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match) \<le> 3 * cost_of_path\<^sub>c OPT"
   using assms by (intro christofides_serdyukov_algo_approx.cs_approx) unfold_locales
@@ -451,11 +451,13 @@ theorem cs_approx:
 (* ----- refine Christofides-Serdyukov algorithm with Hoare-Logic ----- *)
 
 lemma refine_christofides_serdyukov:
-  assumes mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+  assumes (* mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
     and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
     and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
-    and "is_mtsp OPT"
-  shows "VARS T W M J v P P' H { True }
+    and *) "is_mtsp OPT"
+  shows "VARS T W M J v P P' H { (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E)) 
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))
+      \<and> (\<forall>E c. (\<exists>M. is_perf_match E M) \<longrightarrow> is_min_match E c (comp_match E c)) }
   T := comp_mst c E;
   W := {v \<in> Vs T. \<not> even' (degree T v)};
   M := comp_match ({e \<in> E. e \<subseteq> W}) c;
@@ -466,7 +468,10 @@ lemma refine_christofides_serdyukov:
   WHILE P' \<noteq> [] 
   INV { comp_hc_of_et P [] = comp_hc_of_et P' H \<and> P = comp_et J \<and> J = mset_set T + mset_set M 
     \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
-    \<and> T = comp_mst c E }
+    \<and> T = comp_mst c E 
+    \<and> (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E)) 
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))
+      \<and> (\<forall>E c. (\<exists>M. is_perf_match E M) \<longrightarrow> is_min_match E c (comp_match E c))}
   DO
     v := hd P';
     P' := tl P';
@@ -498,9 +503,9 @@ theorem cs_is_hc:
   fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and min_match: "\<And>E c. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
   shows "is_hc E (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match)"
   using assms by (intro christofides_serdyukov_algo_feasibility.cs_is_hc) unfold_locales
 
@@ -510,9 +515,9 @@ theorem cs_approx:
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
       and opt: "is_tsp E c OPT"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
+      and min_match: "\<And>E c. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
   shows "2 * cost_of_path c' (christofides_serdyukov_algo.christofides_serdyukov E c comp_mst comp_et comp_match) \<le> 3 * cost_of_path c' OPT"
   unfolding c'_def using assms by (intro christofides_serdyukov_algo_approx.cs_approx; unfold_locales) auto
 
@@ -524,10 +529,12 @@ lemma refine_christofides_serdyukov:
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
       and opt: "is_tsp E c OPT"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      (* and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)"
-  shows "VARS T W M J v P P' H { True }
+      and min_match: "\<And>E. (\<exists>M. is_perf_match E M) \<Longrightarrow> is_min_match E c (comp_match E c)" *)
+  shows "VARS T W M J v P P' H { (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E)) 
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))
+      \<and> (\<forall>E c. (\<exists>M. is_perf_match E M) \<longrightarrow> is_min_match E c (comp_match E c))}
     T := comp_mst c E;
     W := {v \<in> Vs T. \<not> even' (degree T v)};
     M := comp_match ({e \<in> E. e \<subseteq> W}) c;
@@ -542,6 +549,9 @@ lemma refine_christofides_serdyukov:
       \<and> M = comp_match ({e \<in> E. e \<subseteq> W}) c 
       \<and> W = {v \<in> Vs T. \<not> even' (degree T v)} 
       \<and> T = comp_mst c E 
+      \<and> (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E)) 
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))
+      \<and> (\<forall>E c. (\<exists>M. is_perf_match E M) \<longrightarrow> is_min_match E c (comp_match E c))
     } DO
       v := hd P';
       P' := tl P';

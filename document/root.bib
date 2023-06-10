@@ -16,11 +16,9 @@
   address    = {New York, NY, USA},
   volume     = {23},
   number     = {3},
-  issn       = {0004-5411},
-  url        = {https://doi.org/10.1145/321958.321975},
   doi        = {10.1145/321958.321975},
   abstract   = {For P-complete problems such as traveling salesperson, cycle covers, 0-1 integer programming, multicommodity network flows, quadratic assignment, etc., it is shown that the approximation problem is also P-complete. In contrast with these results, a linear time approximation algorithm for the clustering problem is presented.},
-  journal    = {J. ACM},
+  journal    = {Journal of the ACM},
   month      = {Jul},
   pages      = {555--565},
   numpages   = {11}
@@ -30,9 +28,8 @@
   author    = {Tobias Nipkow and Lawrence C. Paulson and Markus Wenzel},
   title     = {Isabelle/HOL --- A Proof Assistant for Higher-Order Logic},
   publisher = {Springer},
-  series    = {LNCS},
-  volume    = 2283,
-  year      = 2002
+  series    = {Lecture Notes in Computer Science},
+  year      = {2002}
 }
 
 @article{lammich_nipkow_2019,
@@ -46,15 +43,22 @@
   issn    = {2150-914x}
 }
 
-@article{edmonds_1965,
+@article{edmonds_1965_paths,
   title     = {Paths, Trees, and Flowers},
   volume    = {17},
-  doi       = {10.4153/CJM-1965-045-4},
   journal   = {Canadian Journal of Mathematics},
   publisher = {Cambridge University Press},
   author    = {Edmonds, Jack},
   year      = {1965},
   pages     = {449--467}
+}
+
+@article{edmonds_1965_maximum,
+  title   = {Maximum matching and a polyhedron with 0,1-vertices},
+  author  = {Jack Edmonds},
+  journal = {Journal of Research of the National Bureau of Standards Section B Mathematics and Mathematical Physics},
+  year    = {1965},
+  pages   = {125--130}
 }
 
 @inproceedings{essmann_et_al_2020,
@@ -67,7 +71,6 @@
   address   = {Cham},
   pages     = {291--306},
   abstract  = {We present the first formal verification of approximation algorithms for NP-complete optimization problems: vertex cover, independent set, load balancing, and bin packing. We uncover incompletenesses in existing proofs and improve the approximation ratio in one case.},
-  isbn      = {978-3-030-51054-1}
 }
 
 @techreport{christofides_1976,
@@ -97,9 +100,7 @@
   day     = {01},
   volume  = {35},
   number  = {1},
-  pages   = {61-84},
-  issn    = {1432-5217},
-  doi     = {10.1007/BF01415960}
+  pages   = {61--84}
 }
 
 @inproceedings{brumitt_stentz_1996,
@@ -109,8 +110,7 @@
   year      = {1996},
   volume    = {3},
   number    = {},
-  pages     = {2396-2401 vol.3},
-  doi       = {10.1109/ROBOT.1996.506522}
+  pages     = {2396--2401}
 }
 
 @article{ratliff_rosenthal_1983,
@@ -120,7 +120,7 @@
   journal  = {Operations Research},
   volume   = {31},
   number   = {3},
-  pages    = {507-521},
+  pages    = {507--521},
   abstract = {This paper addresses the problem of order-picking in a rectangular warehouse that contains crossovers only at the ends of aisles. An algorithm is presented for picking an order in minimum time. The computational effort required is linear in the number of aisles. The procedure has been implemented on a microcomputer A 50-aisle problem requires only about 1 minute to solve.},
   keywords = {491 a solvable traveling salesman problem; 587 warehouse order-picking}
 }
@@ -130,10 +130,8 @@
   journal  = {Journal of Computer and System Sciences},
   volume   = {43},
   number   = {3},
-  pages    = {425-440},
+  pages    = {425--440},
   year     = {1991},
-  issn     = {0022-0000},
-  doi      = {https://doi.org/10.1016/0022-0000(91)90023-X},
   author   = {Christos H. Papadimitriou and Mihalis Yannakakis},
   abstract = {We define a natural variant of NP, MAX NP, and also a subclass called MAX SNP. These are classes of optimization problems, and in fact contain several natural, well-studied ones. We show that problems in these classes can be approximated with some bounded error. Furthermore, we show that a number of common optimization problems are complete for MAX SNP under a kind of careful transformation (called L-reduction) that preserves approximability. It follows that such a complete problem has a polynomial-time approximation scheme iff the whole class does. These results may help explain the lack of progress on the approximability of a host of optimization problems.}
 }
@@ -147,9 +145,8 @@
   address    = {Linthicum, MD, USA},
   volume     = {18},
   number     = {1},
-  issn       = {0364-765X},
   abstract   = {We present a polynomial-time approximation algorithm with worst-case ratio 7/6 for the special case of the traveling salesman problem in which all distances are either one or two. We also show that this special case of the traveling salesman problem is MAX SNP-hard, and therefore it is unlikely that it has a polynomial-time approximation scheme.},
-  journal    = {Math. Oper. Res.},
+  journal    = {Mathematics of Operations Research},
   month      = {Feb},
   pages      = {1--11},
   numpages   = {11},
@@ -163,8 +160,6 @@
   isbn      = {9781450380539},
   publisher = {Association for Computing Machinery},
   address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/3406325.3451009},
-  doi       = {10.1145/3406325.3451009},
   abstract  = {For some &gt; 10--36 we give a randomized 3/2--approximation algorithm for metric TSP.},
   booktitle = {Proceedings of the 53rd Annual ACM SIGACT Symposium on Theory of Computing},
   pages     = {32--45},
@@ -180,6 +175,14 @@
   howpublished = {GitHub Repository},
   year         = {2020},
   note         = {\url{https://github.com/wimmers/archive-of-graph-formalizations/blob/master/Undirected_Graphs/Berge.thy}}
+}
+
+@misc{abdulaziz_2022,
+  author       = {Abdulaziz, Mohammad},
+  title        = {Formalization {D}epth-First Search Algorithm},
+  howpublished = {GitHub Repository},
+  year         = {2022},
+  note         = {\url{https://github.com/cmadlener/archive-of-graph-formalizations/blob/master/Pair_Graph/DFS.thy}}
 }
 
 @misc{wimmer_2021,
@@ -215,12 +218,29 @@
   title    = {Completing graphs to metric spaces},
   journal  = {Electronic Notes in Discrete Mathematics},
   volume   = {61},
-  pages    = {53-60},
+  pages    = {53--60},
   year     = {2017},
   note     = {The European Conference on Combinatorics, Graph Theory and Applications (EUROCOMB'17)},
-  issn     = {1571-0653},
-  doi      = {https://doi.org/10.1016/j.endm.2017.06.020},
   author   = {Andrés Aranda and David Bradley-Williams and Eng {Keat Hng} and Jan Hubička and Miltiadis Karamanlis and Michael Kompatscher and Matěj Konečný and Micheal Pawliuk},
   keywords = {Ramsey class, metric space, homogeneous structure, metrically homogeneous graph, extension property for partial automorphisms},
   abstract = {We prove that certain classes of metrically homogeneous graphs omitting triangles of odd short perimeter as well as triangles of long perimeter have the extension property for partial automorphisms and we describe their Ramsey expansions.}
+}
+
+@article{jarnik_1930,
+  title   = {About a certain minimal problem (translated from Czech)},
+  journal = {Práce Moravské Přírodovědecké Společnosti (in Czech)},
+  volume  = {6},
+  pages   = {57--63},
+  year    = {1930},
+  author  = {Vojtěch Jarník}
+}
+
+@article{prim_1957,
+  author  = {Prim, R. C.},
+  journal = {The Bell System Technical Journal},
+  title   = {Shortest connection networks and some generalizations},
+  year    = {1957},
+  volume  = {36},
+  number  = {6},
+  pages   = {1389--1401}
 }

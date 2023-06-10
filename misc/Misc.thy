@@ -1111,6 +1111,23 @@ lemma edges_of_path_tl: "edges_of_path (tl P) = tl (edges_of_path P)"
 lemma edges_of_path_butlast: "edges_of_path (butlast P) = butlast (edges_of_path P)"
   by (induction P rule: list0123.induct) auto
 
+lemma hd_edge_of_path: "length P \<ge> 2 \<Longrightarrow> hd (edges_of_path P) = {hd P,hd (tl P)}"
+  by (induction P rule: list012.induct) auto
+
+lemma last_edge_of_path: "last (edges_of_path (u#v#P)) = {last (u#v#P),last (butlast (u#v#P))}"
+proof -
+  have "last (edges_of_path (u#v#P)) = hd (rev (edges_of_path (u#v#P)))"
+    by (simp add: hd_rev)
+  also have "... = hd (edges_of_path (rev (u#v#P)))"
+    by (simp add: hd_rev edges_of_path_rev del: edges_of_path.simps) 
+  also have "... = {hd (rev (u#v#P)),hd (tl (rev (u#v#P)))}"
+    using hd_edge_of_path by force 
+  also have "... = {last (u#v#P),last (butlast (u#v#P))}"
+    by (metis butlast_rev last_rev rev_rev_ident)
+  finally show ?thesis
+    by auto
+qed
+
 lemma edges_of_path_cons_subset: "set (edges_of_path P) \<subseteq> set (edges_of_path (v#P))"
   by (induction P rule: edges_of_path.induct) auto
 
@@ -1444,6 +1461,16 @@ lemma walk_split:
   assumes "walk_betw X u P v" "u \<noteq> v" "u \<in> E\<^sub>1" "v \<in> E\<^sub>2" "set P \<subseteq> E\<^sub>1 \<union> E\<^sub>2"
   obtains x y where "{x,y} \<in> set (edges_of_path P)" "x \<in> E\<^sub>1" "y \<in> E\<^sub>2"
   using assms by (induction rule: induct_walk_betw) auto
+
+lemma walk_distinct_tl_equiv_butlast:
+  assumes "walk_betw E v P v"
+  shows "distinct (tl P) \<longleftrightarrow> distinct (butlast P)"
+proof -
+  have "P \<noteq> []" "hd P = v" "last P = v"
+    using assms by (auto elim: walk_between_nonempty_path)
+  thus ?thesis
+    by (intro hd_last_eq_distinct_set_iff(1)) auto
+qed
 
 lemma edges_of_vpath_are_vs:
   assumes "\<And>v. P = [v] \<Longrightarrow> v \<in> Vs E" "set (edges_of_path P) \<subseteq> E"

@@ -486,7 +486,7 @@ theorem dt_is_hc:
   fixes E and c :: "'a set \<Rightarrow> 'b::{ordered_semiring_0,semiring_numeral}"
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
   shows "is_hc E (double_tree_algo.double_tree E c comp_et comp_mst)"
   using assms by (intro double_tree_algo.dt_is_hc) unfold_locales
@@ -497,7 +497,7 @@ theorem dt_approx:
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
       and opt: "is_tsp E c OPT"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
+      and mst: "\<And>E c. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
       and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
   shows "cost_of_path c' (double_tree_algo.double_tree E c comp_et comp_mst) \<le> 2 * cost_of_path c' OPT"
   unfolding c'_def using assms by (intro double_tree_algo_approx.dt_approx; unfold_locales) auto
@@ -508,9 +508,10 @@ lemma refine_double_tree:
   assumes "graph_invar E" "is_complete E" "\<And>e. c e > 0"
       and tri_ineq: "\<And>u v w. u \<in> Vs E \<Longrightarrow> v \<in> Vs E \<Longrightarrow> w \<in> Vs E \<Longrightarrow> c {u,w} \<le> c {u,v} + c {v,w}"
       and opt: "is_tsp E c OPT"
-      and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)"
-      and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)"
-  shows "VARS T T\<^sub>2\<^sub>x v P P' H { True }
+      (* and mst: "\<And>E. is_connected E \<Longrightarrow> is_mst E c (comp_mst c E)" *)
+      (* and eulerian: "\<And>E. is_eulerian E \<Longrightarrow> is_et E (comp_et E)" *)
+  shows "VARS T T\<^sub>2\<^sub>x v P P' H { (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E)) 
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))}
     T := comp_mst c E;
     T\<^sub>2\<^sub>x := mset_set T + mset_set T;
     P := comp_et T\<^sub>2\<^sub>x;
@@ -521,6 +522,8 @@ lemma refine_double_tree:
       \<and> P = comp_et T\<^sub>2\<^sub>x 
       \<and> T\<^sub>2\<^sub>x = mset_set T + mset_set T 
       \<and> T = comp_mst c E 
+      \<and> (\<forall>E c. is_connected E \<longrightarrow> is_mst E c (comp_mst c E))
+      \<and> (\<forall>E. is_eulerian E \<longrightarrow> is_et E (comp_et E))
     } DO
       v := hd P';
       P' := tl P';

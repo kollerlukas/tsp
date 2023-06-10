@@ -1,5 +1,5 @@
 theory HamiltonianCycle
-  imports Main tsp.Misc
+  imports Main tsp.Misc tsp.MinSpanningTree
 begin
 
 section \<open>Hamiltonian cycle\<close>
@@ -155,6 +155,33 @@ lemma is_hc_def2: "is_hc E H \<longleftrightarrow> (H \<noteq> [] \<longrightarr
   Definition for \<open>is_hc\<close> with \<open>is_cycle\<close>. 
   Does not hold! counterexample: graph with 2 vertices 
 *)
+
+(* lemma is_hc_def2: "is_hc E H \<and> length (edges_of_path H) \<ge> 3 \<longleftrightarrow> is_cycle E H \<and> set (tl H) = Vs E"
+proof (cases H)
+  case (Cons u tlH)
+  show ?thesis 
+  proof 
+    assume assm: "is_hc E H \<and> length (edges_of_path H) \<ge> 3"
+    hence "H \<noteq> [] \<Longrightarrow> (\<exists>v. walk_betw E v H v)" and vs: "Vs E = set (tl H)" and "distinct (tl H)"
+      by (auto elim!: is_hcE)
+    moreover then obtain v where walk: "walk_betw E v H v"
+      using Cons by auto
+    ultimately have "is_simple H"
+      using walk_distinct_tl_equiv_butlast[of E v H] by (intro is_simpleI) auto
+    hence "is_cycle E H"
+      using assm walk by (intro is_cycleI) auto
+    thus "is_cycle E H \<and> set (tl H) = Vs E"
+      using vs by blast
+  next
+    assume "is_cycle E H \<and> set (tl H) = Vs E"
+    moreover then obtain v where "is_simple H" "walk_betw E v H v" "length (edges_of_path H) \<ge> 3"
+      using Cons by (auto elim!: is_cycleE)
+    moreover hence "distinct (tl H) \<and> distinct (butlast H)"
+      by (auto elim!: is_simpleE)
+    ultimately show "is_hc E H \<and> length (edges_of_path H) \<ge> 3"
+      by (auto intro!: is_hcI)
+  qed
+qed (auto simp add: is_hc_def is_cycle_def) *)
 
 lemma hc_split:
   assumes "is_hc E H"
