@@ -3,3 +3,6 @@
 TSP_old.thy
 
 output/document/
+
+slides/build/
+!slides/build/tsp.pdf
