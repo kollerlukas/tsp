@@ -1,0 +1,54 @@
+\newcommand*{\circleDia}{2.0cm}
+\newcommand*{\edgeBend}{0}
+\newcommand*{\etMargin}{0.15cm}
+
+\begin{tikzpicture}[label distance=0mm,scale=1]
+  \foreach \a in {1,2,...,5}{
+      \draw (90+144-\a*360/5: \circleDia) node[graphNode,label={90+144-\a*360/5:$\mathstrut \a$}] (\a) {};
+    }
+
+  % \draw[white,name path=line21] ($(2)!-\etMargin!(1)!-\etMargin!90:(1)$) -- ($(1)!-\etMargin!(2)!\etMargin!90:(2)$);
+  % \draw[white,name path=line32] ($(3)!-\etMargin!(2)!-\etMargin!90:(2)$) -- ($(2)!-\etMargin!(3)!-\etMargin!-90:(3)$);
+  % \draw[white,name path=line12] ($(1)!-\etMargin!(2)!-\etMargin!90:(2)$) -- ($(2)!-\etMargin!(1)!-\etMargin!-90:(1)$);
+  % \draw[white,name path=line25] ($(2)!-\etMargin!(5)!-\etMargin!90:(5)$) -- ($(5)!-\etMargin!(2)!\etMargin!90:(2)$);
+  % \draw[white,name path=line45] ($(4)!-\etMargin!(5)!-\etMargin!90:(5)$) -- ($(5)!-\etMargin!(4)!-\etMargin!-90:(4)$);
+  % \draw[white,name path=line52] ($(5)!-\etMargin!(2)!-\etMargin!90:(2)$) -- ($(2)!-\etMargin!(5)!-\etMargin!-90:(5)$);
+  % \draw[white,name path=line23] ($(2)!-\etMargin!(3)!-\etMargin!90:(3)$) -- ($(3)!-\etMargin!(2)!\etMargin!90:(2)$);
+
+  % \path [name intersections={of=line21 and line32,by=line123}];
+  % \path [name intersections={of=line12 and line25,by=line125}];
+  % \path [name intersections={of=line45 and line52,by=line452}];
+  % \path [name intersections={of=line52 and line23,by=line523}];
+
+  \path[-] (1) edge node[edgeLabel] {\footnotesize $2$} (2);
+  % \path[-] (1) edge[mstEdge,bend right=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (2);
+  % \path[-] (1) edge[mstEdge,bend left=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (2);
+  \path[-] (1) edge node[edgeLabel] {\footnotesize $3$} (3);
+  \path[-] (1) edge node[edgeLabel] {\footnotesize $3$} (4);
+  \path[-] (1) edge node[edgeLabel] {\footnotesize $3$} (5);
+
+  \path[-] (2) edge node[edgeLabel] {\footnotesize $2$} (3);
+  % \path[-] (2) edge[mstEdge,bend right=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (3);
+  % \path[-] (2) edge[mstEdge,bend left=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (3);
+  \path[-] (2) edge node[edgeLabel] {\footnotesize $3$} (4);
+  \path[-] (2) edge node[edgeLabel] {\footnotesize $1$} (5);
+  % \path[-] (2) edge[mstEdge,bend right=\edgeBend] node[mstEdgeLabel] {\footnotesize $1$} (5);
+  % \path[-] (2) edge[mstEdge,bend left=\edgeBend] node[mstEdgeLabel] {\footnotesize $1$} (5);
+
+  \path[-] (3) edge node[edgeLabel] {\footnotesize $3$} (4);
+  \path[-] (3) edge node[edgeLabel] {\footnotesize $2$} (5);
+
+  \path[-] (4) edge node[edgeLabel] {\footnotesize $2$} (5);
+  % \path[-] (4) edge[mstEdge,bend right=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (5);
+  % \path[-] (4) edge[mstEdge,bend left=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (5);
+
+  % \draw[blue!50,very thick,rounded corners=\etMargin] (line123) -- ($(1)!-\etMargin!(2)!\etMargin!90:(2)$)
+  % -- ($(1)!-\etMargin!(2)!-\etMargin!90:(2)$) -- (line125)
+  % -- ($(5)!-\etMargin!(2)!\etMargin!90:(2)$)
+  % -- ($(5)!-\etMargin!(4)!-\etMargin!90:(4)$) -- ($(4)!-\etMargin!(5)!\etMargin!90:(5)$)
+  % -- ($(4)!-\etMargin!(5)!-\etMargin!90:(5)$) -- (line452)
+  % -- (line523)
+  % -- ($(3)!-\etMargin!(2)!\etMargin!90:(2)$)
+  % -- ($(3)!-\etMargin!(2)!-\etMargin!90:(2)$) -- cycle;
+
+\end{tikzpicture}

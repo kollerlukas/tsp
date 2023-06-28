@@ -1,0 +1,360 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global}
+    \entry{abdulaziz_2020}{misc}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=b07c3cf1b26579b00f1a165e96de1cac}{%
+           family={Abdulaziz},
+           familyi={A\bibinitperiod},
+           given={Mohammad},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{fullhash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{bibnamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authorbibnamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authornamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authorfullhash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \field{extraname}{1}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{GitHub Repository}
+      \field{note}{\url{https://github.com/wimmers/archive-of-graph-formalizations/blob/master/Undirected_Graphs/Berge.thy}}
+      \field{title}{Formalization of {B}erge's Theorem}
+      \field{year}{2020}
+    \endentry
+    \entry{abdulaziz_2022}{misc}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=b07c3cf1b26579b00f1a165e96de1cac}{%
+           family={Abdulaziz},
+           familyi={A\bibinitperiod},
+           given={Mohammad},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{fullhash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{bibnamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authorbibnamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authornamehash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \strng{authorfullhash}{b07c3cf1b26579b00f1a165e96de1cac}
+      \field{extraname}{2}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{GitHub Repository}
+      \field{note}{\url{https://github.com/cmadlener/archive-of-graph-formalizations/blob/master/Pair_Graph/DFS.thy}}
+      \field{title}{Formalization {D}epth-First Search Algorithm}
+      \field{year}{2022}
+    \endentry
+    \entry{berge_1954}{article}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=af56d551a01b0eb0f4598578b9b13272}{%
+           family={Berge},
+           familyi={B\bibinitperiod},
+           given={Claude},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {National Academy of Sciences}%
+      }
+      \strng{namehash}{af56d551a01b0eb0f4598578b9b13272}
+      \strng{fullhash}{af56d551a01b0eb0f4598578b9b13272}
+      \strng{bibnamehash}{af56d551a01b0eb0f4598578b9b13272}
+      \strng{authorbibnamehash}{af56d551a01b0eb0f4598578b9b13272}
+      \strng{authornamehash}{af56d551a01b0eb0f4598578b9b13272}
+      \strng{authorfullhash}{af56d551a01b0eb0f4598578b9b13272}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{00278424}
+      \field{journaltitle}{Proceedings of the National Academy of Sciences of the United States of America}
+      \field{number}{9}
+      \field{title}{Two Theorems in Graph Theory}
+      \field{volume}{43}
+      \field{year}{1957}
+      \field{pages}{842\bibrangedash 844}
+      \range{pages}{3}
+    \endentry
+    \entry{christofides_1976}{report}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=b9677598d203ef2d59db8effb9d58ced}{%
+           family={Christofides},
+           familyi={C\bibinitperiod},
+           given={Nicos},
+           giveni={N\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{institution}{1}{%
+        {Graduate School of Industrial Administration, Carnegie Mellon University}%
+      }
+      \strng{namehash}{b9677598d203ef2d59db8effb9d58ced}
+      \strng{fullhash}{b9677598d203ef2d59db8effb9d58ced}
+      \strng{bibnamehash}{b9677598d203ef2d59db8effb9d58ced}
+      \strng{authorbibnamehash}{b9677598d203ef2d59db8effb9d58ced}
+      \strng{authornamehash}{b9677598d203ef2d59db8effb9d58ced}
+      \strng{authorfullhash}{b9677598d203ef2d59db8effb9d58ced}
+      \field{sortinit}{C}
+      \field{sortinithash}{4d103a86280481745c9c897c925753c0}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{number}{388}
+      \field{title}{Worst-case analysis of a new heuristic for the travelling salesman problem}
+      \field{type}{Technical Report}
+      \field{year}{1976}
+    \endentry
+    \entry{korte_vygen_2018}{book}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=54f9857605c0ba40b057d6545ee51cca}{%
+           family={Korte},
+           familyi={K\bibinitperiod},
+           given={Bernhard},
+           giveni={B\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=60b91c18a457236628f65ee35ab35ddb}{%
+           family={Vygen},
+           familyi={V\bibinitperiod},
+           given={Jens},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Springer Berlin, Heidelberg}%
+      }
+      \strng{namehash}{1d60ca392602bfae2d949aa92b576f85}
+      \strng{fullhash}{1d60ca392602bfae2d949aa92b576f85}
+      \strng{bibnamehash}{1d60ca392602bfae2d949aa92b576f85}
+      \strng{authorbibnamehash}{1d60ca392602bfae2d949aa92b576f85}
+      \strng{authornamehash}{1d60ca392602bfae2d949aa92b576f85}
+      \strng{authorfullhash}{1d60ca392602bfae2d949aa92b576f85}
+      \field{sortinit}{K}
+      \field{sortinithash}{c02bf6bff1c488450c352b40f5d853ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{6th}
+      \field{isbn}{978-3-662-56039-6}
+      \field{title}{Combinatorial Optimization: Theory and Algorithms}
+      \field{year}{2018}
+    \endentry
+    \entry{lammich_nipkow_2019}{article}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=057f38009461631459dbdadcc07ca1ab}{%
+           family={Lammich},
+           familyi={L\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=a41b38c2580f5bb8c574d84f66e0856a}{%
+           family={Nipkow},
+           familyi={N\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{cd33a00b923c7670a069d2c4ac5228db}
+      \strng{fullhash}{cd33a00b923c7670a069d2c4ac5228db}
+      \strng{bibnamehash}{cd33a00b923c7670a069d2c4ac5228db}
+      \strng{authorbibnamehash}{cd33a00b923c7670a069d2c4ac5228db}
+      \strng{authornamehash}{cd33a00b923c7670a069d2c4ac5228db}
+      \strng{authorfullhash}{cd33a00b923c7670a069d2c4ac5228db}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{2150-914x}
+      \field{journaltitle}{Archive of Formal Proofs}
+      \field{month}{6}
+      \field{note}{\url{https://isa-afp.org/entries/Prim_Dijkstra_Simple.html}, Formal proof development}
+      \field{title}{Purely Functional, Simple, and Efficient Implementation of {P}rim and {D}ijkstra}
+      \field{year}{2019}
+    \endentry
+    \entry{nipkow_wenzel_paulson_2002}{book}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=a41b38c2580f5bb8c574d84f66e0856a}{%
+           family={Nipkow},
+           familyi={N\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=3c148717c5f0355213ec4ed493cbd64e}{%
+           family={Paulson},
+           familyi={P\bibinitperiod},
+           given={Lawrence\bibnamedelima C.},
+           giveni={L\bibinitperiod\bibinitdelim C\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=601e622530ffdabcfaef351e537dbd6c}{%
+           family={Wenzel},
+           familyi={W\bibinitperiod},
+           given={Markus},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{98b6dd1022a27174bf22f40512a7e362}
+      \strng{fullhash}{7fd845d8f5e64ea1f3fd574f88408236}
+      \strng{bibnamehash}{7fd845d8f5e64ea1f3fd574f88408236}
+      \strng{authorbibnamehash}{7fd845d8f5e64ea1f3fd574f88408236}
+      \strng{authornamehash}{98b6dd1022a27174bf22f40512a7e362}
+      \strng{authorfullhash}{7fd845d8f5e64ea1f3fd574f88408236}
+      \field{sortinit}{N}
+      \field{sortinithash}{22369a73d5f88983a108b63f07f37084}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{series}{Lecture Notes in Computer Science}
+      \field{title}{Isabelle/HOL --- A Proof Assistant for Higher-Order Logic}
+      \field{year}{2002}
+    \endentry
+    \entry{papadimitriou_yannakakis_1991}{article}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=b3b407bb63367a850366076095ee1970}{%
+           family={Papadimitriou},
+           familyi={P\bibinitperiod},
+           given={Christos\bibnamedelima H.},
+           giveni={C\bibinitperiod\bibinitdelim H\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=4c46d2f3f797a5dedce8a376cb13fe3a}{%
+           family={Yannakakis},
+           familyi={Y\bibinitperiod},
+           given={Mihalis},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{6173388e86e7febe4640b0153ab9de45}
+      \strng{fullhash}{6173388e86e7febe4640b0153ab9de45}
+      \strng{bibnamehash}{6173388e86e7febe4640b0153ab9de45}
+      \strng{authorbibnamehash}{6173388e86e7febe4640b0153ab9de45}
+      \strng{authornamehash}{6173388e86e7febe4640b0153ab9de45}
+      \strng{authorfullhash}{6173388e86e7febe4640b0153ab9de45}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{We define a natural variant of NP, MAX NP, and also a subclass called MAX SNP. These are classes of optimization problems, and in fact contain several natural, well-studied ones. We show that problems in these classes can be approximated with some bounded error. Furthermore, we show that a number of common optimization problems are complete for MAX SNP under a kind of careful transformation (called L-reduction) that preserves approximability. It follows that such a complete problem has a polynomial-time approximation scheme iff the whole class does. These results may help explain the lack of progress on the approximability of a host of optimization problems.}
+      \field{journaltitle}{Journal of Computer and System Sciences}
+      \field{number}{3}
+      \field{title}{Optimization, approximation, and complexity classes}
+      \field{volume}{43}
+      \field{year}{1991}
+      \field{pages}{425\bibrangedash 440}
+      \range{pages}{16}
+    \endentry
+    \entry{sahni_gonzalez_1976}{article}{}
+      \name{author}{2}{}{%
+        {{un=0,uniquepart=base,hash=7e90325f25f41d005a9a47e28fd30bf0}{%
+           family={Sahni},
+           familyi={S\bibinitperiod},
+           given={Sartaj},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=920f6578893cb2e7b8ac997178968f27}{%
+           family={Gonzalez},
+           familyi={G\bibinitperiod},
+           given={Teofilo},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{cf0569040a92efdccd530197b2b4f7c8}
+      \strng{fullhash}{cf0569040a92efdccd530197b2b4f7c8}
+      \strng{bibnamehash}{cf0569040a92efdccd530197b2b4f7c8}
+      \strng{authorbibnamehash}{cf0569040a92efdccd530197b2b4f7c8}
+      \strng{authornamehash}{cf0569040a92efdccd530197b2b4f7c8}
+      \strng{authorfullhash}{cf0569040a92efdccd530197b2b4f7c8}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{For P-complete problems such as traveling salesperson, cycle covers, 0-1 integer programming, multicommodity network flows, quadratic assignment, etc., it is shown that the approximation problem is also P-complete. In contrast with these results, a linear time approximation algorithm for the clustering problem is presented.}
+      \field{journaltitle}{Journal of the ACM}
+      \field{month}{7}
+      \field{number}{3}
+      \field{title}{P-Complete Approximation Problems}
+      \field{volume}{23}
+      \field{year}{1976}
+      \field{pages}{555\bibrangedash 565}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1145/321958.321975
+      \endverb
+    \endentry
+    \entry{serdyukov_1978}{article}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=3223a63e018ed7e42be6db7a03c854c3}{%
+           family={Serdyukov},
+           familyi={S\bibinitperiod},
+           given={Anatoliy\bibnamedelima I.},
+           giveni={A\bibinitperiod\bibinitdelim I\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{3223a63e018ed7e42be6db7a03c854c3}
+      \strng{fullhash}{3223a63e018ed7e42be6db7a03c854c3}
+      \strng{bibnamehash}{3223a63e018ed7e42be6db7a03c854c3}
+      \strng{authorbibnamehash}{3223a63e018ed7e42be6db7a03c854c3}
+      \strng{authornamehash}{3223a63e018ed7e42be6db7a03c854c3}
+      \strng{authorfullhash}{3223a63e018ed7e42be6db7a03c854c3}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{year}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Upravlyaemye Sistemy (in Russian)}
+      \field{title}{On some extremal tours in graphs (translated from Russian)}
+      \field{volume}{17}
+      \field{year}{1978}
+      \field{pages}{76\bibrangedash 79}
+      \range{pages}{4}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

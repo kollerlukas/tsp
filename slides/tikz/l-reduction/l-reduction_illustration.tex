@@ -1,0 +1,23 @@
+\begin{tikzpicture}[label distance=0mm,scale=1]
+  \node at (-0.75,2) {$A$};
+  \draw (0,0) circle[x radius=1.25,y radius=2];
+  \node at (-0.25,0.75) (xA) {$(x_A,y_A)$};
+  \node at (0,-0.75) (xAg) {$(x_A,g(x,y_B))$};
+
+  \node[fill=white] at (0.15,0) (fsol) {{\color{mygrey}\footnotesize feasible solution}};
+  \node[fill=white] at (-0.75,1.45) (inst) {{\color{mygrey}\footnotesize instance}};
+
+  \path[->] (fsol.north) edge[mygrey,bend left=20] ($(xA)+(+0.225cm,-0.27cm)$);
+  \path[->] (inst.south) edge[mygrey,bend left=20] ($(xA)+(-0.275cm,0.25cm)$);
+
+  \fill[myblue,fill opacity=0.2] ($(xA)+(-0.275cm,-0.02cm)$) circle (0.25cm);
+
+  \node at (2.25,1.75) {$B$};
+  \draw (3,0) circle[x radius=1,y radius=1.75];
+  \node at (3,0) (fxB) {$(f(x_A),y_B)$};
+
+  \fill[mygreen,fill opacity=0.2] ($(fxB)+(0.515cm,-0.02cm)$) circle (0.25cm);
+
+  \path[->] ($(xA)+(-0.1cm,0.156)$) edge[draw=myblue,very thick,bend left=50] node[label={[text=myblue]above:$f$}] {} ($(fxB.north)+(-0.35cm,0)$);
+  \path[->] ($(fxB)+(0.506cm,-0.237cm)$) edge[draw=mygreen,very thick,bend left=50] node[label={[text=mygreen]below:$g$}] {} ($(xAg.south)+(0.3cm,0)$);
+\end{tikzpicture}

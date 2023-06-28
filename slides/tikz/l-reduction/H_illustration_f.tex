@@ -1,0 +1,78 @@
+\newcommand*{\edgeBend}{50}
+
+\tikzset{
+  edge4/.style={bend left=\edgeBend}
+}
+
+\begin{tikzpicture}[label distance=0mm, scale=1]
+  \pic[visible on=<2->,inactiveEdges on=<3->] (wx) at (0,0) {He={\only<3->{\color{mygrey}}$\mathstrut w$}{\only<3->{\color{mygreen}}$\mathstrut x$}{}{hpStartNode on=<3->}};
+  \pic[visible on=<2->,rotate=-90,inactiveEdges on=<3->] (vx) at (\HeWidth+\HeMargin,\HeWidth+\HeHeight+\HeMargin) {He={\only<3->{\color{mygreen}}$\mathstrut v$}{\only<3->{\color{mygrey}}$\mathstrut x$}{hpStartNode on=<3->}{}};
+  \pic[visible on=<2->,rotate=45,inactiveEdges on=<3->] (wv) at (0.146*\HeWidth,\HeMargin+0.146*\HeWidth+\HeHeight) {He={\only<3->{\color{mygrey}}$\mathstrut w$}{\only<3->{\color{mygreen}}$\mathstrut v$}{}{hpStartNode on=<3->}};
+  \pic[visible on=<2->,inactiveEdges on=<3->] (uv) at (-\HeMargin,1.146*\HeWidth+\HeHeight+3*\HeMargin) {He={\only<3->{\color{mygrey}}$\mathstrut u$}{\only<3->{\color{mygreen}}$\mathstrut v$}{}{hpStartNode on=<3->}};
+
+  \begin{scope}[on background layer]
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v1) edge[edge4] (wv-v1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v1) edge[edge4] (wv-v2);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v2) edge[edge4] (wv-v1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v2) edge[edge4] (wv-v2);
+
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v1) edge[edge4] (vx-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v1) edge[edge4] (vx-u2);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v2) edge[edge4] (vx-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (uv-v2) edge[edge4] (vx-u2);
+
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wv-v1) edge[edge4] (vx-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wv-v1) edge[edge4] (vx-u2);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wv-v2) edge[edge4] (vx-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wv-v2) edge[edge4] (vx-u2);
+
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wx-u1) edge[edge4] (wv-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wx-u1) edge[edge4] (wv-u2);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wx-u2) edge[edge4] (wv-u1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (wx-u2) edge[edge4] (wv-u2);
+
+    \draw[visible on=<4->,inactiveEdges on=<5->] (vx-v1) edge[edge4] (wx-v1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (vx-v1) edge[edge4] (wx-v2);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (vx-v2) edge[edge4] (wx-v1);
+    \draw[visible on=<4->,inactiveEdges on=<5->] (vx-v2) edge[edge4] (wx-v2);
+  \end{scope}
+
+  \draw[visible on=<3->,lr1Edge] (uv-v1) -- (uv-v3) -- (uv-u2) -- (uv-v5)
+  -- (uv-u6) -- (uv-v4) -- (uv-u5) -- (uv-v6) -- (uv-u4)
+  -- (uv-u1) -- (uv-u3) -- (uv-v2);
+
+  \draw[visible on=<3->,lr1Edge] (wv-v1) -- (wv-v3) -- (wv-u2) -- (wv-v5)
+  -- (wv-u6) -- (wv-v4) -- (wv-u5) -- (wv-v6) -- (wv-u4)
+  -- (wv-u1) -- (wv-u3) -- (wv-v2);
+
+  \draw[visible on=<3->,lr1Edge] (vx-u1) -- (vx-u3) -- (vx-v2) -- (vx-u5)
+  -- (vx-v6) -- (vx-u4) -- (vx-v5) -- (vx-u6) -- (vx-v4)
+  -- (vx-v1) -- (vx-v3) -- (vx-u2);
+
+  \draw[visible on=<3->,lr1Edge] (wx-v1) -- (wx-v3) -- (wx-u2) -- (wx-v5)
+  -- (wx-u6) -- (wx-v4) -- (wx-u5) -- (wx-v6) -- (wx-u4)
+  -- (wx-u1) -- node[lr1EdgeLabel] {\footnotesize 1} (wx-u3) -- (wx-v2);
+
+  \draw[visible on=<5->,lr4Edge] (uv-v1) edge[edge4] (wv-v2);
+  \draw[visible on=<5->,lr4Edge] (wv-v1) edge[edge4] node[lr4EdgeLabel] {} (vx-u2);
+  
+  \draw[visible on=<6->,lr5Edge] (wx-v1)
+  .. controls ++(2*\HeWidth,-\HeMargin) and ++(2*\HeWidth,\HeMargin) .. node[lr5EdgeLabel] {\footnotesize 5}
+  (uv-v2);
+
+  \draw[visible on=<6->,lr5Edge] (wx-v2)
+  .. controls ++(\HeHeight,-\HeHeight) and ++(\HeHeight,-\HeHeight) ..
+  (vx-u1);
+
+  % just for positioning with H_illustration_g.tex
+  \draw[invisible,lr5Edge] (wv-u1)
+  .. controls ++(-2*\HeMargin,2*\HeMargin) and ++(-\HeWidth-2*\HeMargin,\HeHeight+\HeMargin) .. node[lr5EdgeLabel] {\footnotesize 5}
+  (uv-v2);
+
+  \draw[invisible,lr5Edge] (wx-u2)
+  .. controls ++(\HeWidth+\HeMargin,-\HeHeight) and ++(\HeHeight,-\HeWidth-\HeMargin) ..
+  (vx-u1);
+
+  \node[align=left] at ($(vx-u1 |- uv-v2)+(0.25,0)$) {\tiny\shortstack[l]{*Not all edges \\ \tiny are shown.}};
+
+\end{tikzpicture}

@@ -95,12 +95,18 @@ A couple of different approximation algorithms are already formalized and verifi
 I give implementations for both of the formalized approximation algorithms with an imperative 
 \texttt{WHILE}-program.
 
-\citeauthor{wimmer_2021} @{cite "wimmer_2021"} formalize polynomial time reductions in Isabelle/HOL. 
+\citeauthor{wimmer_2021} @{cite "wimmer_2021"} formalized polynomial time reductions in Isabelle/HOL. 
 To formally reason about the running times of functions, a computational model for the programming 
 language is required. Therefore, \citeauthor{wimmer_2021} has developed the imperative language 
 \texttt{IMP-} which provides a computational model to reason about the running times of functions 
 implemented in \texttt{IMP-}. To my knowledge, there are no previous attempts to formalize an 
-L-reduction in Isabelle/HOL.\<close>
+L-reduction in Isabelle/HOL.
+
+{\sloppy \citeauthor{vazirani_2010} @{cite "vazirani_2010"} defines a \textit{gap-introducing} reduction 
+which is a reduction from the satisfiability problem (\textsc{SAT}) to an optimization problem. A 
+\textit{gap-preserving} reduction is a reduction between optimization problems. The combination of a 
+gap-introducing and gap-preserving reduction can be used to prove the inapproximability of an 
+optimization problem. Gap-preserving reductions are weaker than L-reductions @{cite "vazirani_2010"}.\par}\<close>
 
 section \<open>Fundamentals and Definitions\<close>
 
@@ -299,8 +305,7 @@ end
 subsection \<open>Multi-Graphs\<close>
 
 text \<open>A multigraph is formalized as a multiset of edges. The theory @{file "./graphs/MultiGraph.thy"} 
-contains unfinished attempts for encoding a multigraph with a simple graph.
-{\color{red} explain more...}\<close>
+contains unfinished attempts for encoding a multigraph with a simple graph.\<close>
 
 subsection \<open>Eulerian Tours\<close>
 
@@ -335,7 +340,7 @@ A subgraph \<open>M\<close> is a perfect matching for a graph \<open>E\<close> i
 context w_graph_abs
 begin
 (*>*)
-text \<open>A minimum perfect matching \<open>M\<close> is a perfect matching with minimum total weight.
+text \<open>A minimum weight perfect matching \<open>M\<close> is a perfect matching with minimum total weight.
 
 @{lemma[display,source] "is_min_match E c M \<equiv> is_perf_match E M 
   \<and> (\<forall>M'. is_perf_match E M' \<longrightarrow> (\<Sum>e\<in>M. c e) \<le> (\<Sum>e\<in>M'. c e))" by (rule is_min_match_def)}\<close>
@@ -343,11 +348,9 @@ text \<open>A minimum perfect matching \<open>M\<close> is a perfect matching wi
 end
 (*>*)
 text \<open>The locale @{locale min_weight_matching} fixes an algorithm (denoted by \<open>comp_match\<close>) that 
-computes a minimum perfect matching for a given graph. For an instantiation of this locale a 
-formalization of e.g. Edmond's Blossom algorithm 
-@{cite "edmonds_1965_paths" and "edmonds_1965_maximum"} for minimum-weight perfect matching is 
-required.
-{\color{red} TODO: check citation of algorithm}\<close>
+computes a minimum weight perfect matching for a given graph. For an instantiation of this locale a 
+formalization a suitable algorithm is required, e.g. the algorithm described in chapter 11 by 
+\citeauthor{korte_vygen_2018} @{cite "korte_vygen_2018"}.\<close>
 
 subsection \<open>Vertex Cover\<close>
 
@@ -384,8 +387,8 @@ which shows the equivalence of the \textsc{Maximum Matching Problem} and the
 \textsc{Minimum Matching Problem}.
 
 Similar to the formalization of polynomial time reductions by \citeauthor{wimmer_2021} 
-@{cite "wimmer_2021"}, a problem \<open>P\<close> consists of a function \<open>is_sol\<close> that characterizes the 
-solutions to instances of the problem. The function \<open>is_sol\<close> takes a problem instance and an a 
+@{cite "wimmer_2021"}, a problem \<open>P\<close> consists of a predicate \<open>is_sol\<close> that characterizes the 
+solutions to instances of the problem. The function \<open>is_sol\<close> takes a problem instance and a potential
 solution as arguments.
 
 @{datatype[display] prob}
@@ -393,15 +396,14 @@ solution as arguments.
 I define the two matching problems: the \textsc{Maximum Matching Problem} and the
 \textsc{Minimum Matching Problem}. For a well-formed graph \<open>E\<close> with edge weights \<open>c\<close>, a solution to 
 the \textsc{Maximum Matching Problem} is a maximum weight matching (@{const is_max_match}).
+
 @{abbrev[display] P\<^sub>m\<^sub>a\<^sub>x}
 
 If a given well-formed graph \<open>E\<close> with edge weights \<open>c\<close> admits a perfect matching, then a solution to 
 the \textsc{Minimum Matching Problem} is a minimum weight perfect matching (@{const is_min_match}). 
 Otherwise, the solution is \<open>None\<close>.
 
-@{theory_text[display,source] "P\<^sub>m\<^sub>i\<^sub>n \<equiv> Prob (\<lambda>(E,c) M. graph_invar E \<longrightarrow> (case M of 
-    Some M \<Rightarrow> is_min_match E c M 
-  | None \<Rightarrow> \<nexists>M. is_perf_match E M))"}
+@{abbrev[display] P\<^sub>m\<^sub>i\<^sub>n}
 
 If a function \<open>f\<close> returns a solution to every instance of a problem \<open>P\<close>, then the function \<open>f\<close> 
 solves the problem \<open>P\<close>. The predicate @{const solves} characterizes functions that solve a 
@@ -411,38 +413,38 @@ particular problem.
 
 Given a function \<open>g\<close> that solves the \textsc{Maximum Matching Problem} we want to solve the 
 \textsc{Minimum Matching Problem}. Let \<open>E\<close> be an undirected graph with edge weights \<open>c\<close>. We change 
-the edge weight of each edge as follows.
+the edge weights of each edge as follows.
 
 \begin{equation*}
-  \text{@{term "c' e = 1 + (\<Sum>e\<in>E. \<bar>c e\<bar>) - c e"}}
+  \text{\<open>c' e = 1 + (\<Sum>e\<in>E. \<bar>c e\<bar>) - c e\<close>}
 \end{equation*}
 
 A maximum weight matching for the graph \<open>E\<close> with edge weights \<open>c'\<close> is a minimum weight perfect 
 matching for the graph \<open>E\<close> with edge weights \<open>c\<close>. The function \<open>f\<^sub>1\<close> solves the problem \<open>P\<^sub>m\<^sub>i\<^sub>n\<close> and 
 takes as an argument a function \<open>g\<close> that solves the problem \<open>P\<^sub>m\<^sub>a\<^sub>x\<close>.
 
-@{lemma[display,source,mode=IfThen] "f\<^sub>1 g (E,c) \<equiv> let M = g (E,\<lambda>e. 1 + (\<Sum>e\<in>E. \<bar>c e\<bar>) - c e) in 
-  if Vs M = Vs E then Some M else None" by (auto simp add: f\<^sub>1_def)}
+@{lemma[display] "f\<^sub>1 g (E,c) \<equiv> 
+  let M = g (E,\<lambda>e. 1 + (\<Sum>e\<in>E. \<bar>c e\<bar>) - c e) in if Vs M = Vs E then Some M else None" by (auto simp add: f\<^sub>1_def)}
 
 Given a function \<open>g\<close> that solves the \textsc{Minimum Matching Problem} we want to solve the 
 \textsc{Maximum Matching Problem}. Let \<open>E\<close> be an undirected graph with edge weights \<open>c\<close>. We 
 construct a graph \<open>H\<close> by doubling the graph \<open>E\<close> and adding an edge to connect each two copies of the 
 same vertex. The function \<open>E\<^sub>H E\<close> construct this graph.
 
-@{lemma[display,source,mode=IfThen] "E\<^sub>H E \<equiv> 
+@{lemma[display] "E\<^sub>H E \<equiv> 
   {{(v,i),(w,i)} |v w i. {v,w} \<in> E \<and> i\<in>{1,2}} \<union> {{(v,1),(v,2)} |v. v \<in> Vs E}" by (auto simp add: E\<^sub>H_def)}
 
 The function \<open>c\<^sub>H\<close> defines the edge weights for the constructed graph \<open>H\<close>. The cost of an edge in the 
-first copy is its negative original weight. All other edges have no cost
+first copy is its negative original weight. All other edges have no cost.
 
-@{lemma[display,source,mode=IfThen] "c\<^sub>H (E,c) e \<equiv> if fst ` e \<in> E \<and> snd ` e = {1} then -c (fst ` e) else 0" by (auto simp add: c\<^sub>H_def)}
+@{lemma[display] "c\<^sub>H (E,c) e \<equiv> if fst ` e \<in> E \<and> snd ` e = {1::int} then -c (fst ` e) else 0" by (auto simp add: c\<^sub>H_def)}
 
 With the function \<open>g\<close>, we compute a minimum weight perfect matching \<open>M\<close> for the graph \<open>H\<close> with edge 
 weights \<open>c\<^sub>H\<close>. The matching \<open>M\<close> is a maximum weight matching for the graph \<open>E\<close> with edge weights \<open>c\<close>. 
 The function \<open>f\<^sub>2\<close> solves the problem \<open>P\<^sub>m\<^sub>a\<^sub>x\<close> and takes as an argument a function \<open>g\<close> that solves the 
 problem \<open>P\<^sub>m\<^sub>i\<^sub>n\<close>.
 
-@{lemma[display,source,mode=IfThen] "f\<^sub>2 g (E,c) \<equiv> case g (E\<^sub>H E,c\<^sub>H (E,c)) of 
+@{lemma[display] "f\<^sub>2 g (E,c) \<equiv> case g (E\<^sub>H E,c\<^sub>H (E,c)) of 
   Some M \<Rightarrow> {{v,w} |v w. {(v,(1::nat)),(w,1)} \<in> M}" by (auto simp add: f\<^sub>2_def)}
 
 The main results of the formalization of @{cite \<open>Proposition 11.1\<close> "korte_vygen_2018"} are the 
@@ -476,8 +478,6 @@ weights \<open>c\<close> satisfy the triangle inequality, and thus the total wei
 Hamiltonian cycle is at most the total weight of the Eulerian tour \<open>P\<close>, which is exactly the total 
 weight of all edges in the Eulerian graph \<open>E'\<close>.
 \end{proof}
-
-{\color{red} illustration?}
 
 {\sloppy The construction for Lemma~\ref{lemma:comp_hc_of_et} is formalized with the function 
 @{const comp_hc_of_et}. Given an Eulerian tour \<open>P\<close> for \<open>E'\<close>, the function @{const comp_hc_of_et} computes 
@@ -836,7 +836,7 @@ polynomial time) and two positive constants \<open>\<alpha>,\<beta> > 0\<close> 
     @{theory_text "OPT (f x\<^sub>A) \<le> \<alpha>(OPT x\<^sub>A)"}, and
   \item and for any feasible solution \<open>y\<^sub>B\<close> of \<open>f x\<^sub>A\<close>, \<open>g x\<^sub>A y\<^sub>B\<close> is a feasible solution of \<open>x\<^sub>A\<close> s.t.
     
-    @{theory_text "\<bar>(c\<^sub>A x\<^sub>A (g x\<^sub>A y\<^sub>B)) - OPT x\<^sub>A\<bar> \<le> \<bar>(c\<^sub>A (f x\<^sub>A) y\<^sub>B) - OPT (f x\<^sub>A)\<bar>"}.
+    @{theory_text "\<bar>(c\<^sub>A x\<^sub>A (g x\<^sub>A y\<^sub>B)) - OPT x\<^sub>A\<bar> \<le> \<beta>\<bar>(c\<^sub>B (f x\<^sub>A) y\<^sub>B) - OPT (f x\<^sub>A)\<bar>"}.
 \end{enumerate}
 
 The second linear inequality essentially ensures the following: given an optimal solution for \<open>f x\<^sub>A\<close>
@@ -860,16 +860,16 @@ s.t. the edge weights satisfy the triangle inequality.
 The function \<open>f\<close> is defined by the following construction.
 Let \<open>G\<close> be an instance of the \textsc{VCP4}, and let \<open>H:=f G\<close>. For each edge \<open>e\<close> of \<open>G\<close>, a subgraph 
 \<open>H\<^sub>e\<close> is added to \<open>H\<close> (see Figure~\ref{fig:He}). The function \<open>f\<close> computes the complete graph over 
-all the subgraphs \<open>H\<^sub>e\<close> (one for every edge \<open>e\<close> of the graph \<open>G\<close>). A subgraph \<open>H\<^sub>e\<close> consists of 12 
-vertices that are arranged in a 4-by-3 lattice. Each corner vertex of a subgraph \<open>H\<^sub>e\<close> corresponds 
-to a vertex of the edge \<open>e\<close>. Moreover, a subgraph \<open>H\<^sub>e\<close> has the special property that there is no 
-Hamiltonian path for \<open>H\<^sub>e\<close> that starts and ends at corner vertices of \<open>H\<^sub>e\<close> that correspond to 
-different vertices of the edge \<open>e\<close>. E.g. there is no Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> that 
-starts at the top-left corner vertex and ends at the bottom-right corner vertex. 
-Therefore, the start- and end-vertex of a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> can only correspond 
-to the one vertex of the edge \<open>e\<close>. This property is used to encode a vertex cover of \<open>G\<close> with a 
-Hamiltonian cycle of \<open>H\<close>. The subgraph \<open>H\<^sub>e\<close> admits 3 types of Hamiltonian paths 
-(see Figure~\ref{fig:Hamiltonian-paths-He}) {\color{red} Proof?}.
+all the subgraphs \<open>H\<^sub>e\<close> (one for every edge \<open>e\<close> of the graph \<open>G\<close>). Figure~\ref{fig:l-reduction-graph-H} 
+illustrates this construction. A subgraph \<open>H\<^sub>e\<close> consists of 12 vertices that are arranged in a 4-by-3 
+lattice. Each corner vertex of a subgraph \<open>H\<^sub>e\<close> corresponds to a vertex of the edge \<open>e\<close>. Moreover, a 
+subgraph \<open>H\<^sub>e\<close> has the special property that there is no Hamiltonian path for \<open>H\<^sub>e\<close> that starts and 
+ends at corner vertices of \<open>H\<^sub>e\<close> that correspond to different vertices of the edge \<open>e\<close>. E.g. there is 
+no Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> that starts at the top-left corner vertex and ends at the 
+bottom-right corner vertex. Therefore, the start- and end-vertex of a Hamiltonian path for a 
+subgraph \<open>H\<^sub>e\<close> can only correspond to the one vertex of the edge \<open>e\<close>. This property is used to encode 
+a vertex cover of \<open>G\<close> with a Hamiltonian cycle of \<open>H\<close>. The subgraph \<open>H\<^sub>e\<close> admits 3 types of 
+Hamiltonian paths (see Figure~\ref{fig:Hamiltonian-paths-He}).
 
 \begin{figure}
   \centering
@@ -936,6 +936,56 @@ distinguish between 3 types of edges.
 \end{enumerate} 
 The edge weights satisfy the triangle inequality because the edge weights can be seen as a metric 
 completion of the graph \<open>H\<close> restricted to the edges that have weight 1 or 4.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[label distance=0mm, scale=1]
+    \node[graphNode] (u) at (0,\HeWidth+\HeHeight+\HeMargin) {};
+    \node[graphNode,right = of u] (v) {};
+    \node[graphNode,below = of u] (w) {};
+    \node[graphNode,right = of w] (x) {};
+    \path[-] (u) edge (v);
+    \path[-] (v) edge (w);
+    \path[-] (v) edge (x);
+    \path[-] (w) edge (x);
+
+    \path[|->,thick] (2.5,\HeWidth+\HeHeight+\HeMargin-0.5) edge node[label={above:$\mathstrut f$}] {} (3.5,\HeWidth+\HeHeight+\HeMargin-0.5);
+  
+    \pic (wx) at (5,0) {He={}{}};
+    \pic[rotate=-90] (vx) at (5+\HeWidth+\HeMargin,\HeWidth+\HeHeight+\HeMargin) {He={}{}};
+    \pic[rotate=45] (wv) at (5+0.146*\HeWidth,\HeMargin+0.146*\HeWidth+\HeHeight) {He={}{}};
+    \pic (uv) at (5+-\HeMargin,1.146*\HeWidth+\HeHeight+3*\HeMargin) {He={}{}};
+
+    \begin{scope}[on background layer]
+      \draw (uv-v1) edge[edge4] (wv-v1);
+      \draw (uv-v1) edge[edge4] (wv-v2);
+      \draw (uv-v2) edge[edge4] (wv-v1);
+      \draw (uv-v2) edge[edge4] (wv-v2);
+
+      \draw (uv-v1) edge[edge4] (vx-u1);
+      \draw (uv-v1) edge[edge4] (vx-u2);
+      \draw (uv-v2) edge[edge4] (vx-u1);
+      \draw (uv-v2) edge[edge4] (vx-u2);
+
+      \draw (wv-v1) edge[edge4] (vx-u1);
+      \draw (wv-v1) edge[edge4] (vx-u2);
+      \draw (wv-v2) edge[edge4] (vx-u1);
+      \draw (wv-v2) edge[edge4] (vx-u2);
+
+      \draw (wx-u1) edge[edge4] (wv-u1);
+      \draw (wx-u1) edge[edge4] (wv-u2);
+      \draw (wx-u2) edge[edge4] (wv-u1);
+      \draw (wx-u2) edge[edge4] (wv-u2);
+
+      \draw (vx-v1) edge[edge4] (wx-v1);
+      \draw (vx-v1) edge[edge4] (wx-v2);
+      \draw (vx-v2) edge[edge4] (wx-v1);
+      \draw (vx-v2) edge[edge4] (wx-v2);
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Depicted is the construction of the graph \<open>H:=f G\<close> from the graph \<open>G\<close>. The graph 
+  \<open>H\<close> is complete, but only the edges with weight 1 or 4 are shown.}\label{fig:l-reduction-graph-H}
+\end{figure}
 
 Next, I describe the definition of the function \<open>g\<close>.
 The function \<open>g\<close> maps a Hamiltonian cycle \<open>T\<close> in \<open>H\<close> to a vertex cover \<open>X\<close> of \<open>G\<close>. 
@@ -1005,43 +1055,35 @@ The edge weights are formalized by the function \<open>c\<close>, which maps two
 The definition of the function \<open>c\<close> uses a couple of auxiliary functions to distinguish different cases. 
 To simplify things, the case for two vertices that are neighbors in subgraph \<open>H\<^sub>e\<close> (weight 1) is handled separately. 
 The function @{const is_edge_in_He} checks if there is a subgraph \<open>H\<^sub>e\<close> in \<open>H\<close> where the two 
-given vertices are connected by an edge. The function @{const are_vertices_in_He} checks if there is 
-a subgraph \<open>H\<^sub>e\<close> in \<open>H\<close> that contains both given vertices. The function @{const min_dist_in_He} computes 
-the distance between two vertices in a subgraph \<open>H\<^sub>e\<close>. The function \<open>rep1\<close> is an assumed function 
-that is used to identify different instances of undirected edges.
+given vertices are connected by an edge. The function \<open>fold_g1_uedges2\<close> folds the edges of graph \<open>G\<close>. 
+The expression @{term "isin2 (\<N>\<^sub>2 (H\<^sub>e e) x) y"} checks if the vertex \<open>y\<close> is in the neighborhood of 
+the vertex \<open>x\<close> in the subgraph \<open>H\<^sub>e\<close>.
 
-{\color{red} Explain functions...}
+@{thm[display] is_edge_in_He.simps}
 
-@{thm[display,mode=IfThen] is_edge_in_He.simps}
+The function @{const are_vertices_in_He} checks if there is a subgraph \<open>H\<^sub>e\<close> in \<open>H\<close> that contains 
+both given vertices. The expression @{term "isin2 (V\<^sub>H\<^sub>e e) x \<and> isin2 (V\<^sub>H\<^sub>e e) y"} 
+checks if \<open>x\<close> and \<open>y\<close> are vertices in the subgraph \<open>H\<^sub>e\<close>.
 
-@{thm[display,mode=IfThen] are_vertices_in_He.simps}
+@{thm[display] are_vertices_in_He.simps}
 
-@{thm[display,mode=IfThen] c.simps}
+The function @{const min_dist_in_He} computes the distance between two
+vertices in a subgraph \<open>H\<^sub>e\<close>. The function \<open>rep1\<close> is an assumed function that is used to identify 
+different instances of undirected edges. 
+
+@{thm[display] c.simps}
 
 The function \<open>g\<close> depends on two functions @{const shorten_tour} and @{const vc_of_tour}. The 
 function @{const shorten_tour} modifies a Hamiltonian cycle s.t. the resulting tour has less total 
-weight and the tour contains a Hamiltonian path for every subgraph \<open>H\<^sub>e\<close>. The function @{const vc_of_tour} 
-computes a vertex cover for \<open>G\<close> from a given Hamiltonian cycle that contains a Hamiltonian path for 
-every subgraph \<open>H\<^sub>e\<close>.
-
-@{thm[display] hp_starting_at.simps}
-
-@{thm[display] replace_hp.simps}
-
-@{thm[display] shorten_tour.simps}
-
-@{thm[display] vc_of_tour.simps}
-
-@{thm[display] g.simps}
-
-Given a tour \<open>T\<close> of \<open>H\<close>, the function @{const shorten_tour} iteratively (for each edge \<open>e\<close> of \<open>G\<close>) 
-removes all vertices of the subgraph \<open>H\<^sub>e\<close> from the tour \<open>T\<close> and inserts a Hamiltonian path for the 
-subgraph \<open>H\<^sub>e\<close>. The Hamiltonian path is inserted at the position where the tour \<open>T\<close> enters the 
-subgraph \<open>H\<^sub>e\<close> for the first time. This replacement of the Hamiltonian path is done regardless of 
-whether the tour \<open>T\<close> already contains a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. This simplifies 
-definitions and proofs by avoiding extra case distinctions. The inserted Hamiltonian path for the 
-subgraph \<open>H\<^sub>e\<close> is carefully chosen such that the resulting tour has less total weight. Let \<open>e:={u,v}\<close>, 
-and see Figure~\ref{fig:He-formalization} for the naming of the vertices in the subgraph \<open>H\<^sub>e\<close>.
+weight and the tour contains a Hamiltonian path for every subgraph \<open>H\<^sub>e\<close>. Given a tour \<open>T\<close> of \<open>H\<close>, 
+the function @{const shorten_tour} iteratively (for each edge \<open>e\<close> of \<open>G\<close>) removes all vertices of 
+the subgraph \<open>H\<^sub>e\<close> from the tour \<open>T\<close> and inserts a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. 
+The Hamiltonian path is inserted at the position where the tour \<open>T\<close> enters the subgraph \<open>H\<^sub>e\<close> for the 
+first time. This replacement of the Hamiltonian path is done regardless of whether the tour \<open>T\<close> 
+already contains a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close>. This simplifies definitions and proofs 
+by avoiding extra case distinctions. The inserted Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> is 
+carefully chosen such that the resulting tour has less total weight. Let \<open>e:={u,v}\<close>, and see 
+Figure~\ref{fig:He-formalization} for the naming of the vertices in the subgraph \<open>H\<^sub>e\<close>.
 \begin{enumerate}
   \item If the tour \<open>T\<close> does not contain a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> then the 
     Hamiltonian path that starts at \<open>(e,u,1)\<close> and ends at \<open>(e,u,2)\<close> is inserted.
@@ -1053,8 +1095,32 @@ and see Figure~\ref{fig:He-formalization} for the naming of the vertices in the 
     with the Hamiltonian path that starts at \<open>(e,w,j)\<close> and ends at \<open>(e,w,i)\<close>, where \<open>j\<in>{1,2}-{i}\<close>.
   \item Otherwise, the Hamiltonian path that starts at \<open>(e,u,1)\<close> and ends at \<open>(e,u,2)\<close> is inserted.
 \end{enumerate}
+This construction is implemented with the following functions. Given a part of tour @{term "x#T"} 
+in the graph \<open>H\<close>, the function @{const to_covering_vertex} computes a covering vertex for the edge 
+\<open>e\<close> in the graph \<open>G\<close> for which the subgraph \<open>H\<^sub>e\<close> contains the vertex \<open>x\<close>. 
+
+@{thm[display] to_covering_vertex.simps}
+
+The function @{const hp_starting_at} returns a Hamiltonian path for the subgraph \<open>H\<^sub>e\<close> which 
+contains the vertex \<open>x\<close>. @{const hp_u1} and @{const hp_v1} are Hamiltonian paths for the subgraph \<open>H\<^sub>e\<close>.
+
+@{thm[display] hp_starting_at.simps}
+
+The function @{const replace_hp} iteratively replaces parts of a given tour with Hamiltonian paths 
+for each subgraph \<open>H\<^sub>e\<close>.
+
+@{thm[display] replace_hp.simps}
+
 The function @{const shorten_tour} formalizes property (b) from the L-reduction proof in 
-@{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.\<close>
+@{cite \<open>Theorem 21.1\<close> "korte_vygen_2018"}.
+
+@{thm[display] shorten_tour.simps}
+
+The function @{const rotate_tour} rotates a cycle until a given predicate is satisfied.
+
+@{thm[display] rotate_tour_acc.simps}
+
+@{thm[display] rotate_tour.simps}\<close>
 (*<*)
 end
 locale fixed_adj_map_G = VCP4_To_mTSP +
@@ -1084,18 +1150,36 @@ lemma cost_shorten_tour_leq_display:
   using G_assms(1,2) opt_vc cost_shorten_tour_leq by auto
 
 (*>*)
-text \<open>\begin{lemma}\label{lemma:shorten_tour_cost}
+text \<open>The following lemma proves the fact that the tour computed by @{const shorten_tour} has less 
+total weight than the given tour \<open>T\<close>.
+
+\begin{lemma}\label{lemma:shorten_tour_cost}
   @{theory_text[display,source] "is_hc (f G) T \<Longrightarrow> 
     cost_of_path\<^sub>c (shorten_tour G T) \<le> cost_of_path\<^sub>c T"}
 \end{lemma}
 
-{\color{red} intuition for shorten-tour}\<close>
+If the tour \<open>T\<close> does not contain a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> then there are at least 4 
+edges between vertices of the subgraph \<open>H\<^sub>e\<close> and other vertices of the graph \<open>H\<close>. These edges have at 
+least weight 4 are replaced with 2 edges that have a weight of at most 5. If the tour \<open>T\<close> does 
+already contain a Hamiltonian path for a subgraph \<open>H\<^sub>e\<close> then it is ensured by the construction that 
+the 2 edges between vertices of the subgraph \<open>H\<^sub>e\<close> and other vertices of the graph \<open>H\<close> are replaced 
+with edges that have the same weight.\<close>
 (*<*)
 end
+context VCP4_To_mTSP
+begin
 (*>*)
+text \<open>The function @{const vc_of_tour} computes a vertex cover for \<open>G\<close> from a given Hamiltonian cycle 
+that contains a Hamiltonian path for every subgraph \<open>H\<^sub>e\<close>. This is done by recursively identifying a 
+covering vertex for the next subgraph \<open>H\<^sub>e\<close> with the function @{const to_covering_vertex}.
+
+@{thm[display] vc_of_tour.simps}
+
+@{thm[display] g.simps}\<close>
 
 subsection \<open>Proofs for the L-Reduction\<close>
 (*<*)
+end
 context fixed_adj_map_G 
 begin
 (*>*)
@@ -1183,8 +1267,6 @@ The following lemma corresponds to the property (c) that is used by the L-reduct
   @{theory_text[display,source] "is_hc (f G) T \<Longrightarrow> 
     \<exists>k\<ge>|g G T|. 15 * |E(G)| + k \<le> cost_of_path\<^sub>c T"}
 \end{lemma}
-
-{\color{red} graphical representation?}
 
 Intuitively, this follows from the fact that the cardinality of the vertex cover that is computed by \<open>g\<close> can be at most 
 the number of "expensive" edges in a Hamiltonian cycle \<open>T\<close> of \<open>H\<close>. This follows from the fact that any 
@@ -1290,8 +1372,10 @@ opposing sides of the subgraph. Unfortunately, I did not have success with this 
 Secondly, I have not formally proven the polynomial running times of the functions \<open>f\<close> and \<open>g\<close>. To 
 formally reason about running times a formal computational model is required. The imperative language 
 \texttt{IMP-} provides such a computational model. A possible approach is to refine instantiations 
-of the functions \<open>f\<close> and \<open>g\<close> to \texttt{IMP-}. Ultimately, the running times of the refined functions 
-would be proven.\<close>
+of the functions \<open>f\<close> and \<open>g\<close> to \texttt{IMP-}. Ultimately, the running times of the refined 
+functions would be proven. For this a separate recurrence that counts the number of operations in a 
+function call is defined. The counted number of operations is then bounded by the running time of 
+the function.\<close>
 (*<*)
 end
 (*>*)
@@ -1323,12 +1407,10 @@ graphs.
 and \textsc{Christofides-Serdyukov} algorithm. Therefore, formalizations of algorithms to compute 
 a MST, a minimum perfect matching, and an Eulerian tour are needed. I have started (but not finished) 
 to implement an adaptor between my formalization and the formalization of Prim's algorithm in 
-Isabelle/HOL by \citeauthor{lammich_nipkow_2019} @{cite "lammich_nipkow_2019"}. Suitable algorithms 
-for the other problems which would need to be formalized are e.g. Edmonds' Blossom algorithm 
-@{cite "edmonds_1965_paths" and "edmonds_1965_maximum"} for minimum perfect matching and Euler's 
-algorithm @{cite "korte_vygen_2018"} for Eulerian tour.\par}
-
-{\color{red} check min match citation!}
+Isabelle/HOL by \citeauthor{lammich_nipkow_2019} @{cite "lammich_nipkow_2019"}. In chapter 11 
+\citeauthor{korte_vygen_2018} @{cite "korte_vygen_2018"} describe an algorithm to compute minimum 
+perfect matchings. Euler's algorithm @{cite "korte_vygen_2018"} is a suitable algorithm to compute 
+a Eulerian tour.\par}
 
 Furthermore, the Eulerian graphs that are constructed for the \textsc{DoubleTree} and the
 \textsc{Christofides-Serdyukov} algorithm generally are multigraphs. Therefore, a formalization of 

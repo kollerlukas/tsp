@@ -42,12 +42,14 @@
 \newcommand{\HeWidth}{1.5}
 \newcommand{\HeHeight}{1}
 \newcommand{\HeMargin}{0.5}
+\newcommand*{\edgeBend}{50}
 
 \colorlet{mygreen}{green!80!blue}
 \tikzset{
   graphNode/.style={circle,fill,inner sep=0.05cm},
   hpEndpoint/.style={circle,fill=mygreen,inner sep=0.075cm},
   hpEdge/.style={draw=mygreen,ultra thick},
+  edge4/.style={bend left=\edgeBend},
   pics/He/.style n args={2}{code={
     \node at (-0.25,0) {{#1}};
     \node at (-0.25,\HeHeight) {{#1}};

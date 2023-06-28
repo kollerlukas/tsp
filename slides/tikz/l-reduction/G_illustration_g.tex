@@ -1,0 +1,26 @@
+\newcommand*{\vcMargin}{0.2cm}
+
+\begin{tikzpicture}[label distance=0mm, scale=1]
+  \node[graphNode,label={above:$\mathstrut u$}] (u) at (0,0) {};
+  \node[graphNode,right = of u,label={above:$\mathstrut v$}] (v) {};
+  \node[graphNode,below = of u,label={below:$\mathstrut w$}] (w) {};
+  \node[graphNode,right = of w,label={below:$\mathstrut x$}] (x) {};
+  \path[-] (u) edge (v);
+  \path[-] (v) edge (w);
+  \path[-] (v) edge (x);
+  \path[-] (w) edge (x);
+
+  % \filldraw[mstEdge,fill=mygreen,fill opacity=0.2] ($(v)+(\vcMargin,0)$) arc(0:180:\vcMargin)
+  %   -- ($(x)+(-\vcMargin,0)$) arc(-180:0:\vcMargin)
+  %   -- cycle;
+
+  \filldraw[draw=mygreen,very thick,fill=mygreen,fill opacity=0.2,visible on=<3->] (v) to[connect=\vcMargin] (w);
+
+  % just for positioning with G_illustration_f.tex
+  \filldraw[invisible,draw=mygreen,very thick] (v) to[connect=\vcMargin] (x);
+
+  % \node at (0.5,-2.5) (vcX) {min. VC {\color{mygreen}$X$}};
+  % \path[->,mstEdge] (vcX.east) edge[bend right=50] (x.south east);
+
+  % \node (g) at ($(x1_)!0.5!(v_)$) {Graph $G$};
+\end{tikzpicture}

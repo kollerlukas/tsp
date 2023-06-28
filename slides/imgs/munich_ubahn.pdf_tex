@@ -1,0 +1,396 @@
+%% Creator: Inkscape 1.2.1 (9c6d41e410, 2022-07-14), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'munich_ubahn.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{1306.13182651bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.63964737)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{munich_ubahn.pdf}}%
+    \put(0.49478903,0.1211146){\color[rgb]{0.35686275,0.77254902,0.94901961}\transparent{0.89999998}\rotatebox{45}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}I\end{tabular}}}}}%
+    \put(0.49672981,0.12305544){\color[rgb]{0.35686275,0.77254902,0.94901961}\transparent{0.89999998}\rotatebox{45}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}s\end{tabular}}}}}%
+    \put(0.50015615,0.12648509){\color[rgb]{0.35686275,0.77254902,0.94901961}\transparent{0.89999998}\rotatebox{45}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}a\end{tabular}}}}}%
+    \put(0.50418172,0.13051243){\color[rgb]{0.35686275,0.77254902,0.94901961}\transparent{0.89999998}\rotatebox{45}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}r\end{tabular}}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{munich_ubahn.pdf}}%
+    \put(0.51827255,0.2585549){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Odeonsplatz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{munich_ubahn.pdf}}%
+    \put(0.42832667,0.18964733){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Send-}\end{tabular}}}}%
+    \put(0.42792797,0.17816403){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{linger}\end{tabular}}}}%
+    \put(0.44252276,0.16668073){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Tor}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{munich_ubahn.pdf}}%
+    \put(0.51789221,0.22984235){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Marien-\end{tabular}}}}%
+    \put(0.51789221,0.21835906){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{munich_ubahn.pdf}}%
+    \put(0.54581361,0.21997857){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{munich_ubahn.pdf}}%
+    \put(0.33948267,0.22984235){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Hauptbahnhof}\end{tabular}}}}%
+    \put(0.33736785,0.21835906){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{(Central Station)}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{munich_ubahn.pdf}}%
+    \put(0.32990775,0.23072214){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{munich_ubahn.pdf}}%
+    \put(0.31967181,0.23072214){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{munich_ubahn.pdf}}%
+    \put(0.44688639,0.27003738){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Karlsplatz\end{tabular}}}}%
+    \put(0.44754757,0.25855408){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}(Stachus)\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{munich_ubahn.pdf}}%
+    \put(0.46750852,0.28029122){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{munich_ubahn.pdf}}%
+    \put(0.52433262,0.19052243){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Fraunhofer-\end{tabular}}}}%
+    \put(0.52433262,0.17903913){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{munich_ubahn.pdf}}%
+    \put(0.54700838,0.16738158){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Kolumbus-}\end{tabular}}}}%
+    \put(0.54700838,0.15589829){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{platz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{munich_ubahn.pdf}}%
+    \put(0.48691241,0.09777481){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Candidplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=14]{munich_ubahn.pdf}}%
+    \put(0.46555965,0.07193515){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Wettersteinplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=15]{munich_ubahn.pdf}}%
+    \put(0.47200407,0.04609549){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}St.-Quirin-Platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=16]{munich_ubahn.pdf}}%
+    \put(0.47068223,0.02025583){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Mangfallplatz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=17]{munich_ubahn.pdf}}%
+    \put(0.55766138,0.02025583){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U1}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=18]{munich_ubahn.pdf}}%
+    \put(0.46078858,0.13796801){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Goethe-\end{tabular}}}}%
+    \put(0.46078858,0.12648472){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=19]{munich_ubahn.pdf}}%
+    \put(0.43784361,0.11499943){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Pocci-\end{tabular}}}}%
+    \put(0.43784361,0.10351613){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=20]{munich_ubahn.pdf}}%
+    \put(0.41490012,0.09203084){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Impler-}\end{tabular}}}}%
+    \put(0.41490012,0.08054754){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{straße}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=21]{munich_ubahn.pdf}}%
+    \put(0.39156706,0.06906226){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Bruder-\end{tabular}}}}%
+    \put(0.39156706,0.05757896){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}mühlstraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=22]{munich_ubahn.pdf}}%
+    \put(0.36946152,0.0432226){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Thalkirchen\end{tabular}}}}%
+    \put(0.36946152,0.0317393){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}(Tierpark)\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=23]{munich_ubahn.pdf}}%
+    \put(0.31955717,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Ober-\end{tabular}}}}%
+    \put(0.31261953,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}sendling\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=24]{munich_ubahn.pdf}}%
+    \put(0.33473117,0.00466589){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=25]{munich_ubahn.pdf}}%
+    \put(0.32449523,0.00466589){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=26]{munich_ubahn.pdf}}%
+    \put(0.26571864,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Aiden-\end{tabular}}}}%
+    \put(0.26764877,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}bach-\end{tabular}}}}%
+    \put(0.26583537,0.00302956){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=27]{munich_ubahn.pdf}}%
+    \put(0.21137333,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Machtl-\end{tabular}}}}%
+    \put(0.21492725,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}ﬁnger\end{tabular}}}}%
+    \put(0.21320619,0.00302956){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=28]{munich_ubahn.pdf}}%
+    \put(0.15787339,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Forsten-\end{tabular}}}}%
+    \put(0.16306083,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}rieder\end{tabular}}}}%
+    \put(0.16536526,0.00302956){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Allee\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=29]{munich_ubahn.pdf}}%
+    \put(0.11082026,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Basler\end{tabular}}}}%
+    \put(0.11001807,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=30]{munich_ubahn.pdf}}%
+    \put(0.05163472,0.02599616){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Fürsten-}\end{tabular}}}}%
+    \put(0.06318122,0.01451286){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{ried}\end{tabular}}}}%
+    \put(0.06045869,0.00302956){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{West}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=31]{munich_ubahn.pdf}}%
+    \put(0.0667096,0.04896656){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U3}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=32]{munich_ubahn.pdf}}%
+    \put(0.31654061,0.07767729){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Harras\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=33]{munich_ubahn.pdf}}%
+    \put(0.33473117,0.0678295){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=34]{munich_ubahn.pdf}}%
+    \put(0.32449523,0.0678295){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=35]{munich_ubahn.pdf}}%
+    \put(0.25808073,0.07767548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Partnach-\end{tabular}}}}%
+    \put(0.26885424,0.06619218){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=36]{munich_ubahn.pdf}}%
+    \put(0.2068128,0.07767729){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Westpark\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=37]{munich_ubahn.pdf}}%
+    \put(0.16529904,0.07767548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Holz-\end{tabular}}}}%
+    \put(0.16378219,0.06619218){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}apfel-\end{tabular}}}}%
+    \put(0.16198339,0.05470888){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}kreuth\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=38]{munich_ubahn.pdf}}%
+    \put(0.10324322,0.07767548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Haderner\end{tabular}}}}%
+    \put(0.11253876,0.06619218){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Stern\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=39]{munich_ubahn.pdf}}%
+    \put(0.0607456,0.07767548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Groß-\end{tabular}}}}%
+    \put(0.05731814,0.06619218){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}hadern\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=40]{munich_ubahn.pdf}}%
+    \put(-0.0009589,0.07767548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Klinikum}\end{tabular}}}}%
+    \put(0.00740317,0.06619218){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Groß-}\end{tabular}}}}%
+    \put(0.00344576,0.05470888){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{hadern}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=41]{munich_ubahn.pdf}}%
+    \put(0.01502856,0.10064588){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U6}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=42]{munich_ubahn.pdf}}%
+    \put(0.56728711,0.1178705){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Silber-\end{tabular}}}}%
+    \put(0.56965962,0.1063872){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}horn-\end{tabular}}}}%
+    \put(0.56710237,0.0949039){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=43]{munich_ubahn.pdf}}%
+    \put(0.60768265,0.1178705){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Unters-\end{tabular}}}}%
+    \put(0.61246172,0.1063872){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}berg-\end{tabular}}}}%
+    \put(0.60993361,0.0949039){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=44]{munich_ubahn.pdf}}%
+    \put(0.6617682,0.1408409){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Giesing\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=45]{munich_ubahn.pdf}}%
+    \put(0.70040712,0.14171887){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=46]{munich_ubahn.pdf}}%
+    \put(0.59050818,0.183907){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Karl-Preis-Platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=47]{munich_ubahn.pdf}}%
+    \put(0.73513229,0.17816304){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Josephs-\end{tabular}}}}%
+    \put(0.74395626,0.16667974){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}burg\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=48]{munich_ubahn.pdf}}%
+    \put(0.78791234,0.17816304){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Kreiller-\end{tabular}}}}%
+    \put(0.79081962,0.16667974){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=49]{munich_ubahn.pdf}}%
+    \put(0.8489335,0.20400451){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Trudering\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=50]{munich_ubahn.pdf}}%
+    \put(0.89656457,0.20488248){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=51]{munich_ubahn.pdf}}%
+    \put(0.87383718,0.22984417){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Moosfeld\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=52]{munich_ubahn.pdf}}%
+    \put(0.90028305,0.25568201){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Messestadt\end{tabular}}}}%
+    \put(0.90028305,0.24419871){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}West\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=53]{munich_ubahn.pdf}}%
+    \put(0.92596602,0.28152167){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Messestadt}\end{tabular}}}}%
+    \put(0.92596602,0.27003837){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Ost}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=54]{munich_ubahn.pdf}}%
+    \put(0.89644976,0.29300778){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U2}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=55]{munich_ubahn.pdf}}%
+    \put(0.51792975,0.28439456){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Universität\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=56]{munich_ubahn.pdf}}%
+    \put(0.51821226,0.31023422){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Giselastraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=57]{munich_ubahn.pdf}}%
+    \put(0.5178844,0.33607388){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Münchner Freiheit}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=58]{munich_ubahn.pdf}}%
+    \put(0.53504996,0.36191353){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Dietlindenstraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=59]{munich_ubahn.pdf}}%
+    \put(0.55801854,0.38488212){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Nordfriedhof\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=60]{munich_ubahn.pdf}}%
+    \put(0.5818318,0.4078507){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Alte Heide\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=61]{munich_ubahn.pdf}}%
+    \put(0.60425491,0.43081929){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Studentenstadt\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=62]{munich_ubahn.pdf}}%
+    \put(0.62692489,0.45378787){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Freimann\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=63]{munich_ubahn.pdf}}%
+    \put(0.64989348,0.47675646){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Kieferngarten\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=64]{munich_ubahn.pdf}}%
+    \put(0.67286206,0.49972505){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Fröttmaning\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=65]{munich_ubahn.pdf}}%
+    \put(0.67941857,0.53991596){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Garching-\end{tabular}}}}%
+    \put(0.67713847,0.52843266){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Hochbrück\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=66]{munich_ubahn.pdf}}%
+    \put(0.73337855,0.53130685){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Garching\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=67]{munich_ubahn.pdf}}%
+    \put(0.78019838,0.55140025){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Garching-}\end{tabular}}}}%
+    \put(0.77373237,0.53991695){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Forschungs-}\end{tabular}}}}%
+    \put(0.7838301,0.52843365){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{zentrum}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=68]{munich_ubahn.pdf}}%
+    \put(0.79883327,0.50833826){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U6}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=69]{munich_ubahn.pdf}}%
+    \put(0.32583887,0.20130801){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Theresienwiese\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=70]{munich_ubahn.pdf}}%
+    \put(0.28851723,0.17833942){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Schwanthalerhöhe\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=71]{munich_ubahn.pdf}}%
+    \put(0.31517377,0.1293548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Heime-\end{tabular}}}}%
+    \put(0.31283533,0.1178715){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}ranplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=72]{munich_ubahn.pdf}}%
+    \put(0.33473117,0.10802684){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=73]{munich_ubahn.pdf}}%
+    \put(0.32449523,0.10802684){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=74]{munich_ubahn.pdf}}%
+    \put(0.25573514,0.1293548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Westend-}\end{tabular}}}}%
+    \put(0.26363051,0.1178715){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{straße}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=75]{munich_ubahn.pdf}}%
+    \put(0.27342687,0.16093842){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U4}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=76]{munich_ubahn.pdf}}%
+    \put(0.20972692,0.1293548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Frieden-\end{tabular}}}}%
+    \put(0.21212856,0.1178715){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}heimer\end{tabular}}}}%
+    \put(0.21320298,0.1063882){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=77]{munich_ubahn.pdf}}%
+    \put(0.15868173,0.1293548){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Laimer}\end{tabular}}}}%
+    \put(0.16360662,0.1178715){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Platz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=78]{munich_ubahn.pdf}}%
+    \put(0.17006824,0.1523252){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U5}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=79]{munich_ubahn.pdf}}%
+    \put(0.56941729,0.22984417){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Lehel\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=80]{munich_ubahn.pdf}}%
+    \put(0.61239047,0.22984235){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Max-}\end{tabular}}}}%
+    \put(0.60627449,0.21835906){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Weber-}\end{tabular}}}}%
+    \put(0.61201617,0.20687576){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Platz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=81]{munich_ubahn.pdf}}%
+    \put(0.67612356,0.23271524){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Ostbahnhof\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=82]{munich_ubahn.pdf}}%
+    \put(0.74517862,0.23359321){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=83]{munich_ubahn.pdf}}%
+    \put(0.73494615,0.23359321){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=84]{munich_ubahn.pdf}}%
+    \put(0.70450364,0.21548699){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Innsbrucker}\end{tabular}}}}%
+    \put(0.70450364,0.20400369){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Ring}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=85]{munich_ubahn.pdf}}%
+    \put(0.75038104,0.12361446){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Michaelibad\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=86]{munich_ubahn.pdf}}%
+    \put(0.75077147,0.09777481){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Quiddestraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=87]{munich_ubahn.pdf}}%
+    \put(0.75044419,0.07193515){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Neuperlach Zentrum}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=88]{munich_ubahn.pdf}}%
+    \put(0.70408786,0.07767729){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U7}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=89]{munich_ubahn.pdf}}%
+    \put(0.70408786,0.06332193){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U8}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=90]{munich_ubahn.pdf}}%
+    \put(0.75131701,0.04609549){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Therese-Giehse-Allee\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=91]{munich_ubahn.pdf}}%
+    \put(0.75044419,0.02025583){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Neuperlach Süd}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=92]{munich_ubahn.pdf}}%
+    \put(0.83747787,0.02127795){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=93]{munich_ubahn.pdf}}%
+    \put(0.7213143,0.02025583){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U5}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=94]{munich_ubahn.pdf}}%
+    \put(0.68147528,0.26429705){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Prinzregentenplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=95]{munich_ubahn.pdf}}%
+    \put(0.70444387,0.28726563){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Böhmerwaldplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=96]{munich_ubahn.pdf}}%
+    \put(0.72741245,0.31023422){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Richard-Strauss-Str.\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=97]{munich_ubahn.pdf}}%
+    \put(0.75124811,0.3332028){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Arabellapark}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=98]{munich_ubahn.pdf}}%
+    \put(0.7213143,0.3446871){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U4}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=99]{munich_ubahn.pdf}}%
+    \put(0.47764493,0.39923567){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Bonner\end{tabular}}}}%
+    \put(0.47764493,0.38775237){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=100]{munich_ubahn.pdf}}%
+    \put(0.36348038,0.4078507){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Scheidplatz}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=101]{munich_ubahn.pdf}}%
+    \put(0.35079253,0.4333424){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Petuelring\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=102]{munich_ubahn.pdf}}%
+    \put(0.32227903,0.46205346){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Olympia-}\end{tabular}}}}%
+    \put(0.32540792,0.45056917){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{zentrum}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=103]{munich_ubahn.pdf}}%
+    \put(0.39113913,0.47962753){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U8}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=104]{munich_ubahn.pdf}}%
+    \put(0.3214641,0.49685216){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Ober-\end{tabular}}}}%
+    \put(0.2970682,0.48536886){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}wiesenfeld\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=105]{munich_ubahn.pdf}}%
+    \put(0.25685807,0.55140025){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Olympia-}\end{tabular}}}}%
+    \put(0.2559246,0.53991695){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Einkaufs-}\end{tabular}}}}%
+    \put(0.25842351,0.52843365){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{zentrum}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=106]{munich_ubahn.pdf}}%
+    \put(0.23897226,0.50546719){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U1}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=107]{munich_ubahn.pdf}}%
+    \put(0.23897226,0.49111183){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U7}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=108]{munich_ubahn.pdf}}%
+    \put(0.20342975,0.55140025){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Moosacher\end{tabular}}}}%
+    \put(0.20181564,0.53991695){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}St.-Martins-\end{tabular}}}}%
+    \put(0.2174703,0.52843365){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=109]{munich_ubahn.pdf}}%
+    \put(0.15402811,0.52843578){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Moosach}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=110]{munich_ubahn.pdf}}%
+    \put(0.17969322,0.53868781){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=111]{munich_ubahn.pdf}}%
+    \put(0.16945728,0.53868781){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=112]{munich_ubahn.pdf}}%
+    \put(0.17006479,0.50833826){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U3}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=113]{munich_ubahn.pdf}}%
+    \put(0.16185754,0.47675646){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Georg-Brauchle-Ring\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=114]{munich_ubahn.pdf}}%
+    \put(0.19833108,0.44230358){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Westfriedhof\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=115]{munich_ubahn.pdf}}%
+    \put(0.23579342,0.4078507){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Gern\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=116]{munich_ubahn.pdf}}%
+    \put(0.23924847,0.34183554){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Rotkreuzplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=117]{munich_ubahn.pdf}}%
+    \put(0.26231983,0.30736315){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Maillingerstraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=118]{munich_ubahn.pdf}}%
+    \put(0.30144337,0.27291027){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Stiglmaierplatz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=119]{munich_ubahn.pdf}}%
+    \put(0.39053916,0.29013489){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Königs-\end{tabular}}}}%
+    \put(0.40168211,0.27865159){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=120]{munich_ubahn.pdf}}%
+    \put(0.37543437,0.31884562){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Theresien-\end{tabular}}}}%
+    \put(0.39485678,0.30736232){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}straße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=121]{munich_ubahn.pdf}}%
+    \put(0.3853936,0.35042743){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Josephs-\end{tabular}}}}%
+    \put(0.40168025,0.33894413){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=122]{munich_ubahn.pdf}}%
+    \put(0.35984907,0.38200923){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Hohenzollern-\end{tabular}}}}%
+    \put(0.40167897,0.37052593){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}platz\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=123]{munich_ubahn.pdf}}%
+    \put(0.44317562,0.4509168){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Milbertshofen\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=124]{munich_ubahn.pdf}}%
+    \put(0.44317562,0.48536968){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Frankfurter Ring\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=125]{munich_ubahn.pdf}}%
+    \put(0.42392106,0.52843578){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Am Hart\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=126]{munich_ubahn.pdf}}%
+    \put(0.39723845,0.55427543){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Harthof\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=127]{munich_ubahn.pdf}}%
+    \put(0.37139879,0.58011509){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Dülferstraße\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=128]{munich_ubahn.pdf}}%
+    \put(0.34555913,0.60595475){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Hasenbergl\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=129]{munich_ubahn.pdf}}%
+    \put(0.31978035,0.63179441){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Feldmoching}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=130]{munich_ubahn.pdf}}%
+    \put(0.40059359,0.63267238){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{S}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=131]{munich_ubahn.pdf}}%
+    \put(0.39035765,0.63267238){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{R}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=132]{munich_ubahn.pdf}}%
+    \put(0.29065157,0.61743904){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U2}\end{tabular}}}}%
+    \put(0.5170311,0.58011509){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{Bahn München}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=133]{munich_ubahn.pdf}}%
+    \put(0.49252019,0.58011509){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=134]{munich_ubahn.pdf}}%
+    \put(0.50023991,0.54566222){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U4}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=135]{munich_ubahn.pdf}}%
+    \put(0.50023991,0.53130685){\color[rgb]{1,1,1}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textbf{U8}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=136]{munich_ubahn.pdf}}%
+    \put(0.56091489,0.54566222){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}U-Bahn Linie\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=137]{munich_ubahn.pdf}}%
+    \put(0.56091489,0.53130627){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Nur zeitweise\end{tabular}}}}%
+    \put(0.87611053,0.01164074){\color[rgb]{0.70980392,0.70980392,0.70980392}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Stand: Dezember 2021\end{tabular}}}}%
+    \put(0.86744558,0.00015645){\color[rgb]{0.70980392,0.70980392,0.70980392}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}CC-BY-SA Zeno Heilmaier\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

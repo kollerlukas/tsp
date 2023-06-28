@@ -1,0 +1,651 @@
+\documentclass{beamer} % only slides
+%\documentclass[notes]{beamer} % slides + notes
+\geometry{paperwidth=140mm,paperheight=105mm}
+
+\usepackage[utf8]{inputenc}
+\usepackage[%
+  backend=biber,
+  url=false,
+  style=authoryear,
+  citestyle=authoryear,
+  uniquelist=false,
+  maxnames=2,
+  minnames=1,
+  maxbibnames=99,
+  giveninits,
+  dashed=false]{biblatex} % TODO: adapt citation style
+\renewcommand*{\nameyeardelim}{\addcomma\space}
+
+\usepackage{amsfonts}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+
+\usepackage[normalem]{ulem}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
+\usepackage{enumerate}
+% \usepackage{caption}
+% \usepackage{subcaption}
+% \usepackage{xcolor}
+% \usepackage{graphicx}
+% \graphicspath{ {./imgs/} }
+\usepackage{tikz}
+\usetikzlibrary{scopes,calc,shapes.misc,bending,positioning,intersections,through,backgrounds}
+
+\tikzset{
+  graphNode/.style={circle,fill,inner sep=0.05cm},
+  edgeLabel/.style={circle,inner sep=0.05cm,fill=white},
+  mstEdge/.style={draw=mygreen,very thick},
+  mstEdgeLabel/.style={edgeLabel,text=mygreen},
+  addedEdge/.style={draw=mybluegreen,very thick},
+  addedEdgeLabel/.style={edgeLabel,text=mybluegreen},
+  inactiveEdge/.style={draw=mygrey},
+  inactiveEdgeLabel/.style={edgeLabel,text=mygrey},
+  currentNode/.style={circle,draw=myred,very thick},
+  currentEdge/.style={draw=myblue,very thick},
+  resultEdge/.style={draw=myblue,very thick},
+  resultEdgeLabel/.style={edgeLabel,text=myblue},
+  connect/.style={rounded corners=#1,
+      to path= ($(\tikztostart)!-#1!(\tikztotarget)!-#1!-90:(\tikztotarget)$) -- ($(\tikztotarget)!-#1!(\tikztostart)!-#1!90:(\tikztostart)$) --
+      ($(\tikztotarget)!-#1!(\tikztostart)!#1!90:(\tikztostart)$) -- ($(\tikztostart)!-#1!(\tikztotarget)!-#1!90:(\tikztotarget)$) -- cycle (\tikztotarget)
+    },
+  pics/He/.style n args={4}{code={
+    \node at (-0.25,0.5*\HeHeight) {{#1}};
+    \node at (0.25+\HeWidth,0.5*\HeHeight) {{#2}};
+    \node[graphNode,#3] at (0,\HeHeight) (-u1) {};
+    \node[graphNode] at (0.5*\HeWidth,\HeHeight) (-u3) {};
+    \node[graphNode,#4] at (\HeWidth,\HeHeight) (-v2) {};
+    \node[graphNode] at (0,0.66*\HeHeight) (-u4) {};
+    \node[graphNode] at (0.5*\HeWidth,0.66*\HeHeight) (-v6) {};
+    \node[graphNode] at (\HeWidth,0.66*\HeHeight) (-u5) {};
+    \node[graphNode] at (0,0.33*\HeHeight) (-v5) {};
+    \node[graphNode] at (0.5*\HeWidth,0.33*\HeHeight) (-u6) {};
+    \node[graphNode] at (\HeWidth,0.33*\HeHeight) (-v4) {};
+    \node[graphNode,#3] at (0,0) (-u2) {};
+    \node[graphNode] at (0.5*\HeWidth,0) (-v3) {};
+    \node[graphNode,#4] at (\HeWidth,0) (-v1) {};
+  
+    \path[-] (-u1) edge (-u3);
+    \path[-] (-u1) edge (-u4);
+    \path[-] (-u2) edge (-v3);
+    \path[-] (-u2) edge (-v5);
+    \path[-] (-u3) edge (-v2);
+    \path[-] (-u4) edge (-v5);
+    \path[-] (-u4) edge (-v6);
+    \path[-] (-u5) edge (-v2);
+    \path[-] (-u5) edge (-v4);
+    \path[-] (-u5) edge (-v6);
+    \path[-] (-u6) edge (-v4);
+    \path[-] (-u6) edge (-v5);
+    \path[-] (-v1) edge (-v3);
+    \path[-] (-v1) edge (-v4);}},
+  lrRandomEdge/.style={draw=myorange,very thick},
+  lrRandomEdge on/.style={alt={#1{lrRandomEdge}{}}},
+  lr1Edge/.style={draw=mygreen,very thick},
+  lr1Edge on/.style={alt={#1{lr1Edge}{}}},
+  lr1EdgeLabel/.style={edgeLabel,text=mygreen},
+  lr4Edge/.style={draw=myblue,very thick},
+  lr4Edge on/.style={alt={#1{lr4Edge}{}}},
+  lr4EdgeLabel/.style={label={[label distance=-0.15cm]below:{\footnotesize\color{myblue} 4}}},
+  lr5Edge/.style={draw=mypurple,very thick},
+  lr5Edge on/.style={alt={#1{lr5Edge}{}}},
+  lr5EdgeLabel/.style={edgeLabel,text=mypurple},
+  hpStartNode on/.style={alt={#1{fill=mygreen}{}}},
+  inactiveEdges on/.style={alt={#1{every edge/.append style={inactiveEdge}}{}}},
+  invisible/.style={opacity=0},
+  visible on/.style={alt={#1{}{invisible}}},
+  invisible on/.style={alt={#1{invisible}{}}},
+  text invisible/.style={text opacity=0},
+  text visible on/.style={alt={#1{}{text invisible}}},
+  alt/.code args={<#1>#2#3}{%
+    \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+  },
+}
+
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{datetime}
+\usepackage{transparent}
+
+\usepackage{array}
+\usepackage{makecell}
+\renewcommand{\theadalign}{tr}
+\renewcommand\theadfont{\itshape}
+\renewcommand{\cellalign}{tl}
+
+% \theoremstyle{definition}
+% \newtheorem{definition}{Definition}
+% \newtheorem{theorem}{Theorem}
+
+% appendix numbering
+\newcommand{\backupbegin}{
+   \newcounter{framenumberappendix}
+   \setcounter{framenumberappendix}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \addtocounter{framenumberappendix}{-\value{framenumber}}
+   \addtocounter{framenumber}{\value{framenumberappendix}} 
+}
+
+\newenvironment{proofIdea}{%
+  \renewcommand{\proofname}{Proof Idea}\renewcommand{\qedsymbol}{}\proof}{\endproof}
+
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+\input{macros.tex}
+
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{footline}{Formalizing Theory of Approximating the Traveling-Salesman Problem, Lukas Koller\hfill \insertframenumber{}/\inserttotalframenumber}
+\setbeamercovered{transparent}
+
+\title{Formalizing Theory of Approximating the Traveling-Salesman Problem}
+\subtitle{Interdisciplinary Project, Mathematics}
+\author{Lukas Koller}
+\date{\today}
+
+\bibliography{refs}
+
+\begin{document}
+
+\frame{\titlepage}
+
+% \begin{frame}
+%   \frametitle{Traveling-Salesman Problem}
+
+%   \begin{figure}
+%     \centering
+%     \def\svgwidth{0.9\textwidth}{\tiny\input{imgs/munich_ubahn.pdf_tex}}%
+%     \caption{Munich U-Bahn network.}
+%   \end{figure}
+
+%   \note[item]{ A friend visits you in Munich for an afternoon. You want to show her/him some sights in Munich, e.g. your university in Garching, Marienplatz, Olympia Park, etc..}
+%   \note[item]{ Unfortunately, your friend has to catch a train at Hauptbahnhof in the }
+% \end{frame}
+
+\begin{frame}
+  \frametitle{Traveling-Salesman Problem}
+
+  The \textsc{Traveling-Salesman Problem} (\TSP{}) is a well known combinatorial optimization problem.
+
+  \onslide<2->{
+    \begin{columns}[T] % align columns
+      \begin{column}{.25\textwidth}
+        \begingroup
+        \tikzset{every picture/.style={scale=0.7}}%
+        \begin{figure}
+          \begin{overprint}
+            \onslide<1-2>\begin{center}\input{tikz/tsp-example/illustration0.tex}\end{center}
+            \onslide<3->\begin{center}\input{tikz/tsp-example/illustration1.tex}\end{center}
+          \end{overprint}
+        \end{figure}
+        \endgroup
+      \end{column}%
+      \hfill%
+      \begin{column}{.75\textwidth}
+        \begin{minipage}[c][.4\textheight][c]{\linewidth}
+          \begin{definition}[\textsc{Traveling-Salesman Problem}]
+            \begin{tabular}{ r l }
+              \thead{Input:} & \makecell{undirected graph $G$ with            \\ edge weights $c:E(G)\to\mathbb{R}_+$.} \\
+              \thead{Task:}  & \makecell{Find a Hamiltonian cycle in $G$ with \\ minimum total weight.}
+            \end{tabular}
+          \end{definition}
+        \end{minipage}
+      \end{column}%
+    \end{columns}
+  }
+  \onslide<4->{
+    \begin{theorem}[15.43, \cite{korte_vygen_2018}]
+      The decision problem of \TSP{} is \NP{}-hard.
+    \end{theorem}
+  }
+  \vspace*{0.5cm}
+  \onslide<5->{
+    {\color{myred} $\implies$ We can't solve \TSP{} optimally in polynomial time, unless $\textsc{P}=\NP{}$.}
+  }
+\end{frame}
+
+\begin{frame}
+  \frametitle{Approximation Algorithms for TSP}
+
+  \begin{itemize}
+    \item An \textit{approximation algorithm} is a polynomial-time algorithm for an optimization problem that returns an approximate solution.
+    \item The \textit{approximation ratio} bounds the distance between the approximate solution and the optimal solution.
+  \end{itemize}
+  \vspace*{0.5cm}
+  \pause
+  {\color{myred} Negative result for \TSP{}:}
+  \begin{theorem}[\cite{sahni_gonzalez_1976}]
+    There is no constant-factor approx. algorithm for \TSP{}, unless $\textsc{P}=\NP{}$.
+  \end{theorem}
+  \vspace*{0.5cm}
+  \pause
+  We simplify the \TSP{} to the \mTSP{} by assuming:
+  \begin{enumerate}[(i)]
+    \item the graph $G$ is complete and
+    \item the edge weights $c$ satisfy the triangle-inequality.
+  \end{enumerate}
+  \vspace*{0.5cm}
+  \pause
+  \begin{theorem}[\cite{sahni_gonzalez_1976}]
+    The decision problem of \mTSP{} is \NP{}-hard.
+  \end{theorem}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Overview}
+
+  \begin{enumerate}[(i)]
+    \item I have formalized a proof for the equivalence of the \textsc{Maximum Matching Problem} and the \textsc{Minimum Matching-Perfect Problem}.
+  \end{enumerate}
+  \vspace*{0.25cm}
+
+  \pause
+  I have formalized parts of the section 21.1, \textit{Approximation Algorithms for the TSP} from \parencite{korte_vygen_2018}.
+  \vspace*{0.25cm}
+  \begin{enumerate}[(i)]
+    \setcounter{enumi}{1}
+    \item<1,2-> I have formally verified two approx. algorithms for \mTSP{}.
+      \begin{itemize}
+        \item \textsc{DoubleTree} and \textsc{Christofides-Serdyukov} algorithm
+      \end{itemize}
+      \vspace*{0.25cm}
+    \item<1,3-> I have formalized a L-reduction from \textsc{VCP4}\footnotemark{} to \mTSP{}.
+      \begin{itemize}
+        \item \textsc{VCP4} is \maxSNP{}-hard \parencite[Thm. 16.46,][]{korte_vygen_2018}\\ $\implies$ \mTSP{} is \maxSNP{}-hard.
+      \end{itemize}
+  \end{enumerate}
+  \footnotetext[1]{\textsc{Minimum Vertex Cover Problem} with maximum degree of 4}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Christofides-Serdyukov Algorithm \parencite{christofides_1976,serdyukov_1978}}
+
+  \begin{theorem}[21.5, \cite{korte_vygen_2018}]
+    \textsc{Christofides-Serdyukov} is a $\frac{3}{2}$-approx. algorithm for \mTSP{}.
+  \end{theorem}
+  % \begin{proofIdea}
+  %   The total weight of the minimum perfect-matching is at most half of the total weight of the optimal Hamiltonian cycle.
+  % \end{proofIdea}
+
+  \begin{columns}[T] % align columns
+    \begin{column}{.35\textwidth}
+      \begin{figure}
+        \begin{overprint}
+          \onslide<1>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration0.tex}\end{center}
+          \onslide<2>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration1.tex}\end{center}
+          \onslide<3-4>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2.tex}\end{center}
+          \onslide<5>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_0.tex}\end{center}
+          \onslide<6>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_1.tex}\end{center}
+          \onslide<7>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_2.tex}\end{center}
+          \onslide<8>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_3.tex}\end{center}
+          \onslide<9>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_4.tex}\end{center}
+          \onslide<10>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_5.tex}\end{center}
+          \onslide<11>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration2_6.tex}\end{center}
+          \onslide<12>\begin{center}\input{tikz/christofides-serdyukov/christofides-serdyukov_illustration3.tex}\end{center}
+        \end{overprint}
+      \end{figure}
+    \end{column}%
+    \hfill%
+    \begin{column}{.65\textwidth}
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        Algorithm:
+        \begin{enumerate}
+          \item<2-> compute {\color<2-11>{mygreen} minimum spanning-tree} (MST) % \footnotemark
+          \item<3-> compute {\color<3-11>{mybluegreen} minimum perfect-matching} between vertices with odd degree in MST
+          \item<4-> compute Eulerian tour on MST + matching, e.g. 2,1,4,5,2,3,2
+          \item<5-> shortcut Eulerian tour, e.g. \only<1-4,6->{2}\only<5>{{\color{myred} 2}},\only<1-5,7->{1}\only<6>{{\color{myred} 1}},\only<1-6,8->{4}\only<7>{{\color{myred} 4}},\only<1-7,9->{5}\only<8>{{\color{myred} 5}},\only<1-8>{2}\only<9>{{\color{myred} 2}}\only<10->{{\color{mygrey}\sout{2}}},\only<1-9,11->{3}\only<10>{{\color{myred} 3}},\only<1-10,12->{2}\only<11>{{\color{myred} 2}}
+        \end{enumerate}
+      \end{minipage}
+    \end{column}%
+  \end{columns}
+
+  % \footnotetext[1]{Minimum Spanning Tree}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Formalization of the Christofides-Serdyukov Algorithm}
+
+  I have formalized and verified the \textsc{Christofides-Serdyukov} algorithm in Isabelle/HOL \parencite{nipkow_wenzel_paulson_2002}.
+
+  \begin{itemize}
+    \item I build on an exiting graph formalization by \citeauthor{abdulaziz_2020} (\citeyear{abdulaziz_2020}) for Berge's theorem \parencite{berge_1954}.
+          % \item I formalized the necessary background theory.
+          %       \begin{itemize}
+          %         \item minimum spanning-tree, Eulerian tour, Hamiltonian cycle, etc.
+          %       \end{itemize}
+    \item The \textsc{Christofides-Serdyukov} algorithm is formalized with the assumption of the existence of necessary algorithms.
+          \begin{itemize}
+            \item minimum spanning-tree, minimum perfect-matching, and Eulerian tour.
+          \end{itemize}
+    \item The feasibility and the approximation ratio of the \textsc{Christofides-Serdyukov} algorithm are proven.
+    \item The definition of the \textsc{Christofides-Serdyukov} algorithm is refined to a \texttt{WHILE}-program using Hoare-Logic.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{L-Reduction (Linear Reduction)}
+
+  An L-reduction is a special type of reduction that is used to prove the \maxSNP{}-hardness of optimization problems.
+
+  \pause
+  \begin{definition}[L-Reduction, \cite{papadimitriou_yannakakis_1991}]
+    Let $A$ and $B$ be optimization problems with cost functions $c_A$ and $c_B$.
+    An L-Reduction from $A$ to $B$ is a pair of function $f$ and $g$ (computable in polynomial time) with $\alpha,\beta > 0$ s.t. for any instance $x_A$ of $A$
+    \begin{columns}[T] % align columns
+      \begin{column}{.35\textwidth}
+        \begin{figure}
+          \begin{center}
+            \input{tikz/l-reduction/l-reduction_illustration.tex}
+          \end{center}
+        \end{figure}
+      \end{column}%
+      \hfill%
+      \begin{column}{.6\textwidth}
+        \begin{minipage}[c][.5\textheight][c]{\linewidth}
+          {\small\begin{enumerate}[(i)]
+              \item $f(x_A)$ is an instance of $B$ and
+                    \begin{equation*}\operatorname{OPT}(f(x_A))\leq\alpha\operatorname{OPT}(x_A)\text{,}\end{equation*}
+              \item for any feasible solution $y_B$ of $f(x_A)$, $g(x_A,y_B)$ is a feasible solution of $x_A$ s.t.
+                    \begin{multline*}
+                      \abs{c_A(x_A,g(x_A,y_B))-\operatorname{OPT}(x_A)}\leq\\\beta\abs{c_B(f(x_A),y)-\operatorname{OPT}(f(x_A))}\text{.}
+                    \end{multline*}
+            \end{enumerate}}
+        \end{minipage}
+      \end{column}%
+    \end{columns}
+  \end{definition}
+
+  \blfootnote{$\operatorname{OPT}(\cdot)$ denotes the cost of the optimal solution.}
+\end{frame}
+
+\begin{frame}
+  \frametitle{L-Reduction for Metric TSP \parencite{korte_vygen_2018} I}
+  \begin{columns}[T] % align columns
+    \begin{column}{.35\textwidth}
+      \textsc{VCP4}\footnotemark[1]
+      {\footnotesize
+        \begin{tabular}{ r l }
+          \thead{Input:} & \makecell{undir. graph $G$ with           \\ maximum degree of 4.} \\
+          \thead{Task:}  & \makecell{Find a vertex cover of $G$ with \\ minimum cardiality. }
+        \end{tabular}
+      }
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        \begin{figure}
+          \centering
+          \vspace*{0.5cm}
+          \input{tikz/l-reduction/G_illustration_f.tex}%
+        \end{figure}
+        % \begin{center}
+        %   Graph $G$
+        % \end{center}
+      \end{minipage}
+    \end{column}%
+    \begin{column}{.1\textwidth}
+      \vspace*{2cm}
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        \begin{tikzpicture}[label distance=0mm, scale=1]
+          \path[|->,very thick] (0,0) edge node[label={above:$\mathstrut f$}] {} (1,0);
+        \end{tikzpicture}
+      \end{minipage}
+    \end{column}%
+    \begin{column}{.55\textwidth}
+      \mTSP{}
+      {\footnotesize
+        \begin{tabular}{ r l }
+          \thead{Input:} & \makecell{undir. \& compl. graph $G$ with      \\ edge weights $c:E(G)\to\mathbb{R}_+$ that \\ satisfy the tri.-inequality.} \\
+          \thead{Task:}  & \makecell{Find a Hamiltonian cycle in $G$ with \\ minimum total weight.}
+        \end{tabular}
+      }
+      \begin{minipage}[c][.55\textheight][c]{\linewidth}
+        \begin{figure}
+          \centering
+          \input{tikz/l-reduction/H_illustration_f.tex}
+        \end{figure}
+      \end{minipage}
+      % \begin{center}
+      %   Graph $H:=f(G)$
+      % \end{center}
+    \end{column}%
+  \end{columns}
+
+  \footnotetext[1]{\textsc{Minimum Vertex Cover Problem} with maximum degree of 4}
+\end{frame}
+
+\begin{frame}
+  \frametitle{L-Reduction for Metric TSP \parencite{korte_vygen_2018} II}
+  \begin{columns}[T] % align columns
+    \begin{column}{.35\textwidth}
+      \textsc{VCP4}\footnotemark[1]
+      {\footnotesize
+        \begin{tabular}{ r l }
+          \thead{Input:} & \makecell{undir. graph $G$ with           \\ maximum degree of 4.} \\
+          \thead{Task:}  & \makecell{Find a vertex cover of $G$ with \\ minimum cardiality. }
+        \end{tabular}
+      }
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        \begin{figure}
+          \centering
+          \vspace*{0.5cm}
+          \input{tikz/l-reduction/G_illustration_g.tex}%
+        \end{figure}
+        % \begin{center}
+        %   Graph $G$
+        % \end{center}
+      \end{minipage}
+    \end{column}%
+    \begin{column}{.1\textwidth}
+      \vspace*{2cm}
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        \begin{tikzpicture}[label distance=0mm, scale=1]
+          \path[<-|,very thick] (0,0) edge node[label={above:$\mathstrut g$}] {} (1,0);
+        \end{tikzpicture}
+      \end{minipage}
+    \end{column}%
+    \begin{column}{.55\textwidth}
+      \mTSP{}
+      {\footnotesize
+        \begin{tabular}{ r l }
+          \thead{Input:} & \makecell{undir. \& compl. graph $G$ with      \\ edge weights $c:E(G)\to\mathbb{R}_+$ that \\ satisfy the tri.-inequality.} \\
+          \thead{Task:}  & \makecell{Find a Hamiltonian cycle in $G$ with \\ minimum total weight.}
+        \end{tabular}
+      }
+      \begin{minipage}[c][.55\textheight][c]{\linewidth}
+        \begin{figure}
+          \centering
+          \input{tikz/l-reduction/H_illustration_g.tex}
+        \end{figure}
+      \end{minipage}
+      % \begin{center}
+      %   Graph $H:=f(G)$
+      % \end{center}
+    \end{column}%
+  \end{columns}
+  \footnotetext[1]{\textsc{Minimum Vertex Cover Problem} with maximum degree of 4}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Formalization of L-Reduction for Metric TSP}
+
+  I have formalized the L-reduction in Isabelle/HOL. % \parencite{nipkow_wenzel_paulson_2002}.
+
+  \begin{itemize}
+    \item A locale provides an abstract executable graph representation based on an adjacency map.
+    \item The locale assumes \texttt{fold}-functions to do computation on the graphs.
+          \begin{itemize}
+            \item This approach is adapted from \parencite{abdulaziz_2022}.
+          \end{itemize}
+    \item Abstract versions of the reduction functions $f$ and $g$ are defined using the \texttt{fold}-functions.
+    \item The feasibility of the function $f$ and $g$ and the linear inequalities are proven.
+    \item The locale is instantiated with concrete implementations to obtain executable versions of the functions $f$ and $g$.
+  \end{itemize}
+  \vspace*{0.5cm}
+  \pause
+  {\color{myred} The L-reduction in \parencite[Thm. 21.6,][]{korte_vygen_2018} is incomplete.}
+  \begin{enumerate}[(i)]
+    \item The proof for the linear inequalities fails if the optimal vertex cover has a cardinality of 1.
+    \item Not all cases are covered when constructing a vertex cover from a Hamiltonian cycle.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Conclusion and Future Work}
+
+  \begin{itemize}
+    \item I have formally verified two approx. algorithms for \mTSP{}.
+    \item I have formalized a L-reduction from \textsc{VCP4}\footnotemark[1]{} to \mTSP{}, which proves the \maxSNP{}-hardness of \mTSP{}.
+  \end{itemize}
+  \vspace*{0.5cm}
+  \pause
+  \begin{itemize}
+    \item Prove the existence of the necessary algorithms for the \textsc{Christofides-Serdyukov} algorithm.
+          \begin{itemize}
+            \item Write an adaptor to the existing formalization of Prim's algorithm \parencite{lammich_nipkow_2019}.
+            \item Formalize and verify algorithms for minimum perfect-matching and Eulerian tour \parencite[Sec. 11.2 \& 2.4,][]{korte_vygen_2018}.
+          \end{itemize}
+    \item Formalize an encoding of multigraphs with simple graphs.
+    \item Prove the polynomial running time of reduction functions $f$ and $g$.
+          \begin{itemize}
+            \item Refine the functions $f$ and $g$ to \texttt{IMP-} and prove their running time.
+          \end{itemize}
+  \end{itemize}
+  \footnotetext[1]{\textsc{Minimum Vertex Cover Problem} with maximum degree of 4}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+  \printbibliography
+\end{frame}
+
+\appendix
+\backupbegin
+
+\begin{frame}
+  \frametitle{Appendix -- Equiv. Max. Matching and Min. Matching}
+
+  Let $G$ be an undirected graph with edge weights $c$.
+  \vspace*{0.25cm}
+  \begin{enumerate}[(i)]
+    \item \textsc{MaxMatch}\footnotemark[1]{} solves \textsc{MinMatch}\footnotemark[2]{}. Assume $f$ solves \textsc{MaxMatch}.
+  \end{enumerate}
+  \begin{equation*}
+    c'(e) := 1 + - c(e) + \sum_{e'\in E(G)} c(e')
+  \end{equation*}
+  \vspace*{-0.4cm}
+  \begin{itemize}
+    \item If matching $M:=f(G,c')$ is perfect return $M$ otherwise None.
+  \end{itemize}
+  \vspace*{0.5cm}
+  \begin{enumerate}[(i)]
+    \setcounter{enumi}{1}
+    \item \textsc{MinMatch} solves \textsc{MaxMatch}. Assume $f$ solves \textsc{MinMatch}.
+  \end{enumerate}
+  \vspace*{-0.25cm}
+  \begin{align*}
+    E_1 & := \left\{e\times\{1\}\mid e\in E(G)\right\} & E_2 & := \left\{e\times\{2\}\mid e\in E(G)\right\}
+  \end{align*}
+  \vspace*{-1cm}
+  \begin{align*}
+    E_V & := \left\{\{(v,1),(v,2)\}\mid v\in V(G)\right\}
+  \end{align*}
+  \vspace*{-1cm}
+  \begin{align*}
+    H & := \left(V(G)\times\{1,2\},E_1\cup E_2\cup E_V\right) & c'(e) & := \begin{cases*} 1 & if $e\in E_V$ \\ -c(e) & otherwise\end{cases*}
+  \end{align*}
+  \vspace*{-0.4cm}
+  \begin{itemize}
+    \item Return matching $M:=f(H,c')\cap E_1$.
+  \end{itemize}
+
+  \footnotetext[1]{\textsc{Maximum Matching Problem}}
+  \footnotetext[2]{\textsc{Minimum Matching-Perfect Problem}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Appendix -- Approximation Algorithms for Metric TSP}
+
+  Let $(G,c)$ be an instance of \mTSP{}.
+
+  \begin{lemma}[21.3, \cite{korte_vygen_2018}]
+    Given a connected Eulerian graph $G'$ that spans $V(G)$, we can compute (in polynomial time) a Hamiltonian cycle for $G$ with total weight of at most $c(E(G'))$.
+  \end{lemma}
+  \begin{proofIdea}
+    \begin{enumerate}
+      \item Compute a Eulerian tour in $G'$.
+      \item Remove duplicate vertices ("shortcutting").
+    \end{enumerate}
+  \end{proofIdea}
+
+  \begin{itemize}
+    \item[$\implies$] We only need to find Eulerian graph that spans $V(G)$ with the smallest total weight!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Appendix -- DoubleTree Algorithm}
+
+  \begin{theorem}[21.4, \cite{korte_vygen_2018}]
+    \textsc{DoubleTree} is a 2-approximation algorithm for \mTSP{}.
+  \end{theorem}
+  % \begin{proofIdea}
+  %   The total weight of any Hamiltonian cycle is at least the total weight of a MST.
+  % \end{proofIdea}
+
+  \begin{columns}[T] % align columns
+    \begin{column}{.35\textwidth}
+      \begin{figure}
+        % \begin{overprint}
+        %   \onslide<1>\begin{center}\input{tikz/doubletree/doubletree_illustration0.tex}\end{center}
+        %   \onslide<2>\begin{center}\input{tikz/doubletree/doubletree_illustration1.tex}\end{center}
+        %   \onslide<3>\begin{center}\input{tikz/doubletree/doubletree_illustration2.tex}\end{center}
+        %   \onslide<4>\begin{center}\input{tikz/doubletree/doubletree_illustration2_0.tex}\end{center}
+        %   \onslide<5>\begin{center}\input{tikz/doubletree/doubletree_illustration2_1.tex}\end{center}
+        %   \onslide<6>\begin{center}\input{tikz/doubletree/doubletree_illustration2_2.tex}\end{center}
+        %   \onslide<7>\begin{center}\input{tikz/doubletree/doubletree_illustration2_3.tex}\end{center}
+        %   \onslide<8>\begin{center}\input{tikz/doubletree/doubletree_illustration2_4.tex}\end{center}
+        %   \onslide<9>\begin{center}\input{tikz/doubletree/doubletree_illustration2_5.tex}\end{center}
+        %   \onslide<10>\begin{center}\input{tikz/doubletree/doubletree_illustration2_6.tex}\end{center}
+        %   \onslide<11>\begin{center}\input{tikz/doubletree/doubletree_illustration2_7.tex}\end{center}
+        %   \onslide<12>\begin{center}\input{tikz/doubletree/doubletree_illustration2_8.tex}\end{center}
+        %   \onslide<13>\begin{center}\input{tikz/doubletree/doubletree_illustration3.tex}\end{center}
+        % \end{overprint}
+        \begin{overprint}
+          \onslide<1>\begin{center}\input{tikz/doubletree/doubletree_illustration0.tex}\end{center}
+          \onslide<2>\begin{center}\input{tikz/doubletree/doubletree_illustration1.tex}\end{center}
+          \onslide<3>\begin{center}\input{tikz/doubletree/doubletree_illustration2.tex}\end{center}
+          % \onslide<4>\begin{center}\input{tikz/doubletree/doubletree_illustration2_0.tex}\end{center}
+          % \onslide<5>\begin{center}\input{tikz/doubletree/doubletree_illustration2_1.tex}\end{center}
+          % \onslide<6>\begin{center}\input{tikz/doubletree/doubletree_illustration2_2.tex}\end{center}
+          % \onslide<7>\begin{center}\input{tikz/doubletree/doubletree_illustration2_3.tex}\end{center}
+          % \onslide<8>\begin{center}\input{tikz/doubletree/doubletree_illustration2_4.tex}\end{center}
+          % \onslide<9>\begin{center}\input{tikz/doubletree/doubletree_illustration2_5.tex}\end{center}
+          % \onslide<10>\begin{center}\input{tikz/doubletree/doubletree_illustration2_6.tex}\end{center}
+          % \onslide<11>\begin{center}\input{tikz/doubletree/doubletree_illustration2_7.tex}\end{center}
+          % \onslide<12>\begin{center}\input{tikz/doubletree/doubletree_illustration2_8.tex}\end{center}
+          \onslide<4->\begin{center}\input{tikz/doubletree/doubletree_illustration3.tex}\end{center}
+        \end{overprint}
+      \end{figure}
+    \end{column}%
+    \hfill%
+    \begin{column}{.65\textwidth}
+      \begin{minipage}[c][.6\textheight][c]{\linewidth}
+        Algorithm:
+        \begin{enumerate}
+          \item<2-> compute {\color<2>{mygreen} minimum spanning-tree (MST)}
+          \item<3-> compute Eulerian tour on {\color<3-12>{mygreen} doubled MST}, e.g. 2,1,2,5,4,5,2,3,2
+          % \item<4-> shortcut Eulerian tour, e.g. \only<1-3,5->{2}\only<4>{{\color{myred} 2}},\only<1-4,6->{1}\only<5>{{\color{myred} 1}},\only<1-5>{2}\only<6>{{\color{myred} 2}}\only<7->{{\color{mygrey}\sout{2}}},\only<1-6,8->{5}\only<7>{{\color{myred} 5}},\only<1-7,9->{4}\only<8>{{\color{myred} 4}},\only<1-8>{5}\only<9>{{\color{myred} 5}}\only<10->{{\color{mygrey}\sout{5}}},\only<1-9>{2}\only<10>{{\color{myred} 2}}\only<11->{{\color{mygrey}\sout{2}}},\only<1-10,12->{3}\only<11>{{\color{myred} 3}},\only<1-11,13->{2}\only<12>{{\color{myred} 2}}
+          \item<4-> shortcut Eulerian tour, e.g. 2,1,\sout{2},5,4,\sout{5},\sout{2},3,2
+        \end{enumerate}
+      \end{minipage}
+    \end{column}%
+  \end{columns}
+\end{frame}
+
+\backupend
+
+\end{document}

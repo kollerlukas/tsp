@@ -1,0 +1,28 @@
+\newcommand*{\circleDia}{2.0cm}
+\newcommand*{\edgeBend}{15}
+
+\begin{tikzpicture}[label distance=0mm,scale=1]
+  \foreach \a in {1,2,...,5}{
+      \draw (90+144-\a*360/5: \circleDia) node[graphNode,label={90+144-\a*360/5:$\mathstrut \a$}] (\a) {};
+    }
+
+  % \path[-] (1) edge node[edgeLabel] {\footnotesize $2$} (2);
+  \path[-] (1) edge[mstEdge] node[mstEdgeLabel] {\footnotesize $2$} (2);
+  \path[-] (1) edge[inactiveEdge] node[inactiveEdgeLabel] {\footnotesize $3$} (3);
+  \path[-] (1) edge[addedEdge] node[addedEdgeLabel] {\footnotesize $3$} (4);
+  \path[-] (1) edge[inactiveEdge] node[inactiveEdgeLabel] {\footnotesize $3$} (5);
+
+  % \path[-] (2) edge node[edgeLabel] {\footnotesize $2$} (3);
+  \path[-] (2) edge[mstEdge,bend right=\edgeBend] node[mstEdgeLabel] {\footnotesize $2$} (3);
+  \path[-] (2) edge[addedEdge,bend left=\edgeBend] node[addedEdgeLabel] {\footnotesize $2$} (3);
+  \path[-] (2) edge[inactiveEdge] node[inactiveEdgeLabel] {\footnotesize $3$} (4);
+  % \path[-] (2) edge node[edgeLabel] {\footnotesize $1$} (5);
+  \path[-] (2) edge[mstEdge] node[mstEdgeLabel] {\footnotesize $1$} (5);
+
+  \path[-] (3) edge[inactiveEdge] node[inactiveEdgeLabel] {\footnotesize $3$} (4);
+  \path[-] (3) edge[inactiveEdge] node[inactiveEdgeLabel] {\footnotesize $2$} (5);
+
+  % \path[-] (4) edge node[edgeLabel] {\footnotesize $2$} (5);
+  \path[-] (4) edge[mstEdge] node[mstEdgeLabel] {\footnotesize $2$} (5);
+
+\end{tikzpicture}
